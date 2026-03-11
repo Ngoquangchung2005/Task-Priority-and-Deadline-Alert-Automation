@@ -1,4 +1,3 @@
-# Task-Priority-and-Deadline-Alert-Automation
 # 🛠️ Hướng Dẫn Xử Lý Lỗi Xác Thực Google API (OAuth) Trên n8n Docker
 Trong quá trình triển khai hệ thống Automation bằng n8n trên môi trường Docker, nhóm đã gặp và giải quyết thành công 2 lỗi bảo mật khắt khe từ phía Google. Dưới đây là tài liệu ghi chú cách khắc phục để các thành viên khác hoặc người triển khai sau có thể nắm bắt.
 
@@ -24,6 +23,7 @@ services:
       - WEBHOOK_URL=http://localhost:5678/ #ADD CONTENT
     volumes:
       - n8n_data:/home/node/.n8n
+```
 
 ## 2. Lỗi 403: `access_denied` (Google verification process)
 **🔴 Biểu hiện:** Sau khi vượt qua lỗi 400, tiến hành đăng nhập bằng Gmail thì Google hiện cảnh báo: *"n8n has not completed the Google verification process"* kèm theo mã lỗi `Error 403: access_denied` và không cho phép cấp quyền.
