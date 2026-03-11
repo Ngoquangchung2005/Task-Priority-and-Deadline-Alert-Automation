@@ -1,0 +1,51 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1wMxqh4eWisso6skyP8CtQPKuKHb3QGEkzSaqk2CWPnA",
+          "mode": "list",
+          "cachedResultName": "TaskAutomation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wMxqh4eWisso6skyP8CtQPKuKHb3QGEkzSaqk2CWPnA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1395565445,
+          "mode": "list",
+          "cachedResultName": "Task_Master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wMxqh4eWisso6skyP8CtQPKuKHb3QGEkzSaqk2CWPnA/edit#gid=1395565445"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b0c5b1f5-7b40-44d8-87d5-0adc2533c0f0",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "AiIxxvUu35BUCc0N",
+          "name": "TaskAutomation"
+        }
+      }
+    }
+  ],
+  "connections": {},
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "86908ced7abe74099e3172e110ad6bb646d8398960a8a2727cadc20e59bf7ede"
+  }
+}
