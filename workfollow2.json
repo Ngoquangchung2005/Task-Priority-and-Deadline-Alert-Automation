@@ -5,7 +5,7 @@
         "rule": {
           "interval": [
             {
-              "triggerAtHour": 18
+              "triggerAtHour": 8
             }
           ]
         }
@@ -51,6 +51,35 @@
           "name": "Google Sheets account"
         }
       }
+    },
+    {
+      "parameters": {
+        "options": {
+          "includeInputFields": true,
+          "timezone": "Asia/Ho_Chi_Minh"
+        }
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "cd4b24e3-f3fb-461b-b051-16193d4b1b32",
+      "name": "Date & Time"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  const deadlineStr = item.json.deadline; \n  \n  const todayStr = $node[\"Date & Time\"].json.currentDate; \n\n  if (deadlineStr) {\n    const deadlineDate = new Date(deadlineStr);\n    const todayDate = new Date(todayStr);\n    \n    const diffTime = deadlineDate - todayDate;\n    \n    const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));\n    \n    item.json.daysLeft = daysLeft;\n  } else {\n    item.json.daysLeft = null;\n  }\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "91c7f893-6229-4685-8271-5ced6026ceaa",
+      "name": "Code in JavaScript"
     }
   ],
   "connections": {
@@ -59,6 +88,28 @@
         [
           {
             "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Date & Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
             "type": "main",
             "index": 0
           }
