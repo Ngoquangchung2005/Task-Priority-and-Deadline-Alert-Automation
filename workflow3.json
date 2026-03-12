@@ -68,6 +68,19 @@
       ],
       "id": "1b815a5e-2386-490e-92ff-5d6d919a513c",
       "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "items.sort((a, b) => {\n  const priorityA = a.json.priority === 'High' ? 0 : 1;\n  const priorityB = b.json.priority === 'High' ? 0 : 1;\n\n  if (priorityA !== priorityB) {\n    return priorityA - priorityB;\n  }\n\n  const deadlineA = new Date(a.json.deadline);\n  const deadlineB = new Date(b.json.deadline);\n\n  return deadlineA - deadlineB;\n});\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "defa41c4-0349-48d8-a1b5-7431858db0cb",
+      "name": "Sort Overdue Tasks"
     }
   ],
   "connections": {
@@ -87,6 +100,17 @@
         [
           {
             "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Sort Overdue Tasks",
             "type": "main",
             "index": 0
           }
