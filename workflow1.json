@@ -136,6 +136,41 @@
       ],
       "id": "5e8661ac-07b4-4bf1-b55c-df361cbc9c30",
       "name": "If1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "29d900f8-0df8-4c23-b369-bc4b46d7e5cf",
+              "name": "task_name",
+              "value": "={{ $json.task_name.trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "890ee7a4-7708-44a2-bbd2-c33a2e5d610f",
+              "name": "assignee_email",
+              "value": "={{ $json.assignee_email.toLowerCase().trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "f74865b8-49e9-479d-9867-3982f8867f94",
+              "name": "priority",
+              "value": "={{ $json.priority.trim().charAt(0).toUpperCase() + $json.priority.trim().slice(1).toLowerCase() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        -192
+      ],
+      "id": "426abf9c-75d9-4767-a456-3945edf11dc4",
+      "name": "Edit Fields"
     }
   ],
   "connections": {
@@ -155,6 +190,17 @@
         [
           {
             "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
             "type": "main",
             "index": 0
           }
