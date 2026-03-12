@@ -168,6 +168,41 @@
       ],
       "id": "4261aea9-d053-4a39-baa9-f43088e33702",
       "name": "IF - Anti Spam Check"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b4c132fb-6bbc-458c-871e-d1323cec436f",
+              "name": "days_left",
+              "value": "={{ $json.days_left === 0 ? \"🔥 HÔM NAY LÀ HẠN CHÓT\" : \"⏳ Còn \" + $json.days_left + \" ngày\" }}",
+              "type": "string"
+            },
+            {
+              "id": "77da80e0-8790-4273-8015-03ab6c42a003",
+              "name": "deadline_text",
+              "value": "=📅 Hạn: {{ $json.deadline }}",
+              "type": "string"
+            },
+            {
+              "id": "ac56a3e3-2413-4cfe-b1d7-b9c59003b996",
+              "name": "=priority_label",
+              "value": "={{ $json.priority === 'High' ? \"🚨 \" + $json.priority : \"🟢 \" + $json.priority }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1248,
+        -192
+      ],
+      "id": "f057b622-fa2b-46fd-8f1b-d4935767724b",
+      "name": "Set - Reminder Metadata"
     }
   ],
   "connections": {
@@ -220,6 +255,17 @@
         [
           {
             "node": "IF - Anti Spam Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Anti Spam Check": {
+      "main": [
+        [
+          {
+            "node": "Set - Reminder Metadata",
             "type": "main",
             "index": 0
           }
