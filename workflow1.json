@@ -199,6 +199,60 @@
       ],
       "id": "cc96c113-767f-4c56-9002-b99c98ddc184",
       "name": "Calculate Deadline"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "08c46374-503f-4f47-ab4b-1fe9b55d6b0e",
+              "name": "status",
+              "value": "Pending",
+              "type": "string"
+            },
+            {
+              "id": "06cc8233-bd5e-449f-87d2-d0e1b11e89a3",
+              "name": "reminder_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "63e02fc0-35cd-47d2-a5b4-03eb0cddccf6",
+              "name": "created_at",
+              "value": "={{ $now.setZone('Asia/Ho_Chi_Minh').toFormat('yyyy-MM-dd HH:mm:ss') }}",
+              "type": "string"
+            },
+            {
+              "id": "66801606-3283-42e8-bdd5-d3b49282a940",
+              "name": "last_reminded_at",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "1cc7f03b-2d64-45d1-9b90-3ad773a25b2d",
+              "name": "escalated_at",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "4bc25aab-142e-4b07-8529-17e3d97a842e",
+              "name": "completed_at",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1248,
+        -192
+      ],
+      "id": "5a3747b7-4bdc-40d8-a4f3-4fa78af9d9bc",
+      "name": "Set-Add Default Fields"
     }
   ],
   "connections": {
@@ -251,6 +305,17 @@
         [
           {
             "node": "Code TaskID Automation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Deadline": {
+      "main": [
+        [
+          {
+            "node": "Set-Add Default Fields",
             "type": "main",
             "index": 0
           }
