@@ -283,6 +283,29 @@
       ],
       "id": "94a658d3-3c51-4e32-bfa0-2d13cba689e8",
       "name": "Set - Email Data"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email_to }}",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $('Code Build HTML Table').item.json.htmlTable }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2048,
+        -272
+      ],
+      "id": "bafd9744-9e85-4de1-93e7-6d7f39ec9c6e",
+      "name": "Send a message",
+      "webhookId": "e63355b1-c9b6-4ec9-97dd-1bcd056b4a22",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "O3qQ9pi02RtYNPyk",
+          "name": "Gmail account"
+        }
+      }
     }
   ],
   "connections": {
@@ -379,6 +402,17 @@
         [
           {
             "node": "Set - Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Email Data": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
             "type": "main",
             "index": 0
           }
