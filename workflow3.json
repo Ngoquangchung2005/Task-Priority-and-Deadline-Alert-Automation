@@ -55,6 +55,19 @@
           "name": "Google Sheets account"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "const today = new Date();\ntoday.setHours(0, 0, 0, 0);\n\nconst overdue = items.filter(item => {\n  const row = item.json;\n\n  if (!row.deadline) return false;\n\n  const deadline = new Date(row.deadline);\n  deadline.setHours(0, 0, 0, 0);\n\n  const status = (row.status || '').trim();\n  const escalated = (row.escalated_at || '').toString().trim();\n\n  const isActiveStatus = ['Pending', 'Doing', 'Overdue'].includes(status);\n  const isOverdue = deadline < today;\n  const notEscalated = escalated === '';\n\n  return isActiveStatus && isOverdue && notEscalated;\n});\n\nreturn overdue;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "1b815a5e-2386-490e-92ff-5d6d919a513c",
+      "name": "Code in JavaScript"
     }
   ],
   "connections": {
@@ -63,6 +76,17 @@
         [
           {
             "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
             "type": "main",
             "index": 0
           }
