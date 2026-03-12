@@ -193,6 +193,9 @@
             }
           ]
         },
+        "includeOtherFields": true,
+        "include": "selected",
+        "includeFields": "task_id, task_name, assignee_email",
         "options": {}
       },
       "type": "n8n-nodes-base.set",
@@ -203,6 +206,40 @@
       ],
       "id": "f057b622-fa2b-46fd-8f1b-d4935767724b",
       "name": "Set - Reminder Metadata"
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "append",
+              "field": "task_name"
+            },
+            {
+              "aggregation": "append",
+              "field": "priority_label"
+            },
+            {
+              "aggregation": "append",
+              "field": "deadline_text"
+            },
+            {
+              "aggregation": "append",
+              "field": "days_left"
+            }
+          ]
+        },
+        "fieldsToSplitBy": "assignee_email",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        1456,
+        -192
+      ],
+      "id": "60068f82-7ee0-47ac-9298-c01106e18902",
+      "name": "Summarize"
     }
   ],
   "connections": {
@@ -266,6 +303,17 @@
         [
           {
             "node": "Set - Reminder Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Reminder Metadata": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
             "type": "main",
             "index": 0
           }
