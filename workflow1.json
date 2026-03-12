@@ -171,6 +171,20 @@
       ],
       "id": "426abf9c-75d9-4767-a456-3945edf11dc4",
       "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Lấy ngày tháng năm hiện tại\nconst date = new Date();\nconst yyyy = date.getFullYear();\nconst mm = String(date.getMonth() + 1).padStart(2, '0');\nconst dd = String(date.getDate()).padStart(2, '0');\n\n// Tạo một số ngẫu nhiên từ 000 đến 999 để không bao giờ bị trùng\nconst randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');\n\n// Ghép lại thành chuỗi Task ID chuẩn doanh nghiệp (VD: TASK-20260312-045)\n$input.item.json.task_id = `TASK-${yyyy}${mm}${dd}-${randomNum}`;\n\nreturn $input.item;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        -192
+      ],
+      "id": "d01766a1-d8cf-49cb-9a51-cbd456b5f482",
+      "name": "Code in JavaScript"
     }
   ],
   "connections": {
@@ -201,6 +215,17 @@
         [
           {
             "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
             "type": "main",
             "index": 0
           }
