@@ -1,0 +1,102 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                5
+              ],
+              "triggerAtHour": 17
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "da8e8a6d-1d03-4c53-9822-c962c2329b92",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1-AOSifdjrT-7vr6e1OQcIcxe-FucMAN7MRLpVIjbnSE",
+          "mode": "list",
+          "cachedResultName": "task automation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-AOSifdjrT-7vr6e1OQcIcxe-FucMAN7MRLpVIjbnSE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1925314341,
+          "mode": "list",
+          "cachedResultName": "Task_Master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-AOSifdjrT-7vr6e1OQcIcxe-FucMAN7MRLpVIjbnSE/edit#gid=1925314341"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "29589ac2-203e-44d9-bd08-a184c7867cdd",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MfW03DHml6wUvwSL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const today = new Date();\ntoday.setHours(0, 0, 0, 0);\n\nconst overdue = items.filter(item => {\n  const row = item.json;\n\n  if (!row.deadline) return false;\n\n  const deadline = new Date(row.deadline);\n  deadline.setHours(0, 0, 0, 0);\n\n  const status = (row.status || '').trim();\n  const escalated = (row.escalated_at || '').toString().trim();\n\n  const isActiveStatus = ['Pending', 'Doing', 'Overdue'].includes(status);\n  const isOverdue = deadline < today;\n  const notEscalated = escalated === '';\n\n  return isActiveStatus && isOverdue && notEscalated;\n});\n\nreturn overdue;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "1b815a5e-2386-490e-92ff-5d6d919a513c",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4121df01053c0f8a341fa2addde26ee46d9fdc6ece34de4881ad07a95f15d3e7"
+  }
+}
