@@ -76,7 +76,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        624,
+        608,
         0
       ],
       "id": "defa41c4-0349-48d8-a1b5-7431858db0cb",
@@ -94,6 +94,19 @@
       ],
       "id": "2ee5f5e5-3707-4bf2-8b38-25fbc914ec67",
       "name": "Generate Summary Metrics"
+    },
+    {
+      "parameters": {
+        "jsCode": "const tasks = $json.tasks || [];\n\nconst lines = tasks.map((task, index) => {\n  return `${index + 1}. [${task.priority}] ${task.task_name} | Owner: ${task.owner_name || '-'} | Deadline: ${task.deadline} | Status: ${task.status}`;\n});\n\nconst reportBody = `\nWEEKLY OVERDUE TASK REPORT\n\nReport Date: ${$json.report_date}\n\nTotal overdue tasks: ${$json.total_overdue}\nHigh priority tasks: ${$json.high_count}\nNormal priority tasks: ${$json.normal_count}\n\nTask Details:\n${lines.join('\\n')}\n`;\n\nreturn [\n  {\n    json: {\n      ...$json,\n      report_body: reportBody\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "8b5127ea-82a7-4de7-bf4e-4ebe6d755baa",
+      "name": "Build Report Body"
     }
   ],
   "connections": {
@@ -135,6 +148,17 @@
         [
           {
             "node": "Generate Summary Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Summary Metrics": {
+      "main": [
+        [
+          {
+            "node": "Build Report Body",
             "type": "main",
             "index": 0
           }
