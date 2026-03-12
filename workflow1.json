@@ -43,6 +43,62 @@
     },
     {
       "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Lấy ngày tháng năm hiện tại\nconst date = new Date();\nconst yyyy = date.getFullYear();\nconst mm = String(date.getMonth() + 1).padStart(2, '0');\nconst dd = String(date.getDate()).padStart(2, '0');\n\n// Tạo một số ngẫu nhiên từ 000 đến 999 để không bao giờ bị trùng\nconst randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');\n\n// Ghép lại thành chuỗi Task ID chuẩn doanh nghiệp (VD: TASK-20260312-045)\n$input.item.json.task_id = `TASK-${yyyy}${mm}${dd}-${randomNum}`;\n\nreturn $input.item;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        -192
+      ],
+      "id": "d01766a1-d8cf-49cb-9a51-cbd456b5f482",
+      "name": "Code TaskID Automation"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a55ce29c-43f6-4c23-bc3b-7049cf65fbd2",
+              "leftValue": "={{ $json.assignee_email }}",
+              "rightValue": "@",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "f572b2be-21d6-4287-bca6-c4cc2d7a3a64",
+              "leftValue": "={{ $json.assignee_email }}",
+              "rightValue": ".",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        -96
+      ],
+      "id": "5e8661ac-07b4-4bf1-b55c-df361cbc9c30",
+      "name": "IF-Validate Email"
+    },
+    {
+      "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
@@ -93,49 +149,7 @@
         0
       ],
       "id": "f9d351cc-12f2-4c0c-be0a-3b0eb654de5a",
-      "name": "If"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "a55ce29c-43f6-4c23-bc3b-7049cf65fbd2",
-              "leftValue": "={{ $json.assignee_email }}",
-              "rightValue": "@",
-              "operator": {
-                "type": "string",
-                "operation": "contains"
-              }
-            },
-            {
-              "id": "f572b2be-21d6-4287-bca6-c4cc2d7a3a64",
-              "leftValue": "={{ $json.assignee_email }}",
-              "rightValue": ".",
-              "operator": {
-                "type": "string",
-                "operation": "contains"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        416,
-        -96
-      ],
-      "id": "5e8661ac-07b4-4bf1-b55c-df361cbc9c30",
-      "name": "If1"
+      "name": "IF-Check Required Fields"
     },
     {
       "parameters": {
@@ -170,21 +184,7 @@
         -192
       ],
       "id": "426abf9c-75d9-4767-a456-3945edf11dc4",
-      "name": "Edit Fields"
-    },
-    {
-      "parameters": {
-        "mode": "runOnceForEachItem",
-        "jsCode": "// Lấy ngày tháng năm hiện tại\nconst date = new Date();\nconst yyyy = date.getFullYear();\nconst mm = String(date.getMonth() + 1).padStart(2, '0');\nconst dd = String(date.getDate()).padStart(2, '0');\n\n// Tạo một số ngẫu nhiên từ 000 đến 999 để không bao giờ bị trùng\nconst randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');\n\n// Ghép lại thành chuỗi Task ID chuẩn doanh nghiệp (VD: TASK-20260312-045)\n$input.item.json.task_id = `TASK-${yyyy}${mm}${dd}-${randomNum}`;\n\nreturn $input.item;"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        832,
-        -192
-      ],
-      "id": "d01766a1-d8cf-49cb-9a51-cbd456b5f482",
-      "name": "Code in JavaScript"
+      "name": "Normalize Input"
     }
   ],
   "connections": {
@@ -192,40 +192,40 @@
       "main": [
         [
           {
-            "node": "If",
+            "node": "IF-Check Required Fields",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "If": {
+    "IF-Validate Email": {
       "main": [
         [
           {
-            "node": "If1",
+            "node": "Normalize Input",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "If1": {
+    "IF-Check Required Fields": {
       "main": [
         [
           {
-            "node": "Edit Fields",
+            "node": "IF-Validate Email",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Edit Fields": {
+    "Normalize Input": {
       "main": [
         [
           {
-            "node": "Code in JavaScript",
+            "node": "Code TaskID Automation",
             "type": "main",
             "index": 0
           }
@@ -238,4 +238,5 @@
     "templateCredsSetupCompleted": true,
     "instanceId": "86908ced7abe74099e3172e110ad6bb646d8398960a8a2727cadc20e59bf7ede"
   }
+  
 }
