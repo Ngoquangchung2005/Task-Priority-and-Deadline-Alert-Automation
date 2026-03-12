@@ -254,6 +254,35 @@
       ],
       "id": "b08816d2-6c03-4e41-964e-7ab2eb68bc28",
       "name": "Code Build HTML Table"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "71719ff0-0fe3-433d-bb0b-e3abd8366d17",
+              "name": "subject",
+              "value": "🚨 [Nhắc việc] Danh sách công việc sắp tới hạn cần xử lý!",
+              "type": "string"
+            },
+            {
+              "id": "854ec29a-d7c0-44d0-b4d2-e7530e036660",
+              "name": "email_to",
+              "value": "={{ $json.assignee_email }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1840,
+        -272
+      ],
+      "id": "94a658d3-3c51-4e32-bfa0-2d13cba689e8",
+      "name": "Set - Email Data"
     }
   ],
   "connections": {
@@ -339,6 +368,17 @@
         [
           {
             "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Build HTML Table": {
+      "main": [
+        [
+          {
+            "node": "Set - Email Data",
             "type": "main",
             "index": 0
           }
