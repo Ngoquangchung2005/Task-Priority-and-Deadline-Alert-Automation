@@ -253,6 +253,21 @@
       ],
       "id": "5a3747b7-4bdc-40d8-a4f3-4fa78af9d9bc",
       "name": "Set-Add Default Fields"
+    },
+    {
+      "parameters": {
+        "url": "https://zenquotes.io/api/random",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1456,
+        -192
+      ],
+      "id": "87bd8868-3d91-4bb8-a7fc-97ab2723d15d",
+      "name": "HTTP Request-Get Quote",
+      "onError": "continueErrorOutput"
     }
   ],
   "connections": {
@@ -316,6 +331,17 @@
         [
           {
             "node": "Set-Add Default Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set-Add Default Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request-Get Quote",
             "type": "main",
             "index": 0
           }
