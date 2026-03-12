@@ -54,6 +54,7 @@
     },
     {
       "parameters": {
+        "outputFieldName": "=currentDate",
         "options": {
           "includeInputFields": true,
           "timezone": "Asia/Ho_Chi_Minh"
@@ -122,6 +123,51 @@
       ],
       "id": "505e36e8-163d-4c4b-b827-db2589d649e9",
       "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fde7f1d5-6c11-426e-809a-0f832217fdb1",
+              "leftValue": "={{ $json.last_reminded_at }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "a57b08d0-8754-42b9-98ef-807d68abd652",
+              "leftValue": "={{ $json.last_reminded_at ? ( $json.last_reminded_at.includes(':') ? DateTime.fromFormat($json.last_reminded_at, 'dd/MM/yyyy HH:mm') : DateTime.fromFormat($json.last_reminded_at, 'dd/MM/yyyy') ) : '' }}",
+              "rightValue": "={{ $now.minus({ hours: 23 }) }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "before"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1040,
+        -96
+      ],
+      "id": "4261aea9-d053-4a39-baa9-f43088e33702",
+      "name": "IF - Anti Spam Check"
     }
   ],
   "connections": {
@@ -163,6 +209,17 @@
         [
           {
             "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "IF - Anti Spam Check",
             "type": "main",
             "index": 0
           }
