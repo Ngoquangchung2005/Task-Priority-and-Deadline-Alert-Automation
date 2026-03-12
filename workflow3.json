@@ -107,6 +107,26 @@
       ],
       "id": "8b5127ea-82a7-4de7-bf4e-4ebe6d755baa",
       "name": "Build Report Body"
+    },
+    {
+      "parameters": {
+        "folderId": "=",
+        "title": "=Weekly_Overdue_Report_{{$json.report_date}}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        0
+      ],
+      "id": "0f2fc843-6c4f-45bd-950e-92f1e63b4947",
+      "name": "Create a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "Hnt9r2BSc811wsce",
+          "name": "Google Docs account"
+        }
+      }
     }
   ],
   "connections": {
@@ -159,6 +179,17 @@
         [
           {
             "node": "Build Report Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Report Body": {
+      "main": [
+        [
+          {
+            "node": "Create a document",
             "type": "main",
             "index": 0
           }
