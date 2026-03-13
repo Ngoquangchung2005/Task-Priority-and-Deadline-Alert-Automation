@@ -44,7 +44,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// Lấy ngày tháng năm hiện tại\nconst date = new Date();\nconst yyyy = date.getFullYear();\nconst mm = String(date.getMonth() + 1).padStart(2, '0');\nconst dd = String(date.getDate()).padStart(2, '0');\n\n// Tạo một số ngẫu nhiên từ 000 đến 999 để không bao giờ bị trùng\nconst randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');\n\n// Ghép lại thành chuỗi Task ID chuẩn doanh nghiệp (VD: TASK-20260312-045)\n$input.item.json.task_id = `TASK-${yyyy}${mm}${dd}-${randomNum}`;\n\nreturn $input.item;"
+        "jsCode": "// Lấy ngày tháng năm hiện tại\nconst date = new Date();\nconst yyyy = date.getFullYear();\nconst mm = String(date.getMonth() + 1).padStart(2, '0');\nconst dd = String(date.getDate()).padStart(2, '0');\nconst todayStr = `${yyyy}${mm}${dd}`;\n\n// Gọi bộ nhớ tĩnh của n8n để lưu biến đếm giữa các lần chạy\nconst staticData = $getWorkflowStaticData('global');\n\n// Kiểm tra: Nếu sang ngày mới, reset biến đếm về 1. Nếu cùng ngày, cộng dồn thêm 1.\nif (staticData.lastDate !== todayStr) {\n  staticData.taskCounter = 1;\n  staticData.lastDate = todayStr;\n} else {\n  staticData.taskCounter += 1;\n}\n\n// Định dạng số đếm thành 3 chữ số (001, 002, 003...)\nconst sequentialNum = String(staticData.taskCounter);\n\n// Tạo chuỗi Task ID hoàn chỉnh (VD: TASK-20260313-001)\nconst taskId = `${sequentialNum}`;\n\n// Ghi biến task_id này vào JSON để các Node tiếp theo có thể sử dụng\n$input.item.json.task_id = taskId;\n\nreturn $input.item;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -158,13 +158,13 @@
             {
               "id": "29d900f8-0df8-4c23-b369-bc4b46d7e5cf",
               "name": "task_name",
-              "value": "={{ $json.task_name.trim() }}",
+              "value": "={{ String($json.task_name).trim() }}",
               "type": "string"
             },
             {
               "id": "890ee7a4-7708-44a2-bbd2-c33a2e5d610f",
               "name": "assignee_email",
-              "value": "={{ $json.assignee_email.toLowerCase().trim() }}",
+              "value": "={{ String($json.assignee_email).toLowerCase().trim() }}",
               "type": "string"
             },
             {
@@ -175,6 +175,9 @@
             }
           ]
         },
+        "includeOtherFields": true,
+        "include": "selected",
+        "includeFields": "task_id",
         "options": {}
       },
       "type": "n8n-nodes-base.set",
@@ -268,6 +271,318 @@
       "id": "87bd8868-3d91-4bb8-a7fc-97ab2723d15d",
       "name": "HTTP Request-Get Quote",
       "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "98693be8-bcdd-4c4a-9a0a-bd812d3d9353",
+              "name": "quote",
+              "value": "Stay focused and finish strong.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1664,
+        -96
+      ],
+      "id": "0daa2a82-79cd-435c-8da8-ffeb428a34f5",
+      "name": "Set - Quote Fallback"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8954d9a1-9fc5-4ea0-9ce3-a46affc70bc3",
+              "name": "quote",
+              "value": "={{ $json.q }} - {{ $json.a }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1664,
+        -288
+      ],
+      "id": "509ab75e-d0f2-4148-91d5-4024ba2f48fc",
+      "name": "Set - Format Quote"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1wMxqh4eWisso6skyP8CtQPKuKHb3QGEkzSaqk2CWPnA",
+          "mode": "list",
+          "cachedResultName": "TaskAutomation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wMxqh4eWisso6skyP8CtQPKuKHb3QGEkzSaqk2CWPnA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1395565445,
+          "mode": "list",
+          "cachedResultName": "Task_Master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wMxqh4eWisso6skyP8CtQPKuKHb3QGEkzSaqk2CWPnA/edit#gid=1395565445"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $('Code TaskID Automation').item.json.task_id }}",
+            "deadline": "={{ $('Set-Add Default Fields').item.json.deadline }}",
+            "status": "={{ $('Set-Add Default Fields').item.json.status }}",
+            "task_id": "={{ $('Set-Add Default Fields').item.json.task_id }}",
+            "created_at": "={{ $('Set-Add Default Fields').item.json.created_at }}",
+            "reminder_count": "={{ $('Set-Add Default Fields').item.json.reminder_count }}",
+            "task_name": "={{ $('Set-Add Default Fields').item.json.task_name }}"
+          },
+          "matchingColumns": [
+            "task_name"
+          ],
+          "schema": [
+            {
+              "id": "task_id",
+              "displayName": "task_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "task_name",
+              "displayName": "task_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "task_description",
+              "displayName": "task_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "owner_name",
+              "displayName": "owner_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assignee_email",
+              "displayName": "assignee_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "deadline",
+              "displayName": "deadline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "days_left",
+              "displayName": "days_left",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_reminded_at",
+              "displayName": "last_reminded_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reminder_count",
+              "displayName": "reminder_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "escalated_at",
+              "displayName": "escalated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "completed_at",
+              "displayName": "completed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source_input",
+              "displayName": "source_input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_by",
+              "displayName": "created_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "admin_note",
+              "displayName": "admin_note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1872,
+        -288
+      ],
+      "id": "aecd2133-369f-4d23-8dca-6e1a0bf93e2c",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8ohxwIBB7GyiwqF6",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Google Sheets Trigger').item.json.assignee_email }}",
+        "subject": "=[Nhiệm vụ mới] {{ $('Google Sheets Trigger').item.json.task_name }} - Hạn chót: {{ $('Calculate Deadline').item.json.deadline }}",
+        "message": "=<div style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;\">     <div style=\"background-color: #4CAF50; color: white; padding: 15px 20px; text-align: center;\">         <h2 style=\"margin: 0;\">🚀 Thông báo nhận Task mới</h2>     </div>          <div style=\"padding: 20px;\">         <p>Chào bạn,</p>         <p>Hệ thống vừa phân công cho bạn một công việc mới. Vui lòng kiểm tra thông tin chi tiết dưới đây:</p>                  <table style=\"width: 100%; border-collapse: collapse; margin-top: 15px;\">             <tr>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee; width: 35%;\"><strong>Mã Task:</strong></td>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee;\">{{ $json.task_name }}</td>             </tr>             <tr>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee;\"><strong>Tên Task:</strong></td>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee;\"><strong>{{ $('Google Sheets Trigger').item.json.task_name }}</strong></td>             </tr>             <tr>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee;\"><strong>Mức độ:</strong></td>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee; color: #d9534f; font-weight: bold;\">{{ $('Normalize Input').item.json.priority }}</td>             </tr>             <tr>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee;\"><strong>Deadline:</strong></td>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee; color: #f0ad4e; font-weight: bold;\">{{ $('Calculate Deadline').item.json.deadline }}</td>             </tr>         </table>                  <div style=\"margin-top: 25px; background-color: #f9f9f9; border-left: 4px solid #4CAF50; padding: 15px; font-style: italic; color: #555;\">             \"{{ $('HTTP Request-Get Quote').item.json.q }}\"         </div>                  <p style=\"margin-top: 25px;\">Chúc bạn hoàn thành công việc đúng hạn!</p>     </div>          <div style=\"background-color: #f1f1f1; color: #777; padding: 10px; text-align: center; font-size: 12px;\">         Đây là email tự động từ hệ thống quản lý Task. Vui lòng không trả lời email này.     </div> </div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2080,
+        -288
+      ],
+      "id": "02d55eb2-5611-4ab1-8af5-6142c534b232",
+      "name": "Send a message",
+      "webhookId": "a5a820fd-15c4-4ec4-9fcb-1fe5864ccd96",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "K7891QYZq0qKi7VV",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "7801932240",
+        "text": "=✅ [HỆ THỐNG] ĐÃ PHÂN CÔNG TASK MỚI - 🆔 Mã Task:  {{ $('Calculate Deadline').item.json.task_id }}\n- 📝 Tên Task: {{ $('Code TaskID Automation').item.json.task_name }}\n - 👤 Người nhận: {{ $('Code TaskID Automation').item.json.assignee_email }}\n - ⏰ Hạn chót: {{ $('Calculate Deadline').item.json.deadline }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2288,
+        -288
+      ],
+      "id": "2f0f99b2-35d9-4f02-97eb-3d3bd5b36ca3",
+      "name": "Send a text message",
+      "webhookId": "92ba87d2-8b51-445e-93ea-a36e4bba077e",
+      "credentials": {
+        "telegramApi": {
+          "id": "SxcovgETCd4yFCuj",
+          "name": "Telegram account"
+        }
+      }
     }
   ],
   "connections": {
@@ -342,6 +657,68 @@
         [
           {
             "node": "HTTP Request-Get Quote",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request-Get Quote": {
+      "main": [
+        [
+          {
+            "node": "Set - Format Quote",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set - Quote Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Quote Fallback": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Format Quote": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
             "type": "main",
             "index": 0
           }
