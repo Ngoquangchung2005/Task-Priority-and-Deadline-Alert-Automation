@@ -292,6 +292,30 @@
       ],
       "id": "0daa2a82-79cd-435c-8da8-ffeb428a34f5",
       "name": "Set - Quote Fallback"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8954d9a1-9fc5-4ea0-9ce3-a46affc70bc3",
+              "name": "quote",
+              "value": "={{ $json.q }} - {{ $json.a }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1664,
+        -288
+      ],
+      "id": "509ab75e-d0f2-4148-91d5-4024ba2f48fc",
+      "name": "Set - Format Quote"
     }
   ],
   "connections": {
@@ -374,7 +398,13 @@
     },
     "HTTP Request-Get Quote": {
       "main": [
-        [],
+        [
+          {
+            "node": "Set - Format Quote",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Set - Quote Fallback",
