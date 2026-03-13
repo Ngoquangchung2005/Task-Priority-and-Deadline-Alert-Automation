@@ -561,6 +561,28 @@
           "name": "Gmail account"
         }
       }
+    },
+    {
+      "parameters": {
+        "chatId": "7801932240",
+        "text": "=✅ [HỆ THỐNG] ĐÃ PHÂN CÔNG TASK MỚI - 🆔 Mã Task:  {{ $('Calculate Deadline').item.json.task_id }}\n- 📝 Tên Task: {{ $('Code TaskID Automation').item.json.task_name }}\n - 👤 Người nhận: {{ $('Code TaskID Automation').item.json.assignee_email }}\n - ⏰ Hạn chót: {{ $('Calculate Deadline').item.json.deadline }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2288,
+        -288
+      ],
+      "id": "2f0f99b2-35d9-4f02-97eb-3d3bd5b36ca3",
+      "name": "Send a text message",
+      "webhookId": "92ba87d2-8b51-445e-93ea-a36e4bba077e",
+      "credentials": {
+        "telegramApi": {
+          "id": "SxcovgETCd4yFCuj",
+          "name": "Telegram account"
+        }
+      }
     }
   ],
   "connections": {
@@ -686,6 +708,17 @@
         [
           {
             "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
             "type": "main",
             "index": 0
           }
