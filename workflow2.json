@@ -14,7 +14,7 @@
       "typeVersion": 1.3,
       "position": [
         0,
-        0
+        -80
       ],
       "id": "f67db607-16cd-4d68-8ee7-44b652a2e963",
       "name": "Schedule Trigger"
@@ -41,7 +41,7 @@
       "typeVersion": 4.7,
       "position": [
         208,
-        0
+        -80
       ],
       "id": "5d97510a-5631-4e23-aea5-e8d10eddf73b",
       "name": "Get row(s) in sheet",
@@ -54,6 +54,7 @@
     },
     {
       "parameters": {
+        "outputFieldName": "=currentDate",
         "options": {
           "includeInputFields": true,
           "timezone": "Asia/Ho_Chi_Minh"
@@ -63,23 +64,10 @@
       "typeVersion": 2,
       "position": [
         416,
-        0
+        -80
       ],
       "id": "cd4b24e3-f3fb-461b-b051-16193d4b1b32",
       "name": "Date & Time"
-    },
-    {
-      "parameters": {
-        "jsCode": "for (const item of $input.all()) {\n  const deadlineStr = item.json.deadline; \n  \n  const todayStr = $node[\"Date & Time\"].json.currentDate; \n\n  if (deadlineStr) {\n    const deadlineDate = new Date(deadlineStr);\n    const todayDate = new Date(todayStr);\n    \n    const diffTime = deadlineDate - todayDate;\n    \n    const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));\n    \n    item.json.daysLeft = daysLeft;\n  } else {\n    item.json.daysLeft = null;\n  }\n}\n\nreturn $input.all();"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        624,
-        0
-      ],
-      "id": "91c7f893-6229-4685-8271-5ced6026ceaa",
-      "name": "Code in JavaScript"
     },
     {
       "parameters": {
@@ -118,10 +106,226 @@
       "typeVersion": 2.3,
       "position": [
         832,
-        0
+        -80
       ],
       "id": "505e36e8-163d-4c4b-b827-db2589d649e9",
       "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fde7f1d5-6c11-426e-809a-0f832217fdb1",
+              "leftValue": "={{ $json.last_reminded_at }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "a57b08d0-8754-42b9-98ef-807d68abd652",
+              "leftValue": "={{ $json.last_reminded_at ? ( $json.last_reminded_at.includes(':') ? DateTime.fromFormat($json.last_reminded_at, 'dd/MM/yyyy HH:mm') : DateTime.fromFormat($json.last_reminded_at, 'dd/MM/yyyy') ) : '' }}",
+              "rightValue": "={{ $now.minus({ hours: 23 }) }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "before"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1040,
+        -176
+      ],
+      "id": "4261aea9-d053-4a39-baa9-f43088e33702",
+      "name": "IF - Anti Spam Check"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b4c132fb-6bbc-458c-871e-d1323cec436f",
+              "name": "days_left",
+              "value": "={{ $json.days_left === 0 ? \"🔥 HÔM NAY LÀ HẠN CHÓT\" : \"⏳ Còn \" + $json.days_left + \" ngày\" }}",
+              "type": "string"
+            },
+            {
+              "id": "77da80e0-8790-4273-8015-03ab6c42a003",
+              "name": "deadline_text",
+              "value": "=📅 Hạn: {{ $json.deadline }}",
+              "type": "string"
+            },
+            {
+              "id": "ac56a3e3-2413-4cfe-b1d7-b9c59003b996",
+              "name": "=priority_label",
+              "value": "={{ $json.priority === 'High' ? \"🚨 \" + $json.priority : \"🟢 \" + $json.priority }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "selected",
+        "includeFields": "task_id, task_name, assignee_email",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1248,
+        -272
+      ],
+      "id": "f057b622-fa2b-46fd-8f1b-d4935767724b",
+      "name": "Set - Reminder Metadata"
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "append",
+              "field": "task_id"
+            },
+            {
+              "aggregation": "append",
+              "field": "task_name"
+            },
+            {
+              "aggregation": "append",
+              "field": "priority_label"
+            },
+            {
+              "aggregation": "append",
+              "field": "deadline_text"
+            },
+            {
+              "aggregation": "append",
+              "field": "days_left"
+            }
+          ]
+        },
+        "fieldsToSplitBy": "assignee_email",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        1456,
+        -272
+      ],
+      "id": "60068f82-7ee0-47ac-9298-c01106e18902",
+      "name": "Summarize"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  const deadlineStr = item.json.deadline; \n  \n  const todayStr = $node[\"Date & Time\"].json.currentDate; \n\n  if (deadlineStr) {\n    const deadlineDate = new Date(deadlineStr);\n    const todayDate = new Date(todayStr);\n    \n    const diffTime = deadlineDate - todayDate;\n    \n    const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));\n    \n    item.json.daysLeft = daysLeft;\n  } else {\n    item.json.daysLeft = null;\n  }\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        -80
+      ],
+      "id": "91c7f893-6229-4685-8271-5ced6026ceaa",
+      "name": "Code Days_left"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// 1. Đếm xem nhân viên này có bao nhiêu task (dựa vào độ dài của mảng)\nconst taskCount = item.json.appended_days_left ? item.json.appended_days_left.length : 0;\nlet tableRows = \"\";\n\n// 2. Vòng lặp để tạo từng hàng (thẻ <tr>) cho bảng\nfor (let i = 0; i < taskCount; i++) {\n  // Lấy dữ liệu từng cột, nếu cột nào lỡ bị trống thì để chữ \"Chưa có thông tin\"\n  const taskName = item.json.appended_task_name ? item.json.appended_task_name[i] : \"Chưa có tên\";\n  const priority = item.json.appended_priority_label ? item.json.appended_priority_label[i] : \"\";\n  const deadline = item.json.appended_deadline_text ? item.json.appended_deadline_text[i] : \"\";\n  const daysLeft = item.json.appended_days_left ? item.json.appended_days_left[i] : \"\";\n\n  // Lắp dữ liệu vào các ô (thẻ <td>)\n  tableRows += `\n    <tr>\n      <td style=\"border: 1px solid #ddd; padding: 10px;\">${taskName}</td>\n      <td style=\"border: 1px solid #ddd; padding: 10px; text-align: center;\">${priority}</td>\n      <td style=\"border: 1px solid #ddd; padding: 10px; text-align: center;\">${deadline}</td>\n      <td style=\"border: 1px solid #ddd; padding: 10px; color: #d9534f; font-weight: bold; text-align: center;\">${daysLeft}</td>\n    </tr>\n  `;\n}\n\n// 3. Bọc tất cả các hàng vào một khung bảng (thẻ <table>) hoàn chỉnh\nitem.json.htmlTable = `\n  <div style=\"font-family: Arial, sans-serif; max-width: 650px; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px;\">\n    <h2 style=\"color: #2c3e50; border-bottom: 2px solid #e74c3c; padding-bottom: 10px; margin-top: 0;\">\n      🚨 CÔNG VIỆC SẮP TỚI HẠN\n    </h2>\n    <p style=\"font-size: 15px; color: #333;\">Chào bạn,</p>\n    <p style=\"font-size: 15px; color: #333;\">Dưới đây là danh sách các công việc chỉ còn <strong>0-3 ngày</strong> nữa là tới hạn. Vui lòng kiểm tra và xử lý:</p>\n    \n    <table style=\"width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px;\">\n      <thead>\n        <tr style=\"background-color: #f8f9fa; color: #333;\">\n          <th style=\"border: 1px solid #ddd; padding: 10px; text-align: left;\">Tên công việc</th>\n          <th style=\"border: 1px solid #ddd; padding: 10px; text-align: center;\">Mức độ</th>\n          <th style=\"border: 1px solid #ddd; padding: 10px; text-align: center;\">Hạn chót</th>\n          <th style=\"border: 1px solid #ddd; padding: 10px; text-align: center;\">Tình trạng</th>\n        </tr>\n      </thead>\n      <tbody>\n        ${tableRows}\n      </tbody>\n    </table>\n    \n    <p style=\"margin-top: 25px; font-size: 12px; color: #999; text-align: center;\">\n      <i>Hệ thống nhắc việc tự động từ n8n.</i>\n    </p>\n  </div>\n`;\n\n// Trả kết quả đi tiếp\nreturn item;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1632,
+        -272
+      ],
+      "id": "b08816d2-6c03-4e41-964e-7ab2eb68bc28",
+      "name": "Code Build HTML Table"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "71719ff0-0fe3-433d-bb0b-e3abd8366d17",
+              "name": "subject",
+              "value": "🚨 [Nhắc việc] Danh sách công việc sắp tới hạn cần xử lý!",
+              "type": "string"
+            },
+            {
+              "id": "854ec29a-d7c0-44d0-b4d2-e7530e036660",
+              "name": "email_to",
+              "value": "={{ $json.assignee_email }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "selected",
+        "includeFields": "appended_task_id",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1840,
+        -272
+      ],
+      "id": "94a658d3-3c51-4e32-bfa0-2d13cba689e8",
+      "name": "Set - Email Data"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email_to }}",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $('Code Build HTML Table').item.json.htmlTable }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2048,
+        -272
+      ],
+      "id": "bafd9744-9e85-4de1-93e7-6d7f39ec9c6e",
+      "name": "Send a message",
+      "webhookId": "e63355b1-c9b6-4ec9-97dd-1bcd056b4a22",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "O3qQ9pi02RtYNPyk",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Lấy TOÀN BỘ danh sách nhân viên từ Node 'Set - Email Data'\nconst allEmployees = $('Set - Email Data').all();\nconst finalTaskList = [];\n\n// 2. Vòng lặp 1: Duyệt qua từng nhân viên (Nam, Hoa, Bình...)\nfor (const employee of allEmployees) {\n  const taskIds = employee.json.appended_task_id;\n  \n  // Kiểm tra xem người này có danh sách task không\n  if (taskIds && Array.isArray(taskIds)) {\n    \n    // 3. Vòng lặp 2: Duyệt qua từng task của nhân viên đó\n    for (const id of taskIds) {\n      // Đẩy từng task lẻ vào danh sách tổng\n      finalTaskList.push({\n        json: {\n          task_id_to_update: id,\n          processed_at: new Date().toISOString() // Thêm thời gian để tí ghi vào Sheet cho chuẩn\n        }\n      });\n    }\n  }\n}\n\n// 4. Trả về danh sách phẳng (ví dụ: 2 người, mỗi người 3 task -> trả về 6 items lẻ)\nreturn finalTaskList;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2272,
+        -272
+      ],
+      "id": "64bbabfe-a1ef-43ca-968c-14ab87c6ce94",
+      "name": "Code in JavaScript"
     }
   ],
   "connections": {
@@ -151,6 +355,94 @@
       "main": [
         [
           {
+            "node": "Code Days_left",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "IF - Anti Spam Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Anti Spam Check": {
+      "main": [
+        [
+          {
+            "node": "Set - Reminder Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Reminder Metadata": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize": {
+      "main": [
+        [
+          {
+            "node": "Code Build HTML Table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Days_left": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Build HTML Table": {
+      "main": [
+        [
+          {
+            "node": "Set - Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Email Data": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
             "node": "Code in JavaScript",
             "type": "main",
             "index": 0
@@ -160,13 +452,7 @@
     },
     "Code in JavaScript": {
       "main": [
-        [
-          {
-            "node": "If",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     }
   },
