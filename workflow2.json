@@ -316,6 +316,220 @@
     },
     {
       "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "12MmBXHD0YevLsUN0n-4p5PpA2iP5Kypkaj4nTUt13bU",
+          "mode": "list",
+          "cachedResultName": "n8n-automation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12MmBXHD0YevLsUN0n-4p5PpA2iP5Kypkaj4nTUt13bU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1310262284,
+          "mode": "list",
+          "cachedResultName": "Task_Master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12MmBXHD0YevLsUN0n-4p5PpA2iP5Kypkaj4nTUt13bU/edit#gid=1310262284"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "last_reminded_at": "={{ $now.toFormat('yyyy-MM-dd HH:mm:ss') }}",
+            "task_id": "={{ $json.task_id_to_update }}"
+          },
+          "matchingColumns": [
+            "task_id"
+          ],
+          "schema": [
+            {
+              "id": "task_id",
+              "displayName": "task_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "task_name",
+              "displayName": "task_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "task_description",
+              "displayName": "task_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "owner_name",
+              "displayName": "owner_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assignee_email",
+              "displayName": "assignee_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "deadline",
+              "displayName": "deadline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "days_left",
+              "displayName": "days_left",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_reminded_at",
+              "displayName": "last_reminded_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reminder_count",
+              "displayName": "reminder_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "escalated_at",
+              "displayName": "escalated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "completed_at",
+              "displayName": "completed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source_input",
+              "displayName": "source_input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_by",
+              "displayName": "created_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "admin_note",
+              "displayName": "admin_note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2480,
+        -272
+      ],
+      "id": "fb428731-1a99-4f88-8bf5-f753b670d192",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ydjkGFIw6M8fEs1t",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
         "jsCode": "// 1. Lấy TOÀN BỘ danh sách nhân viên từ Node 'Set - Email Data'\nconst allEmployees = $('Set - Email Data').all();\nconst finalTaskList = [];\n\n// 2. Vòng lặp 1: Duyệt qua từng nhân viên (Nam, Hoa, Bình...)\nfor (const employee of allEmployees) {\n  const taskIds = employee.json.appended_task_id;\n  \n  // Kiểm tra xem người này có danh sách task không\n  if (taskIds && Array.isArray(taskIds)) {\n    \n    // 3. Vòng lặp 2: Duyệt qua từng task của nhân viên đó\n    for (const id of taskIds) {\n      // Đẩy từng task lẻ vào danh sách tổng\n      finalTaskList.push({\n        json: {\n          task_id_to_update: id,\n          processed_at: new Date().toISOString() // Thêm thời gian để tí ghi vào Sheet cho chuẩn\n        }\n      });\n    }\n  }\n}\n\n// 4. Trả về danh sách phẳng (ví dụ: 2 người, mỗi người 3 task -> trả về 6 items lẻ)\nreturn finalTaskList;"
       },
       "type": "n8n-nodes-base.code",
@@ -452,7 +666,13 @@
     },
     "Code in JavaScript": {
       "main": [
-        []
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
