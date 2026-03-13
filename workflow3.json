@@ -137,7 +137,11 @@
           "mode": "id"
         },
         "options": {
-          "fileName": "application/pdf"
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "application/pdf"
+            }
+          }
         }
       },
       "type": "n8n-nodes-base.googleDrive",
@@ -163,9 +167,7 @@
         "options": {
           "attachmentsUi": {
             "attachmentsBinary": [
-              {
-                "property": "Binary Property: data"
-              }
+              {}
             ]
           }
         }
