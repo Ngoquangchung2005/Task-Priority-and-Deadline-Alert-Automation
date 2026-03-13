@@ -268,6 +268,30 @@
       "id": "87bd8868-3d91-4bb8-a7fc-97ab2723d15d",
       "name": "HTTP Request-Get Quote",
       "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "98693be8-bcdd-4c4a-9a0a-bd812d3d9353",
+              "name": "quote",
+              "value": "Stay focused and finish strong.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1664,
+        -96
+      ],
+      "id": "0daa2a82-79cd-435c-8da8-ffeb428a34f5",
+      "name": "Set - Quote Fallback"
     }
   ],
   "connections": {
@@ -342,6 +366,18 @@
         [
           {
             "node": "HTTP Request-Get Quote",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request-Get Quote": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Set - Quote Fallback",
             "type": "main",
             "index": 0
           }
