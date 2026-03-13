@@ -154,6 +154,37 @@
           "name": "Google Drive account"
         }
       }
+    },
+    {
+      "parameters": {
+        "sendTo": "zinbya22@gmail.com",
+        "subject": "=[Weekly Escalation Report] {{$json.report_date}}",
+        "message": "=Báo cáo task quá hạn tuần này.  Tổng số: {{$json.total_overdue}} High: {{$json.high_count}} Normal: {{$json.normal_count}}  File PDF đính kèm.",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "Binary Property: data"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1824,
+        -80
+      ],
+      "id": "eb96012d-9675-4d5b-8cff-12507ed2bd8a",
+      "name": "Send a message",
+      "webhookId": "bea46410-c1d2-4f52-bcb2-c39bad28dc34",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "v3WLc8FNCRIthhaA",
+          "name": "Gmail account"
+        }
+      }
     }
   ],
   "connections": {
@@ -236,7 +267,13 @@
     },
     "Download file": {
       "main": [
-        []
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
