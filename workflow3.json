@@ -68,6 +68,65 @@
       ],
       "id": "1b815a5e-2386-490e-92ff-5d6d919a513c",
       "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "items.sort((a, b) => {\n  const priorityA = a.json.priority === 'High' ? 0 : 1;\n  const priorityB = b.json.priority === 'High' ? 0 : 1;\n\n  if (priorityA !== priorityB) {\n    return priorityA - priorityB;\n  }\n\n  const deadlineA = new Date(a.json.deadline);\n  const deadlineB = new Date(b.json.deadline);\n\n  return deadlineA - deadlineB;\n});\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        0
+      ],
+      "id": "defa41c4-0349-48d8-a1b5-7431858db0cb",
+      "name": "Sort Overdue Tasks"
+    },
+    {
+      "parameters": {
+        "jsCode": "const total = items.length;\nconst high = items.filter(item => item.json.priority === 'High').length;\nconst normal = items.filter(item => item.json.priority === 'Normal').length;\n\nconst reportDate = new Date().toISOString().split('T')[0];\n\nreturn [\n  {\n    json: {\n      total_overdue: total,\n      high_count: high,\n      normal_count: normal,\n      report_date: reportDate,\n      tasks: items.map(item => item.json),\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        0
+      ],
+      "id": "2ee5f5e5-3707-4bf2-8b38-25fbc914ec67",
+      "name": "Generate Summary Metrics"
+    },
+    {
+      "parameters": {
+        "jsCode": "const tasks = $json.tasks || [];\n\nconst lines = tasks.map((task, index) => {\n  return `${index + 1}. [${task.priority}] ${task.task_name} | Owner: ${task.owner_name || '-'} | Deadline: ${task.deadline} | Status: ${task.status}`;\n});\n\nconst reportBody = `\nWEEKLY OVERDUE TASK REPORT\n\nReport Date: ${$json.report_date}\n\nTotal overdue tasks: ${$json.total_overdue}\nHigh priority tasks: ${$json.high_count}\nNormal priority tasks: ${$json.normal_count}\n\nTask Details:\n${lines.join('\\n')}\n`;\n\nreturn [\n  {\n    json: {\n      ...$json,\n      report_body: reportBody\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "8b5127ea-82a7-4de7-bf4e-4ebe6d755baa",
+      "name": "Build Report Body"
+    },
+    {
+      "parameters": {
+        "folderId": "=",
+        "title": "=Weekly_Overdue_Report_{{$json.report_date}}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        0
+      ],
+      "id": "0f2fc843-6c4f-45bd-950e-92f1e63b4947",
+      "name": "Create a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "Hnt9r2BSc811wsce",
+          "name": "Google Docs account"
+        }
+      }
     }
   ],
   "connections": {
@@ -87,6 +146,50 @@
         [
           {
             "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Sort Overdue Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort Overdue Tasks": {
+      "main": [
+        [
+          {
+            "node": "Generate Summary Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Summary Metrics": {
+      "main": [
+        [
+          {
+            "node": "Build Report Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Report Body": {
+      "main": [
+        [
+          {
+            "node": "Create a document",
             "type": "main",
             "index": 0
           }
