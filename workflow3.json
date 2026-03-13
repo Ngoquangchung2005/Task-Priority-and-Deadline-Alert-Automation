@@ -97,7 +97,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Lấy dữ liệu từ item đầu tiên (và duy nhất) do node Summary truyền sang\nconst data = items[0].json;\nconst tasks = data.tasks || [];\n\n// Đổi task.owner_name thành task.assignee_email cho khớp với file Sheet\nconst lines = tasks.map((task, index) => {\n  return `${index + 1}. [${task.priority}] ${task.task_name} | Assignee: ${task.assignee_email || '-'} | Deadline: ${task.deadline} | Status: ${task.status}`;\n});\n\nconst reportBody = `\nWEEKLY OVERDUE TASK REPORT\n\nReport Date: ${data.report_date}\n\nTotal overdue tasks: ${data.total_overdue}\nHigh priority tasks: ${data.high_count}\nNormal priority tasks: ${data.normal_count}\n\nTask Details:\n${lines.join('\\n')}\n`;\n\n// Trả về dữ liệu gốc cộng thêm phần report_body vừa tạo\nreturn [\n  {\n    json: {\n      ...data,\n      report_body: reportBody\n    }\n  }\n];"
+        "jsCode": "const tasks = $json.tasks || [];\n\nlet taskList = tasks.map(t =>\n`${t.task_id} | ${t.task_name} | ${t.owner_name} | ${t.priority} | ${t.deadline}`\n).join(\"\\n\");\n\nconst report = `\nWEEKLY ESCALATION REPORT\n\nDate: ${$json.report_date}\n\nSummary\n----------------------------------------\nTotal overdue tasks: ${$json.total_overdue}\nHigh priority: ${$json.high_count}\nNormal priority: ${$json.normal_count}\n\nOverdue Tasks\n----------------------------------------\nTask ID | Task Name | Owner | Priority | Deadline\n----------------------------------------\n${taskList}\n`;\n\nreturn [\n{\njson: {\nreport_body: report\n}\n}\n];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -147,7 +147,7 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        1616,
+        1824,
         -80
       ],
       "id": "da4d4959-648a-4391-a1e8-b374db9e3ef4",
@@ -162,8 +162,8 @@
     {
       "parameters": {
         "sendTo": "zinbya22@gmail.com",
-        "subject": "=[Weekly Escalation Report] {{$json.report_date}}",
-        "message": "=Báo cáo task quá hạn tuần này.  Tổng số: {{$json.total_overdue}} High: {{$json.high_count}} Normal: {{$json.normal_count}}  File PDF đính kèm.",
+        "subject": "={{$node[\"Generate Summary Metrics\"].json.report_date}}",
+        "message": "=<h3>📊 Báo cáo task quá hạn tuần</h3>\n\n<ul>\n<li>Tổng task quá hạn: {{$node[\"Generate Summary Metrics\"].json.total_overdue}}</li>\n<li>Ưu tiên cao: {{$node[\"Generate Summary Metrics\"].json.high_count}}</li>\n<li>Ưu tiên thường: {{$node[\"Generate Summary Metrics\"].json.normal_count}}</li>\n</ul>\n\n📎 File PDF chi tiết đính kèm.",
         "options": {
           "attachmentsUi": {
             "attachmentsBinary": [
@@ -175,7 +175,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        1824,
+        2032,
         -80
       ],
       "id": "eb96012d-9675-4d5b-8cff-12507ed2bd8a",
@@ -390,7 +390,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        2032,
+        2240,
         -80
       ],
       "id": "50fafe5e-b7f4-421a-95dc-e7157aa37328",
@@ -405,13 +405,13 @@
     {
       "parameters": {
         "chatId": "7065866911",
-        "text": "=📊 Báo cáo task quá hạn tuần đã được gửi  Ngày: {{$json.report_date}}  • Tổng task quá hạn: {{$json.total_overdue}} • Ưu tiên cao: {{$json.high_count}} • Ưu tiên thường: {{$json.normal_count}}  ✅ Báo cáo đã gửi cho quản lý.",
+        "text": "=📊 Báo cáo task quá hạn tuần đã được gửi\n\nNgày: {{$node[\"Generate Summary Metrics\"].json.report_date}}\n\n• Tổng task quá hạn: {{$node[\"Generate Summary Metrics\"].json.total_overdue}}\n• Ưu tiên cao: {{$node[\"Generate Summary Metrics\"].json.high_count}}\n• Ưu tiên thường: {{$node[\"Generate Summary Metrics\"].json.normal_count}}\n\n✅ Báo cáo đã gửi cho quản lý.",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2240,
+        2448,
         -80
       ],
       "id": "51d77d1e-e2cd-4c2d-8d17-7eae0a71c943",
@@ -421,6 +421,34 @@
         "telegramApi": {
           "id": "XVlbImS4mmkHMgZT",
           "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{$node[\"Create a document\"].json.id}}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{$node[\"Build Report Body\"].json.report_body}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        -80
+      ],
+      "id": "2cad5dc4-ea1f-4cf1-828d-aaaa40c7433f",
+      "name": "Update a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "Jmnpo9eC6UBhJRz3",
+          "name": "Google Docs account"
         }
       }
     }
@@ -496,7 +524,7 @@
       "main": [
         [
           {
-            "node": "Download file",
+            "node": "Update a document",
             "type": "main",
             "index": 0
           }
@@ -530,6 +558,17 @@
         [
           {
             "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a document": {
+      "main": [
+        [
+          {
+            "node": "Download file",
             "type": "main",
             "index": 0
           }
