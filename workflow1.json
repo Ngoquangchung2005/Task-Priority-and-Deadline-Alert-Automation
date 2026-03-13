@@ -43,6 +43,62 @@
     },
     {
       "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Lấy ngày tháng năm hiện tại\nconst date = new Date();\nconst yyyy = date.getFullYear();\nconst mm = String(date.getMonth() + 1).padStart(2, '0');\nconst dd = String(date.getDate()).padStart(2, '0');\n\n// Tạo một số ngẫu nhiên từ 000 đến 999 để không bao giờ bị trùng\nconst randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');\n\n// Ghép lại thành chuỗi Task ID chuẩn doanh nghiệp (VD: TASK-20260312-045)\n$input.item.json.task_id = `TASK-${yyyy}${mm}${dd}-${randomNum}`;\n\nreturn $input.item;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        -192
+      ],
+      "id": "d01766a1-d8cf-49cb-9a51-cbd456b5f482",
+      "name": "Code TaskID Automation"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a55ce29c-43f6-4c23-bc3b-7049cf65fbd2",
+              "leftValue": "={{ $json.assignee_email }}",
+              "rightValue": "@",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "f572b2be-21d6-4287-bca6-c4cc2d7a3a64",
+              "leftValue": "={{ $json.assignee_email }}",
+              "rightValue": ".",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        -96
+      ],
+      "id": "5e8661ac-07b4-4bf1-b55c-df361cbc9c30",
+      "name": "IF-Validate Email"
+    },
+    {
+      "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
@@ -93,49 +149,7 @@
         0
       ],
       "id": "f9d351cc-12f2-4c0c-be0a-3b0eb654de5a",
-      "name": "If"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "a55ce29c-43f6-4c23-bc3b-7049cf65fbd2",
-              "leftValue": "={{ $json.assignee_email }}",
-              "rightValue": "@",
-              "operator": {
-                "type": "string",
-                "operation": "contains"
-              }
-            },
-            {
-              "id": "f572b2be-21d6-4287-bca6-c4cc2d7a3a64",
-              "leftValue": "={{ $json.assignee_email }}",
-              "rightValue": ".",
-              "operator": {
-                "type": "string",
-                "operation": "contains"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        416,
-        -96
-      ],
-      "id": "5e8661ac-07b4-4bf1-b55c-df361cbc9c30",
-      "name": "If1"
+      "name": "IF-Check Required Fields"
     },
     {
       "parameters": {
@@ -170,7 +184,90 @@
         -192
       ],
       "id": "426abf9c-75d9-4767-a456-3945edf11dc4",
-      "name": "Edit Fields"
+      "name": "Normalize Input"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Lấy độ ưu tiên mà Node 4 đã chuẩn hóa (High hoặc Normal)\nconst priority = $input.item.json.priority;\n\n// Nếu High thì cộng 7 ngày, nếu Normal thì cộng 30 ngày\nlet daysToAdd = (priority === 'High') ? 7 : 30;\n\n// Bắt đầu tính toán ngày hạn chót\nlet deadlineDate = new Date();\ndeadlineDate.setDate(deadlineDate.getDate() + daysToAdd);\n\n// Cắt gọn định dạng ngày tháng thành chuẩn YYYY-MM-DD và lưu vào biến deadline\n$input.item.json.deadline = deadlineDate.toISOString().split('T')[0];\n\nreturn $input.item;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        -192
+      ],
+      "id": "cc96c113-767f-4c56-9002-b99c98ddc184",
+      "name": "Calculate Deadline"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "08c46374-503f-4f47-ab4b-1fe9b55d6b0e",
+              "name": "status",
+              "value": "Pending",
+              "type": "string"
+            },
+            {
+              "id": "06cc8233-bd5e-449f-87d2-d0e1b11e89a3",
+              "name": "reminder_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "63e02fc0-35cd-47d2-a5b4-03eb0cddccf6",
+              "name": "created_at",
+              "value": "={{ $now.setZone('Asia/Ho_Chi_Minh').toFormat('yyyy-MM-dd HH:mm:ss') }}",
+              "type": "string"
+            },
+            {
+              "id": "66801606-3283-42e8-bdd5-d3b49282a940",
+              "name": "last_reminded_at",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "1cc7f03b-2d64-45d1-9b90-3ad773a25b2d",
+              "name": "escalated_at",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "4bc25aab-142e-4b07-8529-17e3d97a842e",
+              "name": "completed_at",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1248,
+        -192
+      ],
+      "id": "5a3747b7-4bdc-40d8-a4f3-4fa78af9d9bc",
+      "name": "Set-Add Default Fields"
+    },
+    {
+      "parameters": {
+        "url": "https://zenquotes.io/api/random",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1456,
+        -192
+      ],
+      "id": "87bd8868-3d91-4bb8-a7fc-97ab2723d15d",
+      "name": "HTTP Request-Get Quote",
+      "onError": "continueErrorOutput"
     }
   ],
   "connections": {
@@ -178,29 +275,73 @@
       "main": [
         [
           {
-            "node": "If",
+            "node": "IF-Check Required Fields",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "If": {
+    "Code TaskID Automation": {
       "main": [
         [
           {
-            "node": "If1",
+            "node": "Calculate Deadline",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "If1": {
+    "IF-Validate Email": {
       "main": [
         [
           {
-            "node": "Edit Fields",
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF-Check Required Fields": {
+      "main": [
+        [
+          {
+            "node": "IF-Validate Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Code TaskID Automation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Deadline": {
+      "main": [
+        [
+          {
+            "node": "Set-Add Default Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set-Add Default Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request-Get Quote",
             "type": "main",
             "index": 0
           }
