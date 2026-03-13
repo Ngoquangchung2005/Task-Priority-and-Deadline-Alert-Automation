@@ -17,10 +17,10 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
-        0,
-        0
+        160,
+        -80
       ],
-      "id": "da8e8a6d-1d03-4c53-9822-c962c2329b92",
+      "id": "48c46698-8ef8-4ed2-a30b-5c10c7557df9",
       "name": "Schedule Trigger"
     },
     {
@@ -44,15 +44,15 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        208,
-        0
+        368,
+        -80
       ],
-      "id": "29589ac2-203e-44d9-bd08-a184c7867cdd",
+      "id": "545eee25-d05a-498d-a386-4f664be0ad60",
       "name": "Get row(s) in sheet",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "MfW03DHml6wUvwSL",
-          "name": "Google Sheets account"
+          "id": "wtjdw3x8phVpJOcK",
+          "name": "Google Sheets account 3"
         }
       }
     },
@@ -63,10 +63,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        416,
-        0
+        576,
+        -80
       ],
-      "id": "1b815a5e-2386-490e-92ff-5d6d919a513c",
+      "id": "9d7086e9-dea1-49b3-81e1-7fbdc0965aea",
       "name": "Code in JavaScript"
     },
     {
@@ -76,10 +76,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        608,
-        0
+        768,
+        -80
       ],
-      "id": "defa41c4-0349-48d8-a1b5-7431858db0cb",
+      "id": "d01a2f53-e278-4912-85ca-d49cb626a51b",
       "name": "Sort Overdue Tasks"
     },
     {
@@ -89,23 +89,23 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        832,
-        0
+        992,
+        -80
       ],
-      "id": "2ee5f5e5-3707-4bf2-8b38-25fbc914ec67",
+      "id": "80546697-981b-40dc-8edc-bf44f4493f37",
       "name": "Generate Summary Metrics"
     },
     {
       "parameters": {
-        "jsCode": "const tasks = $json.tasks || [];\n\nconst lines = tasks.map((task, index) => {\n  return `${index + 1}. [${task.priority}] ${task.task_name} | Owner: ${task.owner_name || '-'} | Deadline: ${task.deadline} | Status: ${task.status}`;\n});\n\nconst reportBody = `\nWEEKLY OVERDUE TASK REPORT\n\nReport Date: ${$json.report_date}\n\nTotal overdue tasks: ${$json.total_overdue}\nHigh priority tasks: ${$json.high_count}\nNormal priority tasks: ${$json.normal_count}\n\nTask Details:\n${lines.join('\\n')}\n`;\n\nreturn [\n  {\n    json: {\n      ...$json,\n      report_body: reportBody\n    }\n  }\n];"
+        "jsCode": "// Lấy dữ liệu từ item đầu tiên (và duy nhất) do node Summary truyền sang\nconst data = items[0].json;\nconst tasks = data.tasks || [];\n\n// Đổi task.owner_name thành task.assignee_email cho khớp với file Sheet\nconst lines = tasks.map((task, index) => {\n  return `${index + 1}. [${task.priority}] ${task.task_name} | Assignee: ${task.assignee_email || '-'} | Deadline: ${task.deadline} | Status: ${task.status}`;\n});\n\nconst reportBody = `\nWEEKLY OVERDUE TASK REPORT\n\nReport Date: ${data.report_date}\n\nTotal overdue tasks: ${data.total_overdue}\nHigh priority tasks: ${data.high_count}\nNormal priority tasks: ${data.normal_count}\n\nTask Details:\n${lines.join('\\n')}\n`;\n\n// Trả về dữ liệu gốc cộng thêm phần report_body vừa tạo\nreturn [\n  {\n    json: {\n      ...data,\n      report_body: reportBody\n    }\n  }\n];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1040,
-        0
+        1200,
+        -80
       ],
-      "id": "8b5127ea-82a7-4de7-bf4e-4ebe6d755baa",
+      "id": "f1395425-edfa-4dd6-86bb-48c79e4c04f7",
       "name": "Build Report Body"
     },
     {
@@ -116,15 +116,42 @@
       "type": "n8n-nodes-base.googleDocs",
       "typeVersion": 2,
       "position": [
-        1248,
-        0
+        1408,
+        -80
       ],
-      "id": "0f2fc843-6c4f-45bd-950e-92f1e63b4947",
+      "id": "c578319d-7045-43e8-8411-f85c73329d6f",
       "name": "Create a document",
       "credentials": {
         "googleDocsOAuth2Api": {
-          "id": "Hnt9r2BSc811wsce",
+          "id": "Jmnpo9eC6UBhJRz3",
           "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{$json.id}}",
+          "mode": "id"
+        },
+        "options": {
+          "fileName": "application/pdf"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1616,
+        -80
+      ],
+      "id": "da4d4959-648a-4391-a1e8-b374db9e3ef4",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "qC3UG3qHnLYR6LVh",
+          "name": "Google Drive account"
         }
       }
     }
@@ -195,11 +222,27 @@
           }
         ]
       ]
+    },
+    "Create a document": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        []
+      ]
     }
   },
   "pinData": {},
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "4121df01053c0f8a341fa2addde26ee46d9fdc6ece34de4881ad07a95f15d3e7"
+    "instanceId": "7db58615eea76af926b37c9ce792f3a3b6a538b566b08c5a92cda41e96ff375c"
   }
 }
