@@ -23,7 +23,6 @@
           "cachedResultName": "Task_Master",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wMxqh4eWisso6skyP8CtQPKuKHb3QGEkzSaqk2CWPnA/edit#gid=1395565445"
         },
-        "event": "rowAdded",
         "options": {}
       },
       "type": "n8n-nodes-base.googleSheetsTrigger",
@@ -136,6 +135,16 @@
                 "operation": "notEmpty",
                 "singleValue": true
               }
+            },
+            {
+              "id": "73d7c346-04b1-406d-87f1-e758e4e1956b",
+              "leftValue": "={{ $json.created_at }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "empty",
+                "singleValue": true
+              }
             }
           ],
           "combinator": "and"
@@ -192,7 +201,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// Lấy độ ưu tiên mà Node 4 đã chuẩn hóa (High hoặc Normal)\nconst priority = $input.item.json.priority;\n\n// Nếu High thì cộng 7 ngày, nếu Normal thì cộng 30 ngày\nlet daysToAdd = (priority === 'High') ? 7 : 30;\n\n// Bắt đầu tính toán ngày hạn chót\nlet deadlineDate = new Date();\ndeadlineDate.setDate(deadlineDate.getDate() + daysToAdd);\n\n// Cắt gọn định dạng ngày tháng thành chuẩn YYYY-MM-DD và lưu vào biến deadline\n$input.item.json.deadline = deadlineDate.toISOString().split('T')[0];\n\nreturn $input.item;"
+        "jsCode": "// 1. Lấy dữ liệu hiện tại\nconst priority = $input.item.json.priority;\n// Kiểm tra xem sheet đã có ngày tạo chưa (dành cho trường hợp update task cũ)\nconst existingCreatedAt = $input.item.json.created_at; \nconst existingDeadline = $input.item.json.deadline;\n\n// Hàm hỗ trợ thêm số 0 ở trước (VD: 9 -> 09)\nconst pad = (num) => String(num).padStart(2, '0');\n\nlet createdAtStr;\nlet deadlineStr;\n\n// 2. KIỂM TRA ĐIỀU KIỆN\nif (existingCreatedAt && existingCreatedAt.trim() !== \"\") {\n  // NẾU LÀ TASK CŨ ĐANG UPDATE: Giữ nguyên ngày tạo và deadline cũ, không tính lại\n  createdAtStr = existingCreatedAt;\n  \n  // Nếu đã có deadline thì giữ nguyên, chưa có thì mới tính lại từ created_at cũ\n  if (existingDeadline && existingDeadline.trim() !== \"\") {\n     deadlineStr = existingDeadline;\n  } else {\n     const baseDate = new Date(existingCreatedAt);\n     const deadlineDate = new Date(baseDate.getTime());\n     deadlineDate.setDate(deadlineDate.getDate() + (priority === 'High' ? 7 : 30));\n     deadlineStr = `${deadlineDate.getFullYear()}-${pad(deadlineDate.getMonth() + 1)}-${pad(deadlineDate.getDate())}`;\n  }\n\n} else {\n  // NẾU LÀ TASK MỚI TINH: Tạo mới toàn bộ ngày giờ\n  const baseDate = new Date();\n  createdAtStr = `${baseDate.getFullYear()}-${pad(baseDate.getMonth() + 1)}-${pad(baseDate.getDate())} ${pad(baseDate.getHours())}:${pad(baseDate.getMinutes())}:${pad(baseDate.getSeconds())}`;\n  \n  const deadlineDate = new Date(baseDate.getTime());\n  deadlineDate.setDate(deadlineDate.getDate() + (priority === 'High' ? 7 : 30));\n  deadlineStr = `${deadlineDate.getFullYear()}-${pad(deadlineDate.getMonth() + 1)}-${pad(deadlineDate.getDate())}`;\n}\n\n// 4. Xuất dữ liệu ra\n$input.item.json.created_at = createdAtStr;\n$input.item.json.deadline = deadlineStr;\n\nreturn $input.item;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
