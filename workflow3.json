@@ -399,6 +399,28 @@
           "name": "Google Sheets account 3"
         }
       }
+    },
+    {
+      "parameters": {
+        "chatId": "7065866911",
+        "text": "=📊 Báo cáo task quá hạn tuần đã được gửi  Ngày: {{$json.report_date}}  • Tổng task quá hạn: {{$json.total_overdue}} • Ưu tiên cao: {{$json.high_count}} • Ưu tiên thường: {{$json.normal_count}}  ✅ Báo cáo đã gửi cho quản lý.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2240,
+        -80
+      ],
+      "id": "51d77d1e-e2cd-4c2d-8d17-7eae0a71c943",
+      "name": "Send a text message",
+      "webhookId": "73e5ab0d-b207-4ac9-9c7b-8a93fcca4b05",
+      "credentials": {
+        "telegramApi": {
+          "id": "XVlbImS4mmkHMgZT",
+          "name": "Telegram account"
+        }
+      }
     }
   ],
   "connections": {
@@ -495,6 +517,17 @@
         [
           {
             "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
             "type": "main",
             "index": 0
           }
