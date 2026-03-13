@@ -200,6 +200,10 @@
           "values": [
             {
               "aggregation": "append",
+              "field": "task_id"
+            },
+            {
+              "aggregation": "append",
               "field": "task_name"
             },
             {
@@ -273,6 +277,9 @@
             }
           ]
         },
+        "includeOtherFields": true,
+        "include": "selected",
+        "includeFields": "appended_task_id",
         "options": {}
       },
       "type": "n8n-nodes-base.set",
@@ -306,6 +313,19 @@
           "name": "Gmail account"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Lấy TOÀN BỘ danh sách nhân viên từ Node 'Set - Email Data'\nconst allEmployees = $('Set - Email Data').all();\nconst finalTaskList = [];\n\n// 2. Vòng lặp 1: Duyệt qua từng nhân viên (Nam, Hoa, Bình...)\nfor (const employee of allEmployees) {\n  const taskIds = employee.json.appended_task_id;\n  \n  // Kiểm tra xem người này có danh sách task không\n  if (taskIds && Array.isArray(taskIds)) {\n    \n    // 3. Vòng lặp 2: Duyệt qua từng task của nhân viên đó\n    for (const id of taskIds) {\n      // Đẩy từng task lẻ vào danh sách tổng\n      finalTaskList.push({\n        json: {\n          task_id_to_update: id,\n          processed_at: new Date().toISOString() // Thêm thời gian để tí ghi vào Sheet cho chuẩn\n        }\n      });\n    }\n  }\n}\n\n// 4. Trả về danh sách phẳng (ví dụ: 2 người, mỗi người 3 task -> trả về 6 items lẻ)\nreturn finalTaskList;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2272,
+        -272
+      ],
+      "id": "64bbabfe-a1ef-43ca-968c-14ab87c6ce94",
+      "name": "Code in JavaScript"
     }
   ],
   "connections": {
@@ -417,6 +437,22 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        []
       ]
     }
   },
