@@ -133,7 +133,7 @@
         "operation": "download",
         "fileId": {
           "__rl": true,
-          "value": "={{$json.id}}",
+          "value": "={{$node[\"Create a document\"].json.id}}",
           "mode": "id"
         },
         "options": {
