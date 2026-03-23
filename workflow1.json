@@ -23,6 +23,7 @@
           "cachedResultName": "Task_Master",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wMxqh4eWisso6skyP8CtQPKuKHb3QGEkzSaqk2CWPnA/edit#gid=1395565445"
         },
+        "event": "rowAdded",
         "options": {}
       },
       "type": "n8n-nodes-base.googleSheetsTrigger",
@@ -43,7 +44,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// Lấy ngày tháng năm hiện tại\nconst date = new Date();\nconst yyyy = date.getFullYear();\nconst mm = String(date.getMonth() + 1).padStart(2, '0');\nconst dd = String(date.getDate()).padStart(2, '0');\nconst todayStr = `${yyyy}${mm}${dd}`;\n\n// Gọi bộ nhớ tĩnh của n8n để lưu biến đếm giữa các lần chạy\nconst staticData = $getWorkflowStaticData('global');\n\n// Kiểm tra: Nếu sang ngày mới, reset biến đếm về 1. Nếu cùng ngày, cộng dồn thêm 1.\nif (staticData.lastDate !== todayStr) {\n  staticData.taskCounter = 1;\n  staticData.lastDate = todayStr;\n} else {\n  staticData.taskCounter += 1;\n}\n\n// Định dạng số đếm thành 3 chữ số (001, 002, 003...)\nconst sequentialNum = String(staticData.taskCounter);\n\n// Tạo chuỗi Task ID hoàn chỉnh (VD: TASK-20260313-001)\nconst taskId = `${sequentialNum}`;\n\n// Ghi biến task_id này vào JSON để các Node tiếp theo có thể sử dụng\n$input.item.json.task_id = taskId;\n\nreturn $input.item;"
+        "jsCode": "// Chỉ tạo task_id mới nếu chưa có (tránh ghi đè task cũ)\nif (!$input.item.json.task_id || String($input.item.json.task_id).trim() === \"\") {\n  // 1. Lấy ngày tháng năm hiện tại để làm tiền tố\n  const date = new Date();\n  const yyyy = date.getFullYear();\n  const mm = String(date.getMonth() + 1).padStart(2, '0');\n  const dd = String(date.getDate()).padStart(2, '0');\n  const todayStr = `${yyyy}${mm}${dd}`;\n\n  // 2. Tạo chuỗi ngẫu nhiên 4 ký tự\n  const randomString = Math.random().toString(36).substring(2, 6).toUpperCase();\n\n  // 3. Ghép thành Task ID (VD: TASK-20260321-X7F9)\n  $input.item.json.task_id = `TASK-${todayStr}-${randomString}`;\n}\n\nreturn $input.item;\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -141,7 +142,7 @@
               "leftValue": "={{ $json.created_at }}",
               "rightValue": 0,
               "operator": {
-                "type": "number",
+                "type": "string",
                 "operation": "empty",
                 "singleValue": true
               }
@@ -181,12 +182,18 @@
               "name": "priority",
               "value": "={{ $json.priority.trim().charAt(0).toUpperCase() + $json.priority.trim().slice(1).toLowerCase() }}",
               "type": "string"
+            },
+            {
+              "id": "ef1f07e7-1ab6-4713-b6d2-313acfdf0f99",
+              "name": "id",
+              "value": "={{ $('Google Sheets Trigger').item.json.id }}",
+              "type": "number"
             }
           ]
         },
         "includeOtherFields": true,
         "include": "selected",
-        "includeFields": "task_id",
+        "includeFields": "id",
         "options": {}
       },
       "type": "n8n-nodes-base.set",
@@ -201,7 +208,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// 1. Lấy dữ liệu hiện tại\nconst priority = $input.item.json.priority;\n// Kiểm tra xem sheet đã có ngày tạo chưa (dành cho trường hợp update task cũ)\nconst existingCreatedAt = $input.item.json.created_at; \nconst existingDeadline = $input.item.json.deadline;\n\n// Hàm hỗ trợ thêm số 0 ở trước (VD: 9 -> 09)\nconst pad = (num) => String(num).padStart(2, '0');\n\nlet createdAtStr;\nlet deadlineStr;\n\n// 2. KIỂM TRA ĐIỀU KIỆN\nif (existingCreatedAt && existingCreatedAt.trim() !== \"\") {\n  // NẾU LÀ TASK CŨ ĐANG UPDATE: Giữ nguyên ngày tạo và deadline cũ, không tính lại\n  createdAtStr = existingCreatedAt;\n  \n  // Nếu đã có deadline thì giữ nguyên, chưa có thì mới tính lại từ created_at cũ\n  if (existingDeadline && existingDeadline.trim() !== \"\") {\n     deadlineStr = existingDeadline;\n  } else {\n     const baseDate = new Date(existingCreatedAt);\n     const deadlineDate = new Date(baseDate.getTime());\n     deadlineDate.setDate(deadlineDate.getDate() + (priority === 'High' ? 7 : 30));\n     deadlineStr = `${deadlineDate.getFullYear()}-${pad(deadlineDate.getMonth() + 1)}-${pad(deadlineDate.getDate())}`;\n  }\n\n} else {\n  // NẾU LÀ TASK MỚI TINH: Tạo mới toàn bộ ngày giờ\n  const baseDate = new Date();\n  createdAtStr = `${baseDate.getFullYear()}-${pad(baseDate.getMonth() + 1)}-${pad(baseDate.getDate())} ${pad(baseDate.getHours())}:${pad(baseDate.getMinutes())}:${pad(baseDate.getSeconds())}`;\n  \n  const deadlineDate = new Date(baseDate.getTime());\n  deadlineDate.setDate(deadlineDate.getDate() + (priority === 'High' ? 7 : 30));\n  deadlineStr = `${deadlineDate.getFullYear()}-${pad(deadlineDate.getMonth() + 1)}-${pad(deadlineDate.getDate())}`;\n}\n\n// 4. Xuất dữ liệu ra\n$input.item.json.created_at = createdAtStr;\n$input.item.json.deadline = deadlineStr;\n\nreturn $input.item;"
+        "jsCode": "// 1. Lấy dữ liệu hiện tại\nconst priority = $input.item.json.priority;\n// Kiểm tra xem sheet đã có ngày tạo chưa (dành cho trường hợp update task cũ)\nconst existingCreatedAt = $input.item.json.created_at; \nconst existingDeadline = $input.item.json.deadline;\n\n// Hàm hỗ trợ thêm số 0 ở trước (VD: 9 -> 09)\nconst pad = (num) => String(num).padStart(2, '0');\n\n// HÀM MỚI: Lấy thời gian hiện tại chuẩn múi giờ Việt Nam (UTC+7)\nfunction getVNDate() {\n  const vnTimeStr = new Date().toLocaleString(\"en-US\", { timeZone: \"Asia/Ho_Chi_Minh\" });\n  return new Date(vnTimeStr);\n}\n\nlet createdAtStr;\nlet deadlineStr;\n\n// 2. KIỂM TRA ĐIỀU KIỆN\nif (existingCreatedAt && String(existingCreatedAt).trim() !== \"\") {\n  // NẾU LÀ TASK CŨ ĐANG UPDATE: Giữ nguyên ngày tạo và deadline cũ, không tính lại\n  createdAtStr = existingCreatedAt;\n  \n  // Nếu đã có deadline thì giữ nguyên, chưa có thì mới tính lại từ created_at cũ\n  if (existingDeadline && String(existingDeadline).trim() !== \"\") {\n     deadlineStr = existingDeadline;\n  } else {\n     const baseDate = new Date(existingCreatedAt);\n     const deadlineDate = new Date(baseDate.getTime());\n     deadlineDate.setDate(deadlineDate.getDate() + (priority === 'High' ? 7 : 30));\n     deadlineStr = `${deadlineDate.getFullYear()}-${pad(deadlineDate.getMonth() + 1)}-${pad(deadlineDate.getDate())}`;\n  }\n\n} else {\n  // NẾU LÀ TASK MỚI TINH: Tạo mới toàn bộ ngày giờ DỰA TRÊN GIỜ VIỆT NAM\n  const baseDate = getVNDate();\n  \n  // Tạo created_at theo chuẩn yyyy-MM-dd HH:mm:ss\n  createdAtStr = `${baseDate.getFullYear()}-${pad(baseDate.getMonth() + 1)}-${pad(baseDate.getDate())} ${pad(baseDate.getHours())}:${pad(baseDate.getMinutes())}:${pad(baseDate.getSeconds())}`;\n  \n  // Tạo deadline (+7 hoặc +30 ngày từ mốc giờ VN)\n  const deadlineDate = new Date(baseDate.getTime());\n  deadlineDate.setDate(deadlineDate.getDate() + (priority === 'High' ? 7 : 30));\n  deadlineStr = `${deadlineDate.getFullYear()}-${pad(deadlineDate.getMonth() + 1)}-${pad(deadlineDate.getDate())}`;\n}\n\n// 4. Xuất dữ liệu ra\n$input.item.json.created_at = createdAtStr;\n$input.item.json.deadline = deadlineStr;\n\nreturn $input.item;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -231,7 +238,7 @@
             {
               "id": "63e02fc0-35cd-47d2-a5b4-03eb0cddccf6",
               "name": "created_at",
-              "value": "={{ $now.setZone('Asia/Ho_Chi_Minh').toFormat('yyyy-MM-dd HH:mm:ss') }}",
+              "value": "={{ $json.created_at }}",
               "type": "string"
             },
             {
@@ -251,6 +258,12 @@
               "name": "completed_at",
               "value": "",
               "type": "string"
+            },
+            {
+              "id": "139ce0e7-20b5-4609-b3c8-3deb382f38c2",
+              "name": "=id",
+              "value": "={{ $json.id }}",
+              "type": "number"
             }
           ]
         },
@@ -349,16 +362,16 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "row_number": "={{ $('Code TaskID Automation').item.json.task_id }}",
-            "deadline": "={{ $('Set-Add Default Fields').item.json.deadline }}",
+            "row_number": "={{ $('Set-Add Default Fields').item.json.id + 1 }}",
+            "deadline": "={{ $('Calculate Deadline').item.json.deadline }}",
             "status": "={{ $('Set-Add Default Fields').item.json.status }}",
-            "task_id": "={{ $('Set-Add Default Fields').item.json.task_id }}",
-            "created_at": "={{ $('Set-Add Default Fields').item.json.created_at }}",
+            "task_id": "={{ $('Calculate Deadline').item.json.task_id }}",
+            "created_at": "={{ $('Calculate Deadline').item.json.created_at }}",
             "reminder_count": "={{ $('Set-Add Default Fields').item.json.reminder_count }}",
-            "task_name": "={{ $('Set-Add Default Fields').item.json.task_name }}"
+            "task_name": "={{ $('Calculate Deadline').item.json.task_name }}"
           },
           "matchingColumns": [
-            "task_name"
+            "row_number"
           ],
           "schema": [
             {
