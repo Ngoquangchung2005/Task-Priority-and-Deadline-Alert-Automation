@@ -565,7 +565,7 @@
       "parameters": {
         "sendTo": "={{ $('Google Sheets Trigger').item.json.assignee_email }}",
         "subject": "=[Nhiệm vụ mới] {{ $('Google Sheets Trigger').item.json.task_name }} - Hạn chót: {{ $('Calculate Deadline').item.json.deadline }}",
-        "message": "=<div style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;\">     <div style=\"background-color: #4CAF50; color: white; padding: 15px 20px; text-align: center;\">         <h2 style=\"margin: 0;\">🚀 Thông báo nhận Task mới</h2>     </div>          <div style=\"padding: 20px;\">         <p>Chào bạn,</p>         <p>Hệ thống vừa phân công cho bạn một công việc mới. Vui lòng kiểm tra thông tin chi tiết dưới đây:</p>                  <table style=\"width: 100%; border-collapse: collapse; margin-top: 15px;\">             <tr>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee; width: 35%;\"><strong>Mã Task:</strong></td>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee;\">{{ $json.task_name }}</td>             </tr>             <tr>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee;\"><strong>Tên Task:</strong></td>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee;\"><strong>{{ $('Google Sheets Trigger').item.json.task_name }}</strong></td>             </tr>             <tr>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee;\"><strong>Mức độ:</strong></td>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee; color: #d9534f; font-weight: bold;\">{{ $('Normalize Input').item.json.priority }}</td>             </tr>             <tr>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee;\"><strong>Deadline:</strong></td>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee; color: #f0ad4e; font-weight: bold;\">{{ $('Calculate Deadline').item.json.deadline }}</td>             </tr>         </table>                  <div style=\"margin-top: 25px; background-color: #f9f9f9; border-left: 4px solid #4CAF50; padding: 15px; font-style: italic; color: #555;\">             \"{{ $('HTTP Request-Get Quote').item.json.q }}\"         </div>                  <p style=\"margin-top: 25px;\">Chúc bạn hoàn thành công việc đúng hạn!</p>     </div>          <div style=\"background-color: #f1f1f1; color: #777; padding: 10px; text-align: center; font-size: 12px;\">         Đây là email tự động từ hệ thống quản lý Task. Vui lòng không trả lời email này.     </div> </div>",
+        "message": "=<div style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;\">     <div style=\"background-color: #4CAF50; color: white; padding: 15px 20px; text-align: center;\">         <h2 style=\"margin: 0;\">🚀 Thông báo nhận Task mới</h2>     </div>          <div style=\"padding: 20px;\">         <p>Chào bạn,</p>         <p>Hệ thống vừa phân công cho bạn một công việc mới. Vui lòng kiểm tra thông tin chi tiết dưới đây:</p>                  <table style=\"width: 100%; border-collapse: collapse; margin-top: 15px;\">             <tr>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee; width: 35%;\"><strong>Mã Task:</strong></td>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee;\">{{ $('Calculate Deadline').item.json.task_id }}</td>             </tr>             <tr>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee;\"><strong>Tên Task:</strong></td>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee;\"><strong>{{ $('Google Sheets Trigger').item.json.task_name }}</strong></td>             </tr>             <tr>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee;\"><strong>Mức độ:</strong></td>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee; color: #d9534f; font-weight: bold;\">{{ $('Normalize Input').item.json.priority }}</td>             </tr>             <tr>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee;\"><strong>Deadline:</strong></td>                 <td style=\"padding: 10px; border-bottom: 1px solid #eee; color: #f0ad4e; font-weight: bold;\">{{ $('Calculate Deadline').item.json.deadline }}</td>             </tr>         </table>                  <div style=\"margin-top: 25px; background-color: #f9f9f9; border-left: 4px solid #4CAF50; padding: 15px; font-style: italic; color: #555;\">             \"{{ $('Set - Format Quote').item.json.quote }}\"         </div>                  <p style=\"margin-top: 25px;\">Chúc bạn hoàn thành công việc đúng hạn!</p>     </div>          <div style=\"background-color: #f1f1f1; color: #777; padding: 10px; text-align: center; font-size: 12px;\">         Đây là email tự động từ hệ thống quản lý Task. Vui lòng không trả lời email này.     </div> </div>",
         "options": {}
       },
       "type": "n8n-nodes-base.gmail",
@@ -605,6 +605,50 @@
           "name": "Telegram account"
         }
       }
+    },
+    {
+      "parameters": {
+        "chatId": "7801932240",
+        "text": "=⚠️ [TASK BỊ TỪ CHỐI] Thiếu trường bắt buộc - 🔢 Row: {{ $json.id }} - 📝 task_name: {{ $json.task_name }} - 📧 assignee_email: {{ $json.assignee_email }} - 🎯 priority: {{ $json.priority }} ❌ Vui lòng kiểm tra và điền đầy đủ thông tin.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        416,
+        96
+      ],
+      "id": "f68c71e8-1ef0-4bfd-b790-0bb3667578c2",
+      "name": "Send a text message1",
+      "webhookId": "a8194885-e68d-472f-a499-c2814dc9f68d",
+      "credentials": {
+        "telegramApi": {
+          "id": "SxcovgETCd4yFCuj",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "7801932240",
+        "text": "=⚠️ [EMAIL KHÔNG HỢP LỆ] - 🔢 Row: {{ $json.id }} - 📝 Task: {{ $json.task_name }} - 📧 Email lỗi: {{ $json.assignee_email }} ❌ Vui lòng nhập đúng định dạng email.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "5a9fea04-b665-4ae8-acf9-c4142ed64171",
+      "name": "Send a text message2",
+      "webhookId": "4ec4c715-d3a6-4066-9081-931632dc13a4",
+      "credentials": {
+        "telegramApi": {
+          "id": "SxcovgETCd4yFCuj",
+          "name": "Telegram account"
+        }
+      }
     }
   ],
   "connections": {
@@ -638,6 +682,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -646,6 +697,13 @@
         [
           {
             "node": "IF-Validate Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
             "type": "main",
             "index": 0
           }
