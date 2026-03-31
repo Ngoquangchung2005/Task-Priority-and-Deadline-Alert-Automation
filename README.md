@@ -40,3 +40,86 @@ Thêm địa chỉ Email đang sử dụng vào danh sách Test users trên Goog
 5. Nhập chính xác địa chỉ Email của bạn (Email chứa file Google Sheets cần lấy dữ liệu) và bấm **Save**.
 6. Quay lại giao diện n8n và bấm *Sign in with Google* một lần nữa.
 7. *Lưu ý:* Màn hình có thể hiện cảnh báo "Google hasn't verified this app". Hãy bấm vào nút **Advanced** (Nâng cao) -> Chọn **Go to n8n (unsafe)** -> Tích chọn các quyền truy cập và bấm **Continue** là hoàn tất kết nối!
+
+
+# 🛠️  Setup Frontend React + Vite
+
+## 1. Cài đặt môi trường Node.js (Sử dụng NVM)
+
+Nếu máy tính chưa cài đặt NVM, tiến hành chạy lệnh sau trên Terminal:
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+source ~/.bashrc
+```
+
+Cài đặt và thiết lập Node.js phiên bản 22 làm mặc định:
+```bash
+nvm install 22
+nvm use 22
+nvm alias default 22
+```
+
+Kiểm tra lại để chắc chắn quá trình cài đặt đã thành công:
+```bash
+node -v
+npm -v
+```
+
+## 2. Khởi tạo dự án React bằng Vite
+
+
+Chạy lệnh khởi tạo project với tên `frontend` bằng template React:
+```bash
+npm create vite@latest frontend -- --template react
+```
+
+Di chuyển vào thư mục dự án vừa được tạo:
+```bash
+cd frontend
+```
+
+Cài đặt các gói phụ thuộc (dependencies) mặc định của Vite:
+```bash
+npm install
+```
+
+## 3. Cài đặt các thư viện hỗ trợ thiết yếu
+
+
+Đảm bảo bạn đang ở trong thư mục `frontend/`, chạy lệnh sau để cài đặt đồng loạt các thư viện:
+```bash
+npm install react-router-dom axios zustand lucide-react recharts
+```
+
+*(Lưu ý: Sau khi cài đặt hoàn tất, bạn có thể khởi chạy server bằng lệnh `npm run dev` và truy cập địa chỉ `http://localhost:5173/` trên trình duyệt để kiểm tra kết quả).*
+Dưới đây là phần **Setup Backend (Spring Boot)** được định dạng lại đồng nhất với phong cách của các phần trước, kèm theo các khối code chuẩn để bạn dễ dàng sao chép và dán thẳng vào Terminal:
+
+# 🛠️ Setup Backend (Spring Boot)
+
+## 1. Cài đặt Java 17
+
+Cập nhật danh sách gói phần mềm và tiến hành cài đặt OpenJDK 17:
+```bash
+sudo apt update
+sudo apt install openjdk-17-jdk -y
+```
+
+*(Lưu ý: Sau khi cài xong, bạn có thể kiểm tra lại bằng lệnh `java -version`)*
+
+## 2. Cài đặt Maven
+
+
+Chạy lệnh sau để cài đặt Maven:
+```bash
+sudo apt install maven -y
+```
+
+*(Lưu ý: Kiểm tra lại quá trình cài đặt bằng lệnh `mvn -version`)*
+
+## 3. Khởi chạy ứng dụng
+
+
+Đảm bảo bạn đang đứng ở thư mục gốc của dự án backend (nơi chứa file `pom.xml`), sau đó chạy lệnh:
+```bash
+mvn spring-boot:run
+```
