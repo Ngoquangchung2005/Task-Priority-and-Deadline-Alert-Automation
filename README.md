@@ -43,66 +43,49 @@ Thêm địa chỉ Email đang sử dụng vào danh sách Test users trên Goog
 
 # 🛠️  Setup Frontend React + Vite
 
-Bước 1: Cài Node.js bằng nvm
-Nếu máy chưa có nvm, cài bằng lệnh:
+1. Cài đặt môi trường Node.js (Sử dụng NVM)
 
+
+Nếu máy tính chưa cài đặt NVM, tiến hành chạy lệnh sau trên Terminal:
+
+Bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 source ~/.bashrc
+Cài đặt và thiết lập Node.js phiên bản 22 làm mặc định:
 
-Sau đó cài Node.js:
-
+Bash
 nvm install 22
 nvm use 22
 nvm alias default 22
+Kiểm tra lại để chắc chắn quá trình cài đặt đã thành công:
 
-Kiểm tra lại phiên bản:
-
+Bash
 node -v
 npm -v
+2. Khởi tạo dự án React bằng Vite
+🎯 Mục đích: Sử dụng công cụ Vite để tạo bộ khung dự án React nhanh chóng, nhẹ và tối ưu tốc độ build thay cho Create React App truyền thống.
 
-✅ Bước 2: Tạo project React bằng Vite
+✅ Các bước thực hiện:
 
+Chạy lệnh khởi tạo project với tên frontend bằng template React:
+
+Bash
 npm create vite@latest frontend -- --template react
+Di chuyển vào thư mục dự án vừa được tạo:
 
-Sau khi tạo xong, vào thư mục project:
-
+Bash
 cd frontend
+Cài đặt các gói phụ thuộc (dependencies) mặc định của Vite:
 
-Nếu Vite chưa tự cài dependencies thì chạy thêm:
-
+Bash
 npm install
+3. Cài đặt các thư viện hỗ trợ thiết yếu
+🎯 Mục đích: Tích hợp ngay từ đầu các công cụ phổ biến cho việc định tuyến, gọi API, quản lý trạng thái (state) và giao diện.
 
-✅ Bước 3: Cài các thư viện cần thiết
+✅ Các bước thực hiện:
 
+Đảm bảo bạn đang ở trong thư mục frontend/, chạy lệnh sau để cài đặt đồng loạt các thư viện:
+
+Bash
 npm install react-router-dom axios zustand lucide-react recharts
-
-✅ Bước 4: Tạo cấu trúc thư mục giống project chuẩn
-
-mkdir -p src/assets src/components src/contexts src/layouts src/routes src/services
-mkdir -p src/pages/manager src/pages/user
-
-Cấu trúc sau khi tạo:
-
-frontend/
-├── public/
-├── src/
-│   ├── assets/
-│   ├── components/
-│   ├── contexts/
-│   ├── layouts/
-│   ├── pages/
-│   │   ├── manager/
-│   │   └── user/
-│   ├── routes/
-│   └── services/
-├── index.html
-├── package.json
-└── vite.config.js
-
-✅ Bước 5: Chạy frontend
-
-npm run dev
-
-Sau khi chạy thành công, frontend sẽ hoạt động tại địa chỉ mặc định:
-
 http://localhost:5173/
