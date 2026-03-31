@@ -41,51 +41,54 @@ Thêm địa chỉ Email đang sử dụng vào danh sách Test users trên Goog
 6. Quay lại giao diện n8n và bấm *Sign in with Google* một lần nữa.
 7. *Lưu ý:* Màn hình có thể hiện cảnh báo "Google hasn't verified this app". Hãy bấm vào nút **Advanced** (Nâng cao) -> Chọn **Go to n8n (unsafe)** -> Tích chọn các quyền truy cập và bấm **Continue** là hoàn tất kết nối!
 
+
 # 🛠️  Setup Frontend React + Vite
 
-1. Cài đặt môi trường Node.js (Sử dụng NVM)
-
+## 1. Cài đặt môi trường Node.js (Sử dụng NVM)
 
 Nếu máy tính chưa cài đặt NVM, tiến hành chạy lệnh sau trên Terminal:
-
-Bash
+```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 source ~/.bashrc
-Cài đặt và thiết lập Node.js phiên bản 22 làm mặc định:
+```
 
-Bash
+Cài đặt và thiết lập Node.js phiên bản 22 làm mặc định:
+```bash
 nvm install 22
 nvm use 22
 nvm alias default 22
-Kiểm tra lại để chắc chắn quá trình cài đặt đã thành công:
+```
 
-Bash
+Kiểm tra lại để chắc chắn quá trình cài đặt đã thành công:
+```bash
 node -v
 npm -v
-2. Khởi tạo dự án React bằng Vite
-🎯 Mục đích: Sử dụng công cụ Vite để tạo bộ khung dự án React nhanh chóng, nhẹ và tối ưu tốc độ build thay cho Create React App truyền thống.
+```
 
-✅ Các bước thực hiện:
+## 2. Khởi tạo dự án React bằng Vite
 
-Chạy lệnh khởi tạo project với tên frontend bằng template React:
 
-Bash
+Chạy lệnh khởi tạo project với tên `frontend` bằng template React:
+```bash
 npm create vite@latest frontend -- --template react
+```
+
 Di chuyển vào thư mục dự án vừa được tạo:
-
-Bash
+```bash
 cd frontend
+```
+
 Cài đặt các gói phụ thuộc (dependencies) mặc định của Vite:
-
-Bash
+```bash
 npm install
-3. Cài đặt các thư viện hỗ trợ thiết yếu
-🎯 Mục đích: Tích hợp ngay từ đầu các công cụ phổ biến cho việc định tuyến, gọi API, quản lý trạng thái (state) và giao diện.
+```
 
-✅ Các bước thực hiện:
+## 3. Cài đặt các thư viện hỗ trợ thiết yếu
 
-Đảm bảo bạn đang ở trong thư mục frontend/, chạy lệnh sau để cài đặt đồng loạt các thư viện:
 
-Bash
+Đảm bảo bạn đang ở trong thư mục `frontend/`, chạy lệnh sau để cài đặt đồng loạt các thư viện:
+```bash
 npm install react-router-dom axios zustand lucide-react recharts
-http://localhost:5173/
+```
+
+*(Lưu ý: Sau khi cài đặt hoàn tất, bạn có thể khởi chạy server bằng lệnh `npm run dev` và truy cập địa chỉ `http://localhost:5173/` trên trình duyệt để kiểm tra kết quả).*
