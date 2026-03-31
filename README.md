@@ -92,3 +92,34 @@ npm install react-router-dom axios zustand lucide-react recharts
 ```
 
 *(Lưu ý: Sau khi cài đặt hoàn tất, bạn có thể khởi chạy server bằng lệnh `npm run dev` và truy cập địa chỉ `http://localhost:5173/` trên trình duyệt để kiểm tra kết quả).*
+Dưới đây là phần **Setup Backend (Spring Boot)** được định dạng lại đồng nhất với phong cách của các phần trước, kèm theo các khối code chuẩn để bạn dễ dàng sao chép và dán thẳng vào Terminal:
+
+# 🛠️ Setup Backend (Spring Boot)
+
+## 1. Cài đặt Java 17
+
+Cập nhật danh sách gói phần mềm và tiến hành cài đặt OpenJDK 17:
+```bash
+sudo apt update
+sudo apt install openjdk-17-jdk -y
+```
+
+*(Lưu ý: Sau khi cài xong, bạn có thể kiểm tra lại bằng lệnh `java -version`)*
+
+## 2. Cài đặt Maven
+
+
+Chạy lệnh sau để cài đặt Maven:
+```bash
+sudo apt install maven -y
+```
+
+*(Lưu ý: Kiểm tra lại quá trình cài đặt bằng lệnh `mvn -version`)*
+
+## 3. Khởi chạy ứng dụng
+
+
+Đảm bảo bạn đang đứng ở thư mục gốc của dự án backend (nơi chứa file `pom.xml`), sau đó chạy lệnh:
+```bash
+mvn spring-boot:run
+```
