@@ -40,3 +40,69 @@ Thêm địa chỉ Email đang sử dụng vào danh sách Test users trên Goog
 5. Nhập chính xác địa chỉ Email của bạn (Email chứa file Google Sheets cần lấy dữ liệu) và bấm **Save**.
 6. Quay lại giao diện n8n và bấm *Sign in with Google* một lần nữa.
 7. *Lưu ý:* Màn hình có thể hiện cảnh báo "Google hasn't verified this app". Hãy bấm vào nút **Advanced** (Nâng cao) -> Chọn **Go to n8n (unsafe)** -> Tích chọn các quyền truy cập và bấm **Continue** là hoàn tất kết nối!
+
+# 🛠️  Setup Frontend React + Vite
+
+Bước 1: Cài Node.js bằng nvm
+Nếu máy chưa có nvm, cài bằng lệnh:
+
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+source ~/.bashrc
+
+Sau đó cài Node.js:
+
+nvm install 22
+nvm use 22
+nvm alias default 22
+
+Kiểm tra lại phiên bản:
+
+node -v
+npm -v
+
+✅ Bước 2: Tạo project React bằng Vite
+
+npm create vite@latest frontend -- --template react
+
+Sau khi tạo xong, vào thư mục project:
+
+cd frontend
+
+Nếu Vite chưa tự cài dependencies thì chạy thêm:
+
+npm install
+
+✅ Bước 3: Cài các thư viện cần thiết
+
+npm install react-router-dom axios zustand lucide-react recharts
+
+✅ Bước 4: Tạo cấu trúc thư mục giống project chuẩn
+
+mkdir -p src/assets src/components src/contexts src/layouts src/routes src/services
+mkdir -p src/pages/manager src/pages/user
+
+Cấu trúc sau khi tạo:
+
+frontend/
+├── public/
+├── src/
+│   ├── assets/
+│   ├── components/
+│   ├── contexts/
+│   ├── layouts/
+│   ├── pages/
+│   │   ├── manager/
+│   │   └── user/
+│   ├── routes/
+│   └── services/
+├── index.html
+├── package.json
+└── vite.config.js
+
+✅ Bước 5: Chạy frontend
+
+npm run dev
+
+Sau khi chạy thành công, frontend sẽ hoạt động tại địa chỉ mặc định:
+
+http://localhost:5173/
