@@ -61,7 +61,8 @@ public class Task {
     private LocalDateTime createdAt;
 
     public Integer getDaysLeft() {
-        if (deadline == null) return null;
+        if (deadline == null)
+            return null;
         return (int) ChronoUnit.DAYS.between(LocalDateTime.now(), deadline);
     }
 }
