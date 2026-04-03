@@ -1,0 +1,584 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                5
+              ],
+              "triggerAtHour": 17
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        160,
+        -80
+      ],
+      "id": "48c46698-8ef8-4ed2-a30b-5c10c7557df9",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1-AOSifdjrT-7vr6e1OQcIcxe-FucMAN7MRLpVIjbnSE",
+          "mode": "list",
+          "cachedResultName": "task automation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-AOSifdjrT-7vr6e1OQcIcxe-FucMAN7MRLpVIjbnSE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1925314341,
+          "mode": "list",
+          "cachedResultName": "Task_Master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-AOSifdjrT-7vr6e1OQcIcxe-FucMAN7MRLpVIjbnSE/edit#gid=1925314341"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        368,
+        -80
+      ],
+      "id": "545eee25-d05a-498d-a386-4f664be0ad60",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wtjdw3x8phVpJOcK",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const today = new Date();\ntoday.setHours(0, 0, 0, 0);\n\nconst overdue = items.filter(item => {\n  const row = item.json;\n\n  if (!row.deadline) return false;\n\n  const deadline = new Date(row.deadline);\n  deadline.setHours(0, 0, 0, 0);\n\n  const status = (row.status || '').trim();\n  const escalated = (row.escalated_at || '').toString().trim();\n\n  const isActiveStatus = ['Pending', 'Doing', 'Overdue'].includes(status);\n  const isOverdue = deadline < today;\n  const notEscalated = escalated === '';\n\n  return isActiveStatus && isOverdue && notEscalated;\n});\n\nreturn overdue;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        -80
+      ],
+      "id": "9d7086e9-dea1-49b3-81e1-7fbdc0965aea",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "items.sort((a, b) => {\n  const priorityA = a.json.priority === 'High' ? 0 : 1;\n  const priorityB = b.json.priority === 'High' ? 0 : 1;\n\n  if (priorityA !== priorityB) {\n    return priorityA - priorityB;\n  }\n\n  const deadlineA = new Date(a.json.deadline);\n  const deadlineB = new Date(b.json.deadline);\n\n  return deadlineA - deadlineB;\n});\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        -80
+      ],
+      "id": "d01a2f53-e278-4912-85ca-d49cb626a51b",
+      "name": "Sort Overdue Tasks"
+    },
+    {
+      "parameters": {
+        "jsCode": "const total = items.length;\nconst high = items.filter(item => item.json.priority === 'High').length;\nconst normal = items.filter(item => item.json.priority === 'Normal').length;\n\nconst reportDate = new Date().toISOString().split('T')[0];\n\nreturn [\n  {\n    json: {\n      total_overdue: total,\n      high_count: high,\n      normal_count: normal,\n      report_date: reportDate,\n      tasks: items.map(item => item.json),\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        -80
+      ],
+      "id": "80546697-981b-40dc-8edc-bf44f4493f37",
+      "name": "Generate Summary Metrics"
+    },
+    {
+      "parameters": {
+        "jsCode": "const tasks = $json.tasks || [];\n\nlet taskList = tasks.map(t =>\n`${t.task_id} | ${t.task_name} | ${t.owner_name} | ${t.priority} | ${t.deadline}`\n).join(\"\\n\");\n\nconst report = `\nWEEKLY ESCALATION REPORT\n\nDate: ${$json.report_date}\n\nSummary\n----------------------------------------\nTotal overdue tasks: ${$json.total_overdue}\nHigh priority: ${$json.high_count}\nNormal priority: ${$json.normal_count}\n\nOverdue Tasks\n----------------------------------------\nTask ID | Task Name | Owner | Priority | Deadline\n----------------------------------------\n${taskList}\n`;\n\nreturn [\n{\njson: {\nreport_body: report\n}\n}\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        -80
+      ],
+      "id": "f1395425-edfa-4dd6-86bb-48c79e4c04f7",
+      "name": "Build Report Body"
+    },
+    {
+      "parameters": {
+        "folderId": "=",
+        "title": "=Weekly_Overdue_Report_{{$json.report_date}}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        -80
+      ],
+      "id": "c578319d-7045-43e8-8411-f85c73329d6f",
+      "name": "Create a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "Jmnpo9eC6UBhJRz3",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{$node[\"Create a document\"].json.id}}",
+          "mode": "id"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "application/pdf"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1824,
+        -80
+      ],
+      "id": "da4d4959-648a-4391-a1e8-b374db9e3ef4",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "qC3UG3qHnLYR6LVh",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "zinbya22@gmail.com",
+        "subject": "={{$node[\"Generate Summary Metrics\"].json.report_date}}",
+        "message": "=<h3>📊 Báo cáo task quá hạn tuần</h3>\n\n<ul>\n<li>Tổng task quá hạn: {{$node[\"Generate Summary Metrics\"].json.total_overdue}}</li>\n<li>Ưu tiên cao: {{$node[\"Generate Summary Metrics\"].json.high_count}}</li>\n<li>Ưu tiên thường: {{$node[\"Generate Summary Metrics\"].json.normal_count}}</li>\n</ul>\n\n📎 File PDF chi tiết đính kèm.",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2032,
+        -80
+      ],
+      "id": "eb96012d-9675-4d5b-8cff-12507ed2bd8a",
+      "name": "Send a message",
+      "webhookId": "bea46410-c1d2-4f52-bcb2-c39bad28dc34",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "v3WLc8FNCRIthhaA",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1-AOSifdjrT-7vr6e1OQcIcxe-FucMAN7MRLpVIjbnSE",
+          "mode": "list",
+          "cachedResultName": "task automation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-AOSifdjrT-7vr6e1OQcIcxe-FucMAN7MRLpVIjbnSE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1925314341,
+          "mode": "list",
+          "cachedResultName": "Task_Master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-AOSifdjrT-7vr6e1OQcIcxe-FucMAN7MRLpVIjbnSE/edit#gid=1925314341"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "Escalated",
+            "escalated_at": "={{ $now }}",
+            "task_id": "={{$json.task_id}}"
+          },
+          "matchingColumns": [
+            "task_id"
+          ],
+          "schema": [
+            {
+              "id": "task_id",
+              "displayName": "task_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "task_name",
+              "displayName": "task_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "task_description",
+              "displayName": "task_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "owner_name",
+              "displayName": "owner_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assignee_email",
+              "displayName": "assignee_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "deadline",
+              "displayName": "deadline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "days_left",
+              "displayName": "days_left",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_reminded_at",
+              "displayName": "last_reminded_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reminder_count",
+              "displayName": "reminder_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "escalated_at",
+              "displayName": "escalated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "completed_at",
+              "displayName": "completed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source_input",
+              "displayName": "source_input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_by",
+              "displayName": "created_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "admin_note",
+              "displayName": "admin_note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2240,
+        -80
+      ],
+      "id": "50fafe5e-b7f4-421a-95dc-e7157aa37328",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wtjdw3x8phVpJOcK",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "7065866911",
+        "text": "=📊 Báo cáo task quá hạn tuần đã được gửi\n\nNgày: {{$node[\"Generate Summary Metrics\"].json.report_date}}\n\n• Tổng task quá hạn: {{$node[\"Generate Summary Metrics\"].json.total_overdue}}\n• Ưu tiên cao: {{$node[\"Generate Summary Metrics\"].json.high_count}}\n• Ưu tiên thường: {{$node[\"Generate Summary Metrics\"].json.normal_count}}\n\n✅ Báo cáo đã gửi cho quản lý.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2448,
+        -80
+      ],
+      "id": "51d77d1e-e2cd-4c2d-8d17-7eae0a71c943",
+      "name": "Send a text message",
+      "webhookId": "73e5ab0d-b207-4ac9-9c7b-8a93fcca4b05",
+      "credentials": {
+        "telegramApi": {
+          "id": "XVlbImS4mmkHMgZT",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{$node[\"Create a document\"].json.id}}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{$node[\"Build Report Body\"].json.report_body}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        -80
+      ],
+      "id": "2cad5dc4-ea1f-4cf1-828d-aaaa40c7433f",
+      "name": "Update a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "Jmnpo9eC6UBhJRz3",
+          "name": "Google Docs account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Sort Overdue Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort Overdue Tasks": {
+      "main": [
+        [
+          {
+            "node": "Generate Summary Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Summary Metrics": {
+      "main": [
+        [
+          {
+            "node": "Build Report Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Report Body": {
+      "main": [
+        [
+          {
+            "node": "Create a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a document": {
+      "main": [
+        [
+          {
+            "node": "Update a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a document": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7db58615eea76af926b37c9ce792f3a3b6a538b566b08c5a92cda41e96ff375c"
+  }
+}
