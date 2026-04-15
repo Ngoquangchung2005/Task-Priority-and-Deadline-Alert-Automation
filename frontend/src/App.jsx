@@ -1,121 +1,78 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './routes/ProtectedRoute';
+
+import Login from './pages/Login';
+import ChangePassword from './pages/ChangePassword';
+import Unauthorized from './pages/Unauthorized';
+
+// Layouts
+import ManagerLayout from './layouts/ManagerLayout';
+import UserLayout from './layouts/UserLayout';
+
+// Manager Pages
+import MgrDashboard from './pages/manager/Dashboard';
+import MgrTasks from './pages/manager/Tasks';
+import MgrCancelledTasks from './pages/manager/CancelledTasks';
+import MgrArchivedTasks from './pages/manager/ArchivedTasks';
+import MgrReports from './pages/manager/Reports';
+import MgrUsers from './pages/manager/Users';
+import MgrNotifications from './pages/manager/Notifications';
+import MgrSubtaskBoard from './pages/manager/SubtaskBoard';
+
+// User Pages
+import UsrDashboard from './pages/user/Dashboard';
+import UsrTasks from './pages/user/Tasks';
+import UsrCalendar from './pages/user/Calendar';
+import UsrNotifications from './pages/user/Notifications';
+import SubtaskBoard from './pages/user/SubtaskBoard';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <Router>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/change-password" element={<ChangePassword />} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
 
-      <div className="ticks"></div>
+          {/* Manager Routes */}
+          <Route path="/manager" element={
+            <ProtectedRoute allowedRoles={['MANAGER']}>
+              <ManagerLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<MgrDashboard />} />
+            <Route path="tasks" element={<MgrTasks />} />
+            <Route path="tasks/cancelled" element={<MgrCancelledTasks />} />
+            <Route path="tasks/archived" element={<MgrArchivedTasks />} />
+            <Route path="tasks/:taskId/board" element={<MgrSubtaskBoard />} />
+            <Route path="reports" element={<MgrReports />} />
+            <Route path="users" element={<MgrUsers />} />
+            <Route path="notifications" element={<MgrNotifications />} />
+            <Route path="settings" element={<div className="page-container"><h1 className="page-title">Settings</h1><p className="page-subtitle">Coming soon...</p></div>} />
+          </Route>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          {/* User Routes */}
+          <Route path="/user" element={
+            <ProtectedRoute allowedRoles={['USER']}>
+              <UserLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<UsrDashboard />} />
+            <Route path="tasks" element={<UsrTasks />} />
+            <Route path="tasks/:taskId/board" element={<SubtaskBoard />} />
+            <Route path="calendar" element={<UsrCalendar />} />
+            <Route path="notifications" element={<UsrNotifications />} />
+            <Route path="settings" element={<div className="page-container"><h1 className="page-title">Settings</h1><p className="page-subtitle">Coming soon...</p></div>} />
+          </Route>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+          <Route path="/" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </AuthProvider>
+    </Router>
+  );
 }
 
-export default App
+export default App;
