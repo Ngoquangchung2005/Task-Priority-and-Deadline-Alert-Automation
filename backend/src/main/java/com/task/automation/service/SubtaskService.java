@@ -11,7 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -58,6 +60,58 @@ public class SubtaskService {
         taskRepository.save(task);
 
         return saved;
+    }
+
+    @Transactional
+    public int createSubtasksFromWebhook(String taskPublicId, List<String> titles) {
+        Task task = taskRepository.findByTaskId(taskPublicId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+
+        if (titles == null || titles.isEmpty()) {
+            return 0;
+        }
+
+        List<Subtask> existing = subtaskRepository.findByTaskIdOrderByPositionIndexAsc(task.getId());
+        Set<String> existingNormalizedTitles = new LinkedHashSet<>();
+        for (Subtask subtask : existing) {
+            if (subtask.getTitle() != null) {
+                existingNormalizedTitles.add(subtask.getTitle().trim().toLowerCase());
+            }
+        }
+
+        Set<String> candidates = new LinkedHashSet<>();
+        for (String rawTitle : titles) {
+            if (rawTitle == null) continue;
+            String normalized = rawTitle.trim();
+            if (normalized.isEmpty()) continue;
+            if (normalized.length() > 255) {
+                normalized = normalized.substring(0, 255);
+            }
+            String key = normalized.toLowerCase();
+            if (existingNormalizedTitles.contains(key)) continue;
+            candidates.add(normalized);
+            if (candidates.size() >= 10) break;
+        }
+
+        int position = existing.size();
+        int created = 0;
+        for (String title : candidates) {
+            Subtask subtask = new Subtask();
+            subtask.setTitle(title);
+            subtask.setStatus(TaskStatus.TODO);
+            subtask.setCreatedBy(task.getManagerEmail());
+            subtask.setTask(task);
+            subtask.setPositionIndex(position++);
+            subtaskRepository.save(subtask);
+            created++;
+        }
+
+        if (created > 0) {
+            task.setTotalSubTask(existing.size() + created);
+            taskRepository.save(task);
+        }
+
+        return created;
     }
 
     @Transactional
@@ -144,8 +198,7 @@ public class SubtaskService {
     private void syncParentTaskStatus(Task task) {
         List<Subtask> subtasks = subtaskRepository.findByTaskIdOrderByPositionIndexAsc(task.getId());
 
-        if (subtasks.isEmpty())
-            return;
+        if (subtasks.isEmpty()) return;
 
         TaskStatus originalStatus = task.getStatus();
         LocalDateTime originalCompletedAt = task.getCompletedAt();

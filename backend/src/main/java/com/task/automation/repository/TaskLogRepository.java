@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface TaskLogRepository extends JpaRepository<TaskLog, Long> {
     List<TaskLog> findByTaskIdOrderByCreatedAtDesc(Long taskId);
+    void deleteByTaskId(Long taskId);
 }
