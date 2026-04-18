@@ -1,6 +1,7 @@
 package com.task.automation.controller;
 
 import com.task.automation.dto.request.TaskRequest;
+import com.task.automation.dto.request.AiSubtaskSuggestionRequest;
 import com.task.automation.entity.Task;
 import com.task.automation.enums.TaskStatus;
 import com.task.automation.security.UserDetailsImpl;
@@ -120,10 +121,24 @@ public class TaskController {
         return ResponseEntity.ok(task);
     }
 
-    @PostMapping("/generate-subtasks")
+    @PostMapping("/{id}/generate-subtasks-ai")
     @PreAuthorize("hasRole('MANAGER')")
-    public ResponseEntity<List<Map<String, Object>>> generateSubtasks(@RequestBody Map<String, String> payload) {
-        String taskName = payload.get("taskName");
-        return ResponseEntity.ok(taskService.generateSubtasksFromN8n(taskName));
+    public ResponseEntity<Map<String, String>> generateSubtasksAi(@PathVariable("id") Long id) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Task task = taskService.triggerAiSubtaskGeneration(id, userDetails.getEmail());
+        return ResponseEntity.ok(Map.of(
+                "message", "AI subtask generation triggered",
+                "taskId", task.getTaskId()
+        ));
+    }
+
+    @PostMapping("/ai/suggest-subtasks")
+    @PreAuthorize("hasRole('MANAGER')")
+    public ResponseEntity<Map<String, Object>> suggestSubtasksForDraft(@RequestBody AiSubtaskSuggestionRequest request) {
+        List<String> subtasks = taskService.suggestSubtasksWithAI(request);
+        return ResponseEntity.ok(Map.of(
+                "subtasks", subtasks,
+                "count", subtasks.size()
+        ));
     }
 }
