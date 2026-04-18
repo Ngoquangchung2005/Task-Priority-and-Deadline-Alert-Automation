@@ -2,8 +2,11 @@ package com.task.automation.entity;
 
 import com.task.automation.enums.TaskPriority;
 import com.task.automation.enums.TaskStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -12,7 +15,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "tasks")
+@Table(
+    name = "tasks",
+    indexes = {
+        @Index(name = "idx_tasks_manager_email", columnList = "manager_email"),
+        @Index(name = "idx_tasks_assignee_email", columnList = "assignee_email"),
+        @Index(name = "idx_tasks_status", columnList = "status"),
+        @Index(name = "idx_tasks_deadline", columnList = "deadline")
+    }
+)
 @Data
 public class Task {
     @Id
@@ -46,6 +57,8 @@ public class Task {
     private Integer reminderCount = 0;
     private LocalDateTime escalatedAt;
     private LocalDateTime completedAt;
+    private Boolean archived = false;
+    private LocalDateTime archivedAt;
 
     private String sourceInput;
     private String createdBy;
@@ -53,6 +66,9 @@ public class Task {
 
     private Integer totalSubTask = 0;
 
+    @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("positionIndex ASC")
     private List<Subtask> subtasks = new ArrayList<>();
@@ -61,8 +77,7 @@ public class Task {
     private LocalDateTime createdAt;
 
     public Integer getDaysLeft() {
-        if (deadline == null)
-            return null;
+        if (deadline == null) return null;
         return (int) ChronoUnit.DAYS.between(LocalDateTime.now(), deadline);
     }
 }
