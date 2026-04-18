@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { LayoutDashboard, CheckSquare, FileText, Settings, LogOut, ListTodo, Users, Bell, Calendar } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, FileText, Settings, LogOut, ListTodo, Users, Bell, Calendar, Trash2, Archive } from 'lucide-react';
 import deadlineMark from '../assets/deadline-mark.svg';
 
 const Sidebar = () => {
@@ -27,6 +27,12 @@ const Sidebar = () => {
                     </NavLink>
                     <NavLink to="/manager/tasks" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
                         <ListTodo size={20} /> Tasks
+                    </NavLink>
+                    <NavLink to="/manager/tasks/cancelled" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+                        <Trash2 size={20} /> Cancelled
+                    </NavLink>
+                    <NavLink to="/manager/tasks/archived" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+                        <Archive size={20} /> Archived
                     </NavLink>
                     <NavLink to="/manager/reports" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
                         <FileText size={20} /> Reports
