@@ -20,42 +20,40 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthService {
 
-	private final AuthenticationManager authenticationManager;
-	private final UserRepository userRepository;
-	private final PasswordEncoder passwordEncoder;
-	private final JwtUtils jwtUtils;
+    private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtils jwtUtils;
 
-	public JwtResponse authenticateUser(LoginRequest loginRequest) {
-		Authentication authentication = authenticationManager.authenticate(
-				new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
+    public JwtResponse authenticateUser(LoginRequest loginRequest) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
 
-		SecurityContextHolder.getContext().setAuthentication(authentication);
-		String jwt = jwtUtils.generateJwtToken(authentication);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwt = jwtUtils.generateJwtToken(authentication);
 
-		UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-		return new JwtResponse(jwt,
-				userDetails.getId(),
-				userDetails.getFullName(),
-				userDetails.getEmail(),
-				userRepository.findByEmail(userDetails.getEmail()).get().getRole(),
-				userDetails.getMustChangePassword());
-	}
+        return new JwtResponse(jwt,
+                userDetails.getId(),
+                userDetails.getFullName(),
+                userDetails.getEmail(),
+                userRepository.findByEmail(userDetails.getEmail()).get().getRole(),
+                userDetails.getMustChangePassword());
+    }
 
-	public MessageResponse changePassword(ChangePasswordRequest request) {
-		UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
-				.getPrincipal();
-		User user = userRepository.findById(userDetails.getId())
-				.orElseThrow(() -> new RuntimeException("Error: User is not found."));
+    public MessageResponse changePassword(ChangePasswordRequest request) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findById(userDetails.getId()).orElseThrow(() -> new RuntimeException("Error: User is not found."));
 
-		if (!passwordEncoder.matches(request.getOldPassword(), user.getPasswordHash())) {
-			throw new RuntimeException("Error: Old password is not correct.");
-		}
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPasswordHash())) {
+            throw new RuntimeException("Error: Old password is not correct.");
+        }
 
-		user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
-		user.setMustChangePassword(false);
-		userRepository.save(user);
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        user.setMustChangePassword(false);
+        userRepository.save(user);
 
-		return new MessageResponse("Password changed successfully!");
-	}
+        return new MessageResponse("Password changed successfully!");
+    }
 }
