@@ -13,6 +13,8 @@ import java.util.Optional;
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
     Optional<Task> findByTaskId(String taskId);
+    Optional<Task> findByIdAndAssigneeEmail(Long id, String email);
+    Optional<Task> findByIdAndManagerEmail(Long id, String email);
     List<Task> findByAssigneeEmail(String email);
     List<Task> findByManagerEmail(String email);
     
