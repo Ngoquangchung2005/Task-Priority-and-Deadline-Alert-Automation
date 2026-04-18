@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import api from '../../services/api';
 import LoadingCompass from '../../components/LoadingCompass';
+import useAutoRefresh from '../../hooks/useAutoRefresh';
 import { Bell, AlertTriangle, Clock, CheckCircle, Info } from 'lucide-react';
 
 const UserNotifications = () => {
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetch = async () => {
-            try {
-                const res = await api.get('/tasks/my-tasks');
-                setTasks(res.data.filter(task => !task.archived));
-            } catch (err) { console.error(err); }
-            finally { setLoading(false); }
-        };
-        fetch();
-    }, []);
+    const fetchNotifications = async () => {
+        try {
+            const res = await api.get('/tasks/my-tasks');
+            setTasks(res.data.filter(task => !task.archived));
+        } catch (err) { console.error(err); }
+        finally { setLoading(false); }
+    };
+
+    useAutoRefresh(fetchNotifications, []);
 
     const notifications = [];
 

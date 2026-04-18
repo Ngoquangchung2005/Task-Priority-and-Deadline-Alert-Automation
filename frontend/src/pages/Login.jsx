@@ -26,7 +26,7 @@ const Login = () => {
       } else {
         navigate('/user');
       }
-    } catch (err) {
+    } catch {
       setError('Invalid email or password');
     }
   };
