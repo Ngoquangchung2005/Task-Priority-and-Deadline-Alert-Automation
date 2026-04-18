@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, RefreshCw, Search, Trash2, AlertTriangle, CheckCircle, MoreHorizontal } from 'lucide-react';
 import api from '../../services/api';
 import TaskDetailDrawer from '../../components/TaskDetailDrawer';
+import useAutoRefresh from '../../hooks/useAutoRefresh';
 
 const CancelledTasks = () => {
     const navigate = useNavigate();
@@ -30,9 +31,7 @@ const CancelledTasks = () => {
         }
     };
 
-    useEffect(() => {
-        fetchTasks();
-    }, []);
+    useAutoRefresh(fetchTasks, []);
 
     const filteredTasks = useMemo(() => {
         const keyword = searchTerm.trim().toLowerCase();

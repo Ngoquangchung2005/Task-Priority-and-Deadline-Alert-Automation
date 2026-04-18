@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import CreateTaskModal from '../../components/CreateTaskModal';
 import TaskDetailDrawer from '../../components/TaskDetailDrawer';
+import useAutoRefresh from '../../hooks/useAutoRefresh';
 import { Search, Plus, Filter, ChevronDown, MoreHorizontal, Eye, Edit3, Trash2, Archive, ArchiveRestore, RefreshCw, AlertTriangle, Bell, ChevronLeft, ChevronRight, CheckCircle, Layout } from 'lucide-react';
 
 const PAGE_SIZE = 10;
@@ -34,18 +35,7 @@ const ManagerTasks = () => {
         finally { setLoading(false); }
     };
 
-    useEffect(() => {
-        fetchTasks();
-
-        const intervalId = window.setInterval(fetchTasks, 10000);
-        const handleFocus = () => fetchTasks();
-
-        window.addEventListener('focus', handleFocus);
-        return () => {
-            window.clearInterval(intervalId);
-            window.removeEventListener('focus', handleFocus);
-        };
-    }, []);
+    useAutoRefresh(fetchTasks, []);
 
     const showToast = (msg, type = 'success') => {
         setToast({ msg, type });

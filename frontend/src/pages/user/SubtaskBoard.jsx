@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import api from '../../services/api';
 import LoadingCompass from '../../components/LoadingCompass';
+import useAutoRefresh from '../../hooks/useAutoRefresh';
 import { ArrowLeft, GripVertical, CheckCircle, AlertTriangle, Clock, ListTodo, Flag, User, Calendar } from 'lucide-react';
 
 const COLUMNS = [
@@ -11,6 +12,37 @@ const COLUMNS = [
     { id: 'DONE', title: 'Done', icon: <CheckCircle size={16} />, color: '#10B981' },
 ];
 
+const reorderSubtasks = (items, source, destination, subtaskId) => {
+    const movedSubtask = items.find((item) => item.id === subtaskId);
+
+    if (!movedSubtask) {
+        return items;
+    }
+
+    const columnItems = Object.fromEntries(
+        COLUMNS.map((column) => [
+            column.id,
+            items
+                .filter((item) => item.status === column.id && item.id !== subtaskId)
+                .sort((a, b) => (a.positionIndex ?? 0) - (b.positionIndex ?? 0)),
+        ]),
+    );
+
+    const destinationItems = [...(columnItems[destination.droppableId] ?? [])];
+    destinationItems.splice(destination.index, 0, {
+        ...movedSubtask,
+        status: destination.droppableId,
+    });
+    columnItems[destination.droppableId] = destinationItems;
+
+    return COLUMNS.flatMap((column) =>
+        (columnItems[column.id] ?? []).map((item, index) => ({
+            ...item,
+            positionIndex: index,
+        })),
+    );
+};
+
 const SubtaskBoard = () => {
     const { taskId } = useParams();
     const navigate = useNavigate();
@@ -18,6 +50,7 @@ const SubtaskBoard = () => {
     const [subtasks, setSubtasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState(null);
+    const [isDragging, setIsDragging] = useState(false);
 
     const fetchData = async () => {
         try {
@@ -34,7 +67,7 @@ const SubtaskBoard = () => {
         }
     };
 
-    useEffect(() => { fetchData(); }, [taskId]);
+    useAutoRefresh(fetchData, [taskId], 10000, !isDragging);
 
     const showToast = (msg, type = 'success') => {
         setToast({ msg, type });
@@ -45,19 +78,21 @@ const SubtaskBoard = () => {
 
     const handleDragEnd = async (result) => {
         const { destination, source, draggableId } = result;
+        setIsDragging(false);
         if (!destination) return;
         if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
-        const subtaskId = parseInt(draggableId);
+        const subtaskId = Number.parseInt(draggableId, 10);
         const newStatus = destination.droppableId;
+        const reorderedSubtasks = reorderSubtasks(subtasks, source, destination, subtaskId);
 
-        // Optimistic update
-        setSubtasks(prev => prev.map(s => s.id === subtaskId ? { ...s, status: newStatus, positionIndex: destination.index } : s));
+        setSubtasks(reorderedSubtasks);
 
         try {
-            await api.patch(`/tasks/my-tasks/subtasks/${subtaskId}/status`, { status: newStatus });
-            await api.patch(`/tasks/my-tasks/subtasks/${subtaskId}/position`, { position: destination.index });
-            fetchData();
+            await Promise.all([
+                api.patch(`/tasks/my-tasks/subtasks/${subtaskId}/status`, { status: newStatus }),
+                api.patch(`/tasks/my-tasks/subtasks/${subtaskId}/position`, { position: destination.index }),
+            ]);
         } catch {
             showToast('Lỗi cập nhật trạng thái', 'error');
             fetchData();
@@ -140,7 +175,7 @@ const SubtaskBoard = () => {
             </div>
 
             {/* Kanban Board */}
-            <DragDropContext onDragEnd={handleDragEnd}>
+            <DragDropContext onDragStart={() => setIsDragging(true)} onDragEnd={handleDragEnd}>
                 <div className="kanban-board">
                     {COLUMNS.map(col => (
                         <div className="kanban-column" key={col.id}>
@@ -170,6 +205,7 @@ const SubtaskBoard = () => {
                                                         ref={provided.innerRef}
                                                         {...provided.draggableProps}
                                                         {...provided.dragHandleProps}
+                                                        style={provided.draggableProps.style}
                                                         className={`kanban-card kanban-card-rich ${snapshot.isDragging ? 'kanban-card-dragging' : ''} ${subtask.isOverdue ? 'kanban-card-overdue' : ''}`}
                                                     >
                                                         <div className="kanban-card-top">

@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import api from '../../services/api';
 import LoadingCompass from '../../components/LoadingCompass';
+import useAutoRefresh from '../../hooks/useAutoRefresh';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, LineChart, Line, Legend } from 'recharts';
 import { Download } from 'lucide-react';
 
@@ -9,16 +10,15 @@ const ManagerReports = () => {
     const [loading, setLoading] = useState(true);
     const [dateRange, setDateRange] = useState('all');
 
-    useEffect(() => {
-        const fetch = async () => {
-            try {
-                const res = await api.get('/tasks');
-                setTasks(res.data);
-            } catch (err) { console.error(err); }
-            finally { setLoading(false); }
-        };
-        fetch();
-    }, []);
+    const fetchReports = async () => {
+        try {
+            const res = await api.get('/tasks');
+            setTasks(res.data);
+        } catch (err) { console.error(err); }
+        finally { setLoading(false); }
+    };
+
+    useAutoRefresh(fetchReports, []);
 
     const filteredTasks = useMemo(() => {
         if (dateRange === 'all') return tasks;

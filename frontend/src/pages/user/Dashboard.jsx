@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import LoadingCompass from '../../components/LoadingCompass';
+import useAutoRefresh from '../../hooks/useAutoRefresh';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { CheckCircle, Clock, AlertTriangle, ListTodo } from 'lucide-react';
 
@@ -10,16 +11,15 @@ const UserDashboard = () => {
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
 
-    useEffect(() => {
-        const fetch = async () => {
-            try {
-                const res = await api.get('/tasks/my-tasks');
-                setTasks(res.data.filter(task => !task.archived));
-            } catch (err) { console.error(err); }
-            finally { setLoading(false); }
-        };
-        fetch();
-    }, []);
+    const fetchDashboard = async () => {
+        try {
+            const res = await api.get('/tasks/my-tasks');
+            setTasks(res.data.filter(task => !task.archived));
+        } catch (err) { console.error(err); }
+        finally { setLoading(false); }
+    };
+
+    useAutoRefresh(fetchDashboard, []);
 
     const stats = {
         total: tasks.length,

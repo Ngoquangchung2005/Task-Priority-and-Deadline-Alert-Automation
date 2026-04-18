@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import TaskDetailDrawer from '../../components/TaskDetailDrawer';
 import LoadingCompass from '../../components/LoadingCompass';
+import useAutoRefresh from '../../hooks/useAutoRefresh';
 import { Search, CheckCircle, AlertTriangle, Layout, Send } from 'lucide-react';
 
 const UserTasks = () => {
@@ -22,7 +23,7 @@ const UserTasks = () => {
         finally { setLoading(false); }
     };
 
-    useEffect(() => { fetchTasks(); }, []);
+    useAutoRefresh(fetchTasks, []);
 
     const showToast = (msg, type = 'success') => {
         setToast({ msg, type });

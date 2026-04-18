@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import api from '../../services/api';
 import LoadingCompass from '../../components/LoadingCompass';
+import useAutoRefresh from '../../hooks/useAutoRefresh';
 import { Bell, AlertTriangle, Clock, CheckCircle } from 'lucide-react';
 
 const ManagerNotifications = () => {
@@ -8,16 +9,15 @@ const ManagerNotifications = () => {
     const [loading, setLoading] = useState(true);
     const [tab, setTab] = useState('all');
 
-    useEffect(() => {
-        const fetch = async () => {
-            try {
-                const res = await api.get('/tasks');
-                setTasks(res.data);
-            } catch (err) { console.error(err); }
-            finally { setLoading(false); }
-        };
-        fetch();
-    }, []);
+    const fetchNotifications = async () => {
+        try {
+            const res = await api.get('/tasks');
+            setTasks(res.data);
+        } catch (err) { console.error(err); }
+        finally { setLoading(false); }
+    };
+
+    useAutoRefresh(fetchNotifications, []);
 
     const overdueTasks = tasks.filter(t => t.daysLeft !== null && t.daysLeft < 0 && t.status !== 'DONE');
     const dueTodayTasks = tasks.filter(t => t.daysLeft === 0 && t.status !== 'DONE');

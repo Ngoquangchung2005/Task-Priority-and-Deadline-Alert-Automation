@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import api from '../../services/api';
 import LoadingCompass from '../../components/LoadingCompass';
+import useAutoRefresh from '../../hooks/useAutoRefresh';
 import { Search, Users as UsersIcon } from 'lucide-react';
 
 const ManagerUsers = () => {
@@ -8,16 +9,15 @@ const ManagerUsers = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
-    useEffect(() => {
-        const fetch = async () => {
-            try {
-                const res = await api.get('/tasks');
-                setTasks(res.data);
-            } catch (err) { console.error(err); }
-            finally { setLoading(false); }
-        };
-        fetch();
-    }, []);
+    const fetchUsers = async () => {
+        try {
+            const res = await api.get('/tasks');
+            setTasks(res.data);
+        } catch (err) { console.error(err); }
+        finally { setLoading(false); }
+    };
+
+    useAutoRefresh(fetchUsers, []);
 
     const userStats = useMemo(() => {
         const map = {};
