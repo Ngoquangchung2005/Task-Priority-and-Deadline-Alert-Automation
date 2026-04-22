@@ -27,7 +27,7 @@ public class SecurityConfig {
         return new AuthTokenFilter();
     }
 
-// Auto-configured by Spring Boot 3 using UserDetailsService and PasswordEncoder beans.
+// Auto-configured by Spring Boot 3 using UserDetailsService and PasswordEncoder beans,,,.
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
