@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,4 +24,18 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     @Query("SELECT t FROM Task t WHERE t.status IN :statuses")
     List<Task> findTasksByStatuses(@Param("statuses") List<TaskStatus> statuses);
+
+    @Query("""
+            SELECT t
+            FROM Task t
+            WHERE COALESCE(t.archived, false) = false
+              AND (
+                t.status IN :openStatuses
+                OR (t.status = :doneStatus AND t.completedAt IS NOT NULL AND t.completedAt >= :completedFrom)
+              )
+            """)
+    List<Task> findTasksForEmployeeStatistics(
+            @Param("openStatuses") List<TaskStatus> openStatuses,
+            @Param("doneStatus") TaskStatus doneStatus,
+            @Param("completedFrom") LocalDateTime completedFrom);
 }
