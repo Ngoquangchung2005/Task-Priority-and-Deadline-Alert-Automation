@@ -24,8 +24,8 @@ pipeline {
                 dir('backend') {
                     // Đảm bảo Maven Wrapper có quyền thực thi
                     sh 'chmod +x ./mvnw'
-                    // Chạy build và sẽ chạy bao gồm cả test
-                    sh './mvnw clean package'
+                    // Chạy build và bỏ qua bước test để tránh dính database thật
+                    sh './mvnw clean package -DskipTests'
                     // Log ra xác nhận file Jar đã tạo
                     sh 'ls -la target/*.jar'
                 }
