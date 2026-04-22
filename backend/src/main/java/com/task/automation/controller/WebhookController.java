@@ -48,6 +48,13 @@ public class WebhookController {
         return ResponseEntity.ok(taskService.getOverdueTasks());
     }
 
+    @GetMapping("/employee-statistics")
+    public ResponseEntity<?> getEmployeeStatistics(
+            @RequestHeader(value = "X-Webhook-Secret", required = false) String providedSecret) {
+        validateWebhookSecret(providedSecret);
+        return ResponseEntity.ok(taskService.getEmployeeStatisticsTasks());
+    }
+
     @PostMapping("/subtasks/generate")
     public ResponseEntity<?> generateSubtasks(
             @RequestHeader(value = "X-Webhook-Secret", required = false) String providedSecret,
