@@ -1431,6 +1431,313 @@
           "name": "New task"
         }
       }
+    },
+    {
+      "parameters": {
+        "content": "## Flow 6 - Employee Statistics 8:30AM",
+        "height": 716,
+        "width": 2384,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4336,
+        5440
+      ],
+      "id": "d5407e56-4d15-43eb-b5aa-c67a3f85a361",
+      "name": "Note - Employee Statistics"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 8,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        4448,
+        5728
+      ],
+      "id": "b7b2db0c-75a5-4a4a-a020-8f4ed7c35516",
+      "name": "Schedule Employee Stats 8:30AM"
+    },
+    {
+      "parameters": {
+        "url": "http://172.17.0.1:8080/api/webhooks/employee-statistics",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Webhook-Secret",
+              "value": "local-n8n-sync-secret"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        4672,
+        5728
+      ],
+      "id": "f2c90444-1cb2-4484-91b6-52f18ef2a779",
+      "name": "Fetch Employee Task Snapshot"
+    },
+    {
+      "parameters": {
+        "jsCode": "const parseDate = (value) => {\n  if (!value) return null;\n  if (Array.isArray(value)) {\n    const [year, month = 1, day = 1, hour = 0, minute = 0, second = 0, nano = 0] = value;\n    const millis = Math.floor(Number(nano) / 1000000);\n    const date = new Date(year, month - 1, day, hour, minute, second, millis);\n    return Number.isNaN(date.getTime()) ? null : date;\n  }\n  const date = new Date(value);\n  return Number.isNaN(date.getTime()) ? null : date;\n};\n\nconst formatDate = (date) => {\n  if (!date) return null;\n  const pad = (input) => String(input).padStart(2, '0');\n  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;\n};\n\nconst normalize = (value) => String(value || '').trim().toUpperCase().replace(/[\\s-]+/g, '_');\nconst snapshotAt = new Date().toISOString();\n\nreturn $input.all().map((entry) => {\n  const item = entry.json ?? {};\n  const deadline = parseDate(item.deadline);\n  const completedAt = parseDate(item.completedAt);\n  const assigneeEmail = item.assigneeEmail || 'chua-phan-cong';\n\n  return {\n    json: {\n      ...item,\n      assigneeEmail,\n      assigneeLabel: assigneeEmail === 'chua-phan-cong' ? 'Chua phan cong' : assigneeEmail,\n      priority: normalize(item.priority),\n      status: normalize(item.status),\n      deadline: deadline?.toISOString() ?? item.deadline ?? null,\n      deadlineDisplay: item.deadlineDisplay ?? formatDate(deadline) ?? 'Chua co deadline',\n      completedAt: completedAt?.toISOString() ?? item.completedAt ?? null,\n      completedAtDisplay: completedAt ? formatDate(completedAt) : null,\n      snapshotAt\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4896,
+        5728
+      ],
+      "id": "3873ff6d-89d4-4b20-a2e8-dd4f869e4cbf",
+      "name": "Normalize Employee Snapshot"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().map((entry) => entry.json ?? {});\nconst groups = {};\nconst now = Date.now();\nconst openStatuses = new Set(['PENDING', 'TODO', 'IN_PROGRESS', 'IN_REVIEW', 'OVERDUE']);\n\nfor (const item of items) {\n  const key = item.assigneeEmail || 'chua-phan-cong';\n  const deadlineValue = item.deadline ? Date.parse(item.deadline) : NaN;\n  const completedValue = item.completedAt ? Date.parse(item.completedAt) : NaN;\n  const hasDeadline = !Number.isNaN(deadlineValue);\n  const hasCompleted = !Number.isNaN(completedValue);\n  const daysToDeadline = hasDeadline ? Math.ceil((deadlineValue - now) / 86400000) : null;\n  const isOpen = openStatuses.has(item.status);\n  const isDoneThisWeek = item.status === 'DONE' && hasCompleted;\n  const isOnTime = isDoneThisWeek && hasDeadline && completedValue <= deadlineValue;\n  const isEarly = isDoneThisWeek && hasDeadline && completedValue < deadlineValue;\n  const isLate = isDoneThisWeek && hasDeadline && completedValue > deadlineValue;\n\n  if (!groups[key]) {\n    groups[key] = {\n      assigneeEmail: key,\n      assigneeLabel: item.assigneeLabel || key,\n      snapshotAt: item.snapshotAt || new Date().toISOString(),\n      totalOpenTasks: 0,\n      overdueCount: 0,\n      nearDeadlineCount: 0,\n      highPriorityCount: 0,\n      doneThisWeek: 0,\n      onTimeDoneCount: 0,\n      assessedDoneCount: 0,\n      earlyDoneCount: 0,\n      lateDoneCount: 0,\n      focusTasks: []\n    };\n  }\n\n  const employee = groups[key];\n\n  if (isOpen) {\n    employee.totalOpenTasks += 1;\n    if (item.status === 'OVERDUE') employee.overdueCount += 1;\n    if (item.priority === 'HIGH') employee.highPriorityCount += 1;\n    if (daysToDeadline !== null && daysToDeadline >= 0 && daysToDeadline <= 2) employee.nearDeadlineCount += 1;\n\n    employee.focusTasks.push({\n      taskId: item.taskId || '-',\n      taskName: item.taskName || '-',\n      status: item.status || '-',\n      priority: item.priority || '-',\n      deadlineDisplay: item.deadlineDisplay || item.deadline || '-'\n    });\n  }\n\n  if (isDoneThisWeek) {\n    employee.doneThisWeek += 1;\n    if (hasDeadline) {\n      employee.assessedDoneCount += 1;\n      if (isOnTime) employee.onTimeDoneCount += 1;\n      if (isEarly) employee.earlyDoneCount += 1;\n      if (isLate) employee.lateDoneCount += 1;\n    }\n  }\n}\n\nconst employees = Object.values(groups)\n  .map((employee) => {\n    const onTimeRate = employee.assessedDoneCount > 0\n      ? Math.round((employee.onTimeDoneCount / employee.assessedDoneCount) * 100)\n      : 0;\n\n    return {\n      ...employee,\n      onTimeRate,\n      alertLevel: employee.overdueCount >= 2 || employee.lateDoneCount >= 2 || employee.totalOpenTasks >= 6 || employee.nearDeadlineCount >= 3 ? 'OVERLOADED' : 'NORMAL',\n      focusTasks: employee.focusTasks\n        .sort((a, b) => {\n          const statusRank = { OVERDUE: 0, IN_PROGRESS: 1, IN_REVIEW: 2, PENDING: 3, TODO: 4 };\n          const priorityRank = { HIGH: 0, MEDIUM: 1, LOW: 2 };\n          const aStatus = statusRank[a.status] ?? 9;\n          const bStatus = statusRank[b.status] ?? 9;\n          if (aStatus !== bStatus) return aStatus - bStatus;\n          return (priorityRank[a.priority] ?? 9) - (priorityRank[b.priority] ?? 9);\n        })\n        .slice(0, 2)\n    };\n  });\n\nconst topEarlyEmployees = [...employees]\n  .filter((employee) => employee.earlyDoneCount > 0 || employee.doneThisWeek > 0)\n  .sort((a, b) => {\n    if (b.earlyDoneCount !== a.earlyDoneCount) return b.earlyDoneCount - a.earlyDoneCount;\n    if (b.onTimeRate !== a.onTimeRate) return b.onTimeRate - a.onTimeRate;\n    return b.doneThisWeek - a.doneThisWeek;\n  })\n  .slice(0, 3);\n\nconst topRiskEmployees = [...employees]\n  .filter((employee) => employee.overdueCount > 0 || employee.lateDoneCount > 0 || employee.totalOpenTasks > 0)\n  .sort((a, b) => {\n    if (b.overdueCount !== a.overdueCount) return b.overdueCount - a.overdueCount;\n    if (b.lateDoneCount !== a.lateDoneCount) return b.lateDoneCount - a.lateDoneCount;\n    if (b.nearDeadlineCount !== a.nearDeadlineCount) return b.nearDeadlineCount - a.nearDeadlineCount;\n    return b.totalOpenTasks - a.totalOpenTasks;\n  })\n  .slice(0, 3);\n\nconst totals = employees.reduce((acc, employee) => {\n  acc.totalOpenTasks += employee.totalOpenTasks;\n  acc.overdueCount += employee.overdueCount;\n  acc.nearDeadlineCount += employee.nearDeadlineCount;\n  acc.highPriorityCount += employee.highPriorityCount;\n  acc.doneThisWeek += employee.doneThisWeek;\n  acc.earlyDoneCount += employee.earlyDoneCount;\n  acc.lateDoneCount += employee.lateDoneCount;\n  acc.assessedDoneCount += employee.assessedDoneCount;\n  acc.onTimeDoneCount += employee.onTimeDoneCount;\n  return acc;\n}, {\n  totalOpenTasks: 0,\n  overdueCount: 0,\n  nearDeadlineCount: 0,\n  highPriorityCount: 0,\n  doneThisWeek: 0,\n  earlyDoneCount: 0,\n  lateDoneCount: 0,\n  assessedDoneCount: 0,\n  onTimeDoneCount: 0\n});\n\nreturn [{\n  json: {\n    snapshotAt: employees[0]?.snapshotAt || new Date().toISOString(),\n    totalEmployees: employees.length,\n    totalOpenTasks: totals.totalOpenTasks,\n    overdueCount: totals.overdueCount,\n    nearDeadlineCount: totals.nearDeadlineCount,\n    highPriorityCount: totals.highPriorityCount,\n    doneThisWeek: totals.doneThisWeek,\n    earlyDoneCount: totals.earlyDoneCount,\n    lateDoneCount: totals.lateDoneCount,\n    onTimeRate: totals.assessedDoneCount > 0 ? Math.round((totals.onTimeDoneCount / totals.assessedDoneCount) * 100) : 0,\n    overloadedCount: employees.filter((employee) => employee.alertLevel === 'OVERLOADED').length,\n    topEarlyEmployees,\n    topRiskEmployees,\n    employees\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5120,
+        5728
+      ],
+      "id": "a2f3cfc1-11f4-4f3d-8af8-30233f5c8ca2",
+      "name": "Aggregate Employee Statistics"
+    },
+    {
+      "parameters": {
+        "jsCode": "const topEarlyEmployees = Array.isArray($json.topEarlyEmployees) ? $json.topEarlyEmployees : [];\nconst topRiskEmployees = Array.isArray($json.topRiskEmployees) ? $json.topRiskEmployees : [];\n\nconst lines = [\n  '📈 BAO CAO THONG KE NHAN VIEN',\n  '',\n  `👥 Nhan vien co task: ${$json.totalEmployees ?? 0}`,\n  `📂 Task dang mo: ${$json.totalOpenTasks ?? 0}`,\n  `🚨 Task qua han: ${$json.overdueCount ?? 0}`,\n  `⏳ Task gan deadline: ${$json.nearDeadlineCount ?? 0}`,\n  `🔥 Task uu tien cao: ${$json.highPriorityCount ?? 0}`,\n  `✅ Hoan thanh tuan nay: ${$json.doneThisWeek ?? 0}`,\n  `🏁 Hoan thanh som: ${$json.earlyDoneCount ?? 0}`,\n  `🔴 Hoan thanh tre: ${$json.lateDoneCount ?? 0}`,\n  `🎯 Ty le dung han: ${$json.onTimeRate ?? 0}%`,\n  `🕒 Thoi diem thong ke: ${$json.snapshotAt || new Date().toISOString()}`\n];\n\nif (topEarlyEmployees.length) {\n  lines.push('');\n  lines.push('🌟 NHAN VIEN HOAN THANH SOM:');\n  topEarlyEmployees.forEach((employee, index) => {\n    lines.push(`${index + 1}. ${employee.assigneeLabel || '-'} | Som ${employee.earlyDoneCount} | Dung han ${employee.onTimeRate}% | Xong tuan nay ${employee.doneThisWeek}`);\n  });\n}\n\nif (topRiskEmployees.length) {\n  lines.push('');\n  lines.push('⚠️ NHAN VIEN HAY BI QUA HAN:');\n  topRiskEmployees.forEach((employee, index) => {\n    lines.push(`${index + 1}. ${employee.assigneeLabel || '-'} | Qua han ${employee.overdueCount} | Tre ${employee.lateDoneCount} | Dang mo ${employee.totalOpenTasks}`);\n  });\n}\n\nreturn [{\n  json: {\n    ...$json,\n    employeeReport: lines.join('\\n')\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5344,
+        5600
+      ],
+      "id": "f43917ca-c6de-41b6-9983-b5fdadbf9509",
+      "name": "Build Employee Summary"
+    },
+    {
+      "parameters": {
+        "chatId": "7065866911",
+        "text": "=BOT quan ly: {{ $json.employeeReport }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        5568,
+        5600
+      ],
+      "id": "248d6b52-d8a5-4b47-ae85-fd9202807ce4",
+      "name": "Send Employee Stats Telegram",
+      "webhookId": "1fcbb83b-34b0-4d96-9220-49ff6d84fdcf",
+      "credentials": {
+        "telegramApi": {
+          "id": "y5tyBVQfSqBBBS4g",
+          "name": "Statistics"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "employees",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 3,
+      "position": [
+        5344,
+        5888
+      ],
+      "id": "cb3b6c11-889f-4412-a300-1dca27aa18f4",
+      "name": "Split Employee Ranking"
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date().toISOString();\nconst overloaded = ($json.alertLevel || 'NORMAL') === 'OVERLOADED';\n\nreturn [{\n  json: {\n    ...$json,\n    taskId: 'EMPLOYEE_STATS',\n    taskName: `Stats ${$json.assigneeLabel || $json.assigneeEmail || 'Unknown'}`,\n    priority: `${$json.highPriorityCount ?? 0} HIGH | ${$json.onTimeRate ?? 0}% ONTIME`,\n    status: overloaded ? 'AT_RISK' : ($json.earlyDoneCount > 0 ? 'PERFORMING' : 'STABLE'),\n    deadline: $json.snapshotAt || now,\n    createdAt: now,\n    alertLevel: overloaded ? 'OVERLOADED' : 'NORMAL'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5568,
+        5888
+      ],
+      "id": "381978d2-4088-4f90-8969-74ee1819432f",
+      "name": "Prepare Employee Log Row"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1QeMzy6aDdgJekNqH6XQExigxrkirwMWDdS41xkien7Y",
+          "mode": "list",
+          "cachedResultName": "Task_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QeMzy6aDdgJekNqH6XQExigxrkirwMWDdS41xkien7Y/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 947514859,
+          "mode": "list",
+          "cachedResultName": "Logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QeMzy6aDdgJekNqH6XQExigxrkirwMWDdS41xkien7Y/edit#gid=947514859"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "taskId": "={{ $json.taskId }}",
+            "taskName": "={{ $json.taskName }}",
+            "assigneeEmail": "={{ $json.assigneeEmail }}",
+            "priority": "={{ $json.priority }}",
+            "status": "={{ $json.status }}",
+            "deadline": "={{ $json.deadline }}",
+            "createdAt": "={{ $json.createdAt }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "taskId",
+              "displayName": "taskId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "taskName",
+              "displayName": "taskName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assigneeEmail",
+              "displayName": "assigneeEmail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "deadline",
+              "displayName": "deadline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createdAt",
+              "displayName": "createdAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        5792,
+        5792
+      ],
+      "id": "e6c3ae95-4275-4441-8b06-391b7f530b0d",
+      "name": "Append Employee Stats Log",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gAxM423I89XeYwaH",
+          "name": "Google Sheets account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.alertLevel }}",
+              "operation": "equal",
+              "value2": "OVERLOADED"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        5792,
+        6016
+      ],
+      "id": "5f8c944c-0acf-4d89-8f42-f2a5ff1b1f4f",
+      "name": "If Employee Overloaded"
+    },
+    {
+      "parameters": {
+        "chatId": "7065866911",
+        "text": "={{ [\n  '⚠️ NHAN VIEN CAN CHU Y',\n  `👤 ${$json.assigneeLabel || $json.assigneeEmail || '-'}`,\n  `📂 Task dang mo: ${$json.totalOpenTasks ?? 0}`,\n  `🚨 Qua han hien tai: ${$json.overdueCount ?? 0}`,\n  `⏳ Gan deadline: ${$json.nearDeadlineCount ?? 0}`,\n  `🔴 Hoan thanh tre tuan nay: ${$json.lateDoneCount ?? 0}`,\n  `🎯 Ty le dung han: ${$json.onTimeRate ?? 0}%`\n].join('\\n') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        6016,
+        6016
+      ],
+      "id": "ecdd5ed1-db20-4f5e-9789-dd3a2a4c07f2",
+      "name": "Send Employee Overload Alert",
+      "webhookId": "61c5608b-9d3d-4f0e-9f0f-d09d7d979e42",
+      "credentials": {
+        "telegramApi": {
+          "id": "y5tyBVQfSqBBBS4g",
+          "name": "Statistics"
+        }
+      }
     }
   ],
   "connections": {
@@ -1864,6 +2171,105 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "Schedule Employee Stats 8:30AM": {
+      "main": [
+        [
+          {
+            "node": "Fetch Employee Task Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Employee Task Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Normalize Employee Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Employee Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Employee Statistics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Employee Statistics": {
+      "main": [
+        [
+          {
+            "node": "Build Employee Summary",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Employee Ranking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Employee Summary": {
+      "main": [
+        [
+          {
+            "node": "Send Employee Stats Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Employee Ranking": {
+      "main": [
+        [
+          {
+            "node": "Prepare Employee Log Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Employee Log Row": {
+      "main": [
+        [
+          {
+            "node": "Append Employee Stats Log",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If Employee Overloaded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Employee Overloaded": {
+      "main": [
+        [
+          {
+            "node": "Send Employee Overload Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
       ]
     }
   },
