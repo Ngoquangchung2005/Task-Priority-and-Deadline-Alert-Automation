@@ -2,96 +2,16 @@
   "nodes": [
     {
       "parameters": {
-        "chatId": "7065866911",
-        "text": "=BOT he thong: {{ $json.fileContent }}",
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1,
-      "position": [
-        5200,
-        4144
-      ],
-      "id": "115c94dd-e8a1-4d78-a85a-5c94c5fc19b3",
-      "name": "Send Health Telegram",
-      "webhookId": "bf0ef731-2eba-44f2-9d1d-dad15d263c94",
-      "credentials": {
-        "telegramApi": {
-          "id": "UvaiPAQZMFmVIwe5",
-          "name": "Telegram account 2"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const snapshotAt = $json.snapshotAt || new Date().toISOString();\nconst focusTasks = Array.isArray($json.focusTasks) ? $json.focusTasks : [];\n\nconst lines = [\n  '📊 BAO CAO HE THONG CUOI NGAY',\n  '',\n  `📂 Tong task dang mo: ${$json.totalOpen ?? 0}`,\n  `🚨 Task qua han: ${$json.overdueCount ?? 0}`,\n  `⚙️ Dang xu ly: ${$json.inProgressCount ?? 0}`,\n  `✅ Da hoan thanh: ${$json.doneCount ?? 0}`,\n  `🔥 Uu tien cao: ${$json.highPriorityCount ?? 0}`,\n  `👤 Nhieu task nhat: ${$json.topAssigneeLabel || '-'}`,\n  `🕒 Thoi diem chup: ${snapshotAt}`\n];\n\nif (focusTasks.length) {\n  lines.push('');\n  lines.push('🎯 TASK CAN CHU Y:');\n  focusTasks.forEach((task, index) => {\n    lines.push(`${index + 1}. ${task.taskName || '-'} | ${task.assigneeEmail || '-'} | ${task.status || '-'} | ${task.deadlineDisplay || task.deadline || '-'}`);\n  });\n}\n\nreturn [{\n  json: {\n    ...$json,\n    fileContent: lines.join('\\n')\n  }\n}];\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        4912,
-        3968
-      ],
-      "id": "cf3db3e6-ffe4-4dd2-be30-e29b8046f098",
-      "name": "Build Health Summary"
-    },
-    {
-      "parameters": {
-        "url": "http://172.17.0.1:8080/api/webhooks/pending-reminders",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-Webhook-Secret",
-              "value": "local-n8n-sync-secret"
-            }
-          ]
-        },
-        "options": {
-          "timeout": 10000
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        4720,
-        4144
-      ],
-      "id": "07451793-7cf8-4d7f-a133-881ce14ef845",
-      "name": "Fetch Open Task Snapshot"
-    },
-    {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "triggerAtHour": 23,
-              "triggerAtMinute": 59
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1,
-      "position": [
-        4480,
-        4144
-      ],
-      "id": "0b158d8a-66a0-48f4-9676-cb5ff1b8406d",
-      "name": "Schedule 11:59PM"
-    },
-    {
-      "parameters": {
-        "content": "Luong health check cuoi ngay. Lay danh sach task dang mo tu backend, tong hop nhanh va gui Telegram.",
-        "height": 180,
-        "width": 1040,
+        "content": "## Flow 4 - Overdue Escalation Friday 5PM\n",
+        "height": 660,
+        "width": 2384,
         "color": 5
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        3360,
-        4112
+        4336,
+        4064
       ],
       "id": "53a77ece-dbe6-4bc0-9d73-1de77a55ef90",
       "name": "Note - Daily Health"
@@ -119,8 +39,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        5728,
-        3840
+        5568,
+        4384
       ],
       "id": "ac5daf71-9783-42d3-9658-81cac1d4ad47",
       "name": "Sync Escalation To Backend"
@@ -133,8 +53,8 @@
       "type": "n8n-nodes-base.itemLists",
       "typeVersion": 3,
       "position": [
-        5488,
-        3840
+        5344,
+        4480
       ],
       "id": "0f8df992-9706-4808-8ce5-105a04da827a",
       "name": "Split Overdue Tasks"
@@ -148,16 +68,16 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        5424,
-        3520
+        5344,
+        4096
       ],
       "id": "344d7db3-1dd7-424f-b9cd-cfe8b9db3301",
       "name": "Send Overdue Report Telegram",
       "webhookId": "68a80d74-52b2-499b-ade0-2f7877c1f298",
       "credentials": {
         "telegramApi": {
-          "id": "UvaiPAQZMFmVIwe5",
-          "name": "Telegram account 2"
+          "id": "UAsMsCKR480oPfOn",
+          "name": "Overdue"
         }
       }
     },
@@ -168,8 +88,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5248,
-        3712
+        5120,
+        4288
       ],
       "id": "4768bf5d-9516-4b34-942c-2e0538c737ff",
       "name": "Render Overdue Report"
@@ -193,8 +113,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        4800,
-        3712
+        4672,
+        4288
       ],
       "id": "1391ae7d-d9b9-43b3-bf62-323657d26ae8",
       "name": "Fetch Overdue Tasks"
@@ -216,24 +136,24 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1,
       "position": [
-        4512,
-        3712
+        4448,
+        4288
       ],
       "id": "d316ce7f-c2f4-4b01-8064-7f339c49cb8e",
       "name": "Schedule Friday 5PM"
     },
     {
       "parameters": {
-        "content": "Luong bao cao qua han chieu thu 6. Lay danh sach task overdue, gui report Telegram, sau do tach item va sync ESCALATED ve backend cho tung task.",
-        "height": 220,
-        "width": 1320,
+        "content": "## Flow 5 - Health Check 11:59PM",
+        "height": 556,
+        "width": 2376,
         "color": 4
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        3104,
-        3504
+        4336,
+        4752
       ],
       "id": "25800b78-11e1-4cdb-961f-2bbc31d4a4fd",
       "name": "Note - Escalation"
@@ -261,8 +181,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        5664,
-        3152
+        5568,
+        3680
       ],
       "id": "5816e337-c2fd-4fa6-a47e-874733d5b2c6",
       "name": "Sync Reminder To Backend"
@@ -277,8 +197,8 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        5536,
-        2960
+        5568,
+        3296
       ],
       "id": "2470db0d-61be-4c65-a2b6-8bc0ce1c4f61",
       "name": "Send Reminder Gmail",
@@ -309,8 +229,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        5408,
-        3120
+        5344,
+        3584
       ],
       "id": "d7ce5c77-de17-4b06-ab01-cb8887621f97",
       "name": "If Due Soon"
@@ -322,8 +242,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5168,
-        3120
+        5120,
+        3584
       ],
       "id": "0752b17c-5ef5-4dd5-bbaf-da3a84809035",
       "name": "Compute Days Left"
@@ -347,8 +267,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        4688,
-        3120
+        4672,
+        3584
       ],
       "id": "030847ed-b377-4400-a10f-114adb38bac3",
       "name": "Fetch Pending Reminders"
@@ -367,23 +287,23 @@
       "typeVersion": 1,
       "position": [
         4448,
-        3120
+        3584
       ],
       "id": "78438232-a94c-4d5b-b384-720877348128",
       "name": "Schedule 8AM"
     },
     {
       "parameters": {
-        "content": "Luong nhac nho 8h sang. Lay task dang mo tu backend, tach tung item, loc deadline con <= 3 ngay, gui mail va sync REMINDER_SENT ve Spring Boot.",
-        "height": 220,
-        "width": 1280,
+        "content": "## Flow 3 - Reminder 8AM",
+        "height": 764,
+        "width": 2384,
         "color": 3
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        3136,
-        2848
+        4336,
+        3280
       ],
       "id": "d5f66e34-8c19-493e-bc9e-3ffee85b9da2",
       "name": "Note - Reminders"
@@ -398,8 +318,8 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        5840,
-        2800
+        5792,
+        3040
       ],
       "id": "0b149dc9-31e3-4ea2-8087-f52215b88edf",
       "name": "Send Completion Gmail",
@@ -413,28 +333,6 @@
     },
     {
       "parameters": {
-        "chatId": "7065866911",
-        "text": "={{ [\n  '✅ HOAN THANH SOM',\n  `👤 Nhan vien: ${$node[\"Evaluate Completion\"].json.assigneeEmail || '-'}`,\n  `📝 Task: ${$node[\"Evaluate Completion\"].json.taskName || '-'}`,\n  `📅 Deadline: ${$node[\"Evaluate Completion\"].json.deadlineDisplay || '-'}`,\n  `🕒 Hoan thanh luc: ${$node[\"Evaluate Completion\"].json.completedAtDisplay || '-'}`\n].join('\\n') }}\n",
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1,
-      "position": [
-        6032,
-        2544
-      ],
-      "id": "7f39d90c-7ed2-4f70-9d83-b9061f541413",
-      "name": "Notify Early Completion Telegram",
-      "webhookId": "223d1cfb-5e93-4b40-a905-8cbb098fa07e",
-      "credentials": {
-        "telegramApi": {
-          "id": "UvaiPAQZMFmVIwe5",
-          "name": "Telegram account 2"
-        }
-      }
-    },
-    {
-      "parameters": {
         "sendTo": "={{ $json.assigneeEmail }}",
         "subject": "=Chúc mừng! Bạn đã hoàn thành sớm {{ $json.taskName }}",
         "message": "=<div style=\"margin:0;padding:24px;background:#f4f6fb;font-family:Arial,sans-serif;color:#1f2937;\"><div style=\"max-width:640px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #e5e7eb;box-shadow:0 12px 32px rgba(15,23,42,0.08);\"><div style=\"padding:24px 28px;background:linear-gradient(135deg,#059669,#34d399);color:#ffffff;\"><div style=\"display:flex;align-items:center;gap:14px;\"><div style=\"width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,0.18);text-align:center;line-height:48px;font-size:20px;font-weight:700;\">DA</div><div><div style=\"font-size:12px;letter-spacing:1.2px;text-transform:uppercase;opacity:0.9;\">Deadline Automation</div><div style=\"font-size:15px;opacity:0.95;\">Hệ thống điều phối công việc</div></div></div><h1 style=\"margin:18px 0 0;font-size:28px;line-height:1.3;\">Hoàn thành sớm, rất tốt</h1></div><div style=\"padding:28px;\"><p style=\"margin:0 0 16px;font-size:16px;\">Xin chúc mừng,</p><p style=\"margin:0 0 20px;font-size:16px;line-height:1.7;\">Bạn đã hoàn thành task trước deadline. Đây là một kết quả rất tích cực cho tiến độ công việc.</p><div style=\"padding:20px;border-radius:16px;background:#ecfdf5;border:1px solid #bbf7d0;margin-bottom:20px;\"><div style=\"font-size:24px;font-weight:700;color:#047857;margin-bottom:6px;\">{{ $json.taskName }}</div><div style=\"font-size:14px;color:#065f46;\">Hoàn thành lúc: {{ $json.completedAtDisplay || 'Vừa cập nhật' }}</div></div><table role=\"presentation\" style=\"width:100%;border-collapse:separate;border-spacing:0 12px;\"><tr><td style=\"width:50%;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;vertical-align:top;\"><div style=\"font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.6px;\">Mã task</div><div style=\"margin-top:6px;font-size:18px;font-weight:700;color:#111827;\">{{ $json.taskId || 'Đang cập nhật' }}</div></td><td style=\"width:50%;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;vertical-align:top;\"><div style=\"font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.6px;\">Deadline</div><div style=\"margin-top:6px;font-size:18px;font-weight:700;color:#111827;\">{{ $json.deadlineDisplay || 'Chưa có deadline' }}</div></td></tr></table><div style=\"margin-top:22px;font-size:12px;color:#94a3b8;text-align:center;\">Deadline Automation • Theo dõi tiến độ, nhắc việc, và báo cáo tự động</div></div></div></div>",
@@ -443,8 +341,8 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        5808,
-        2448
+        5792,
+        2848
       ],
       "id": "802fa2d1-6daa-4afc-8961-e71cd80c8c59",
       "name": "Send Early Completion Gmail",
@@ -470,8 +368,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        5696,
-        2592
+        5568,
+        2944
       ],
       "id": "8441185d-b1ec-40e0-bcca-123534c5be6f",
       "name": "If Early Completion"
@@ -483,8 +381,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5504,
-        2592
+        5344,
+        2944
       ],
       "id": "645e7859-07d7-42e1-b2ab-2c355e9310a3",
       "name": "Evaluate Completion"
@@ -499,8 +397,8 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        6080,
-        2368
+        5792,
+        2656
       ],
       "id": "5d536efc-8853-4a99-97dd-1559c94c725e",
       "name": "Send Assignment Gmail",
@@ -522,8 +420,8 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        6304,
-        2208
+        5792,
+        2464
       ],
       "id": "c4043527-9a90-443b-9631-30df1a1a72fc",
       "name": "Send High Priority Gmail",
@@ -549,8 +447,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        5872,
-        2272
+        5568,
+        2560
       ],
       "id": "8921d7ed-b1b7-4c2a-971d-52f336fc8b5a",
       "name": "If High Priority"
@@ -657,8 +555,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        5776,
-        2096
+        5568,
+        2368
       ],
       "id": "d888afb8-279b-43e7-addc-3f4a9ad8a29b",
       "name": "Append Audit Log",
@@ -676,8 +574,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5664,
-        2272
+        5344,
+        2464
       ],
       "id": "38c179ed-a0ea-41b0-a5cb-9d98b597085b",
       "name": "Compose Assignment Context"
@@ -692,8 +590,8 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        4976,
-        2624
+        5120,
+        3072
       ],
       "id": "200023bd-1919-44ee-9982-b631ca53e259",
       "name": "Send Task Cancelled Gmail",
@@ -715,8 +613,8 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        5200,
-        2432
+        5120,
+        2880
       ],
       "id": "eaf05ed1-79c7-456d-8084-cafa337c9bcd",
       "name": "Send Task Updated Gmail",
@@ -747,8 +645,8 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 1,
       "position": [
-        5392,
-        2288
+        5072,
+        2624
       ],
       "id": "c7ba341d-05c6-4dd0-82f5-47c0287883c3",
       "name": "Switch Status"
@@ -779,8 +677,8 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 1,
       "position": [
-        4960,
-        2336
+        4896,
+        2848
       ],
       "id": "55e8aa81-e4ac-4af6-baf8-9ea0c744f44a",
       "name": "Switch Event Type"
@@ -792,8 +690,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4720,
-        2624
+        4672,
+        2880
       ],
       "id": "f59ae152-6678-4118-8abd-0df753d41130",
       "name": "Normalize Task Payload"
@@ -807,8 +705,8 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        4480,
-        2624
+        4448,
+        2880
       ],
       "id": "8ad5fcf6-5c81-40f4-bd61-a60a08628028",
       "name": "Webhook Task Events",
@@ -816,16 +714,16 @@
     },
     {
       "parameters": {
-        "content": "Webhook task-events nhan su kien tu Spring Boot. Workflow tra response ngay lap tuc de backend khong bi timeout, sau do moi xu ly log, mail, Telegram va cac luong dinh ky.",
-        "height": 220,
-        "width": 1120,
-        "color": 6
+        "content": "## Flow 2 - Task Events\n",
+        "height": 956,
+        "width": 2384,
+        "color": "#EDF2E3"
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        3296,
-        2576
+        4336,
+        2304
       ],
       "id": "b0b88b0c-1cab-4b0e-a35a-e2e95615ff45",
       "name": "Note - Main Flow"
@@ -837,8 +735,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4928,
-        3120
+        4896,
+        3584
       ],
       "id": "a701ec42-892a-4e00-b66a-ccb308dd5b4b",
       "name": "Normalize Reminder Payload"
@@ -946,7 +844,7 @@
       "typeVersion": 4,
       "position": [
         5568,
-        3312
+        3872
       ],
       "id": "086d7035-943c-4c3f-a739-8137b5464c57",
       "name": "Append Reminder Audit Log",
@@ -965,8 +863,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5888,
-        3056
+        5568,
+        3488
       ],
       "id": "b3cf7e3a-0742-48a1-b46a-b3b9ef076dbd",
       "name": "Build Reminder Ops Message"
@@ -980,8 +878,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        6128,
-        3056
+        5792,
+        3488
       ],
       "id": "061a4da4-1295-43e0-861a-d49bfa30d7cd",
       "name": "Notify Reminder Ops Telegram",
@@ -989,7 +887,7 @@
       "credentials": {
         "telegramApi": {
           "id": "UvaiPAQZMFmVIwe5",
-          "name": "Telegram account 2"
+          "name": "Reminder task"
         }
       }
     },
@@ -1001,8 +899,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5024,
-        3712
+        4896,
+        4288
       ],
       "id": "1e4cc828-2b67-4a4f-bf62-564074c7ddd8",
       "name": "Normalize Overdue Payload"
@@ -1109,8 +1007,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        5728,
-        3648
+        5344,
+        4288
       ],
       "id": "a122251f-1073-44d2-b68a-4b8d56b68629",
       "name": "Append Overdue Report Log",
@@ -1123,29 +1021,158 @@
     },
     {
       "parameters": {
-        "jsCode": "const snapshotAt = new Date().toISOString();\nreturn $input.all().map((entry) => ({\n  json: {\n    ...(entry.json ?? {}),\n    snapshotAt\n  }\n}));"
+        "httpMethod": "POST",
+        "path": "ai-generate-subtask",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://quangchung.me,https://www.quangchung.me"
+        }
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
       "position": [
-        5024,
-        4144
+        5056,
+        1920
       ],
-      "id": "f195e96f-e54e-44ac-9afd-3d56371134f6",
-      "name": "Normalize Open Snapshot"
+      "id": "00353451-bd36-4e26-b5e6-56eeae6bdd1b",
+      "name": "Webhook",
+      "webhookId": "66bcd857-5088-4ce5-a0ca-e9e8fbca5709"
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all().map((entry) => entry.json ?? {});\nconst normalize = (value) => String(value || '').trim().toUpperCase().replace(/[\\s-]+/g, '_');\n\nconst totalOpen = items.length;\nconst highPriorityCount = items.filter((item) => normalize(item.priority) === 'HIGH').length;\nconst inProgressCount = items.filter((item) => normalize(item.status) === 'IN_PROGRESS').length;\nconst doneCount = items.filter((item) => normalize(item.status) === 'DONE').length;\nconst overdueCount = items.filter((item) => normalize(item.status) === 'OVERDUE').length;\n\nconst assigneeCounts = {};\nfor (const item of items) {\n  const assignee = item.assigneeEmail || item.ownerName || 'Chua ro';\n  assigneeCounts[assignee] = (assigneeCounts[assignee] || 0) + 1;\n}\n\nconst topAssignee = Object.entries(assigneeCounts).sort((a, b) => b[1] - a[1])[0] || null;\nconst topAssigneeLabel = topAssignee ? `${topAssignee[0]} (${topAssignee[1]})` : '-';\n\nconst focusTasks = [...items]\n  .filter((item) => ['OVERDUE', 'IN_PROGRESS', 'PENDING'].includes(normalize(item.status)))\n  .sort((a, b) => {\n    const priorityRank = { HIGH: 0, MEDIUM: 1, LOW: 2 };\n    const aPriority = priorityRank[normalize(a.priority)] ?? 9;\n    const bPriority = priorityRank[normalize(b.priority)] ?? 9;\n    if (aPriority !== bPriority) return aPriority - bPriority;\n    const aDeadline = Date.parse(a.deadline || '') || Number.MAX_SAFE_INTEGER;\n    const bDeadline = Date.parse(b.deadline || '') || Number.MAX_SAFE_INTEGER;\n    return aDeadline - bDeadline;\n  })\n  .slice(0, 3)\n  .map((item) => ({\n    taskId: item.taskId || null,\n    taskName: item.taskName || null,\n    assigneeEmail: item.assigneeEmail || null,\n    status: item.status || null,\n    deadline: item.deadline || null,\n    deadlineDisplay: item.deadlineDisplay || item.deadline || null\n  }));\n\nreturn [{\n  json: {\n    items,\n    totalOpen,\n    highPriorityCount,\n    inProgressCount,\n    doneCount,\n    overdueCount,\n    topAssigneeLabel,\n    focusTasks,\n    snapshotAt: items[0]?.snapshotAt || new Date().toISOString()\n  }\n}];"
+        "promptType": "define",
+        "text": "=Tao 3 sub-task cho task: {{ $json.body.taskName }}. Tra ve DUY NHAT JSON array dung format nay: [{\"title\":\"...\"},{\"title\":\"...\"},{\"title\":\"...\"}]. Khong markdown, khong text khac.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        5280,
+        1920
+      ],
+      "id": "3c227b68-d327-417e-b94d-1863e6d3303f",
+      "name": "AI Agent",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b:free",
+        "options": {
+          "maxTokens": 180,
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        5280,
+        2112
+      ],
+      "id": "f457c6e1-3ff6-4067-8400-859163336763",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "674kXiuNEhUZ9uiP",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        5632,
+        1920
+      ],
+      "id": "6efaf2b6-fab9-410e-8ef0-ffad7f1af9b7",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "chatId": "7065866911",
+        "text": "={{ [\n  '📌 THONG BAO GIAO TASK',\n  `🆔 Ma task: ${$node[\"Compose Assignment Context\"].json.taskId || '-'}`,\n  `📝 Ten task: ${$node[\"Compose Assignment Context\"].json.taskName || '-'}`,\n  `👤 Nguoi nhan: ${$node[\"Compose Assignment Context\"].json.assigneeEmail || '-'}`,\n  `🔥 Uu tien: ${$node[\"Compose Assignment Context\"].json.priority || '-'}`,\n  `📅 Deadline: ${$node[\"Compose Assignment Context\"].json.deadlineDisplay || 'Chua co deadline'}`,\n  $node[\"Compose Assignment Context\"].json.quote ? `💬 Ghi chu: ${$node[\"Compose Assignment Context\"].json.quote}` : null\n].filter(Boolean).join('\\n') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        6016,
+        2560
+      ],
+      "id": "b7c6e9e5-ebe5-4ade-be78-f579c7f564f7",
+      "name": "send Task Telegram",
+      "webhookId": "c48d6dd1-1d9c-4301-913a-bb968a021c7a",
+      "credentials": {
+        "telegramApi": {
+          "id": "8FoWjXdJDyBiISIA",
+          "name": "New task"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.assigneeEmail }}",
+        "subject": "=🚨 [QUA HAN] {{ $json.taskName }}",
+        "message": "=<div style=\"margin:0;padding:32px;background:linear-gradient(180deg,#fff1f2 0%,#fff7ed 100%);font-family:Arial,sans-serif;color:#1f2937;\"><div style=\"max-width:700px;margin:0 auto;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid #fecaca;box-shadow:0 22px 48px rgba(239,68,68,0.14);\"><div style=\"padding:28px 32px;background:linear-gradient(135deg,#dc2626,#f97316);color:#ffffff;\"><div style=\"display:flex;align-items:center;justify-content:space-between;gap:16px;\"><div style=\"display:flex;align-items:center;gap:14px;\"><div style=\"width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,0.16);text-align:center;line-height:52px;font-size:22px;font-weight:700;\">DA</div><div><div style=\"font-size:12px;letter-spacing:1.4px;text-transform:uppercase;opacity:0.9;\">Deadline Automation</div><div style=\"font-size:15px;opacity:0.95;\">Cảnh báo công việc quá hạn</div></div></div><div style=\"padding:10px 14px;border-radius:999px;background:rgba(255,255,255,0.18);font-size:13px;font-weight:700;\">{{ $json.daysLeft !== null && $json.daysLeft < 0 ? 'Tre ' + Math.abs($json.daysLeft) + ' ngay' : 'Can xu ly ngay' }}</div></div><h1 style=\"margin:20px 0 0;font-size:30px;line-height:1.25;\">{{ $json.taskName }}</h1><p style=\"margin:10px 0 0;font-size:15px;line-height:1.7;opacity:0.94;\">Task cua ban da qua han. Vui long kiem tra ngay de cap nhat tien do va tranh anh huong den ke hoach chung.</p></div><div style=\"padding:30px 32px;\"><div style=\"display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:22px;\"><div style=\"padding:16px;border-radius:18px;background:#fef2f2;border:1px solid #fecaca;\"><div style=\"font-size:12px;color:#b91c1c;text-transform:uppercase;letter-spacing:0.8px;\">Ma task</div><div style=\"margin-top:8px;font-size:18px;font-weight:700;color:#7f1d1d;\">{{ $json.taskId || 'Dang cap nhat' }}</div></div><div style=\"padding:16px;border-radius:18px;background:#fff7ed;border:1px solid #fdba74;\"><div style=\"font-size:12px;color:#c2410c;text-transform:uppercase;letter-spacing:0.8px;\">Uu tien</div><div style=\"margin-top:8px;font-size:18px;font-weight:700;color:#9a3412;\">{{ $json.priority || 'HIGH' }}</div></div><div style=\"padding:16px;border-radius:18px;background:#eff6ff;border:1px solid #bfdbfe;\"><div style=\"font-size:12px;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.8px;\">Deadline</div><div style=\"margin-top:8px;font-size:18px;font-weight:700;color:#1e3a8a;\">{{ $json.deadlineDisplay || $json.deadline || 'Chua co deadline' }}</div></div></div><div style=\"padding:20px;border-radius:20px;background:#fff7ed;border:1px dashed #fb7185;margin-bottom:22px;\"><div style=\"font-size:13px;color:#b91c1c;font-weight:700;margin-bottom:8px;\">Can thuc hien ngay</div><div style=\"font-size:15px;line-height:1.8;color:#7f1d1d;\">1. Kiem tra tinh trang hien tai cua task.<br/>2. Cap nhat tien do hoac tiep tuc xu ly ngay lap tuc.<br/>3. Neu co vuong mac, phan hoi lai cho quan ly som nhat.</div></div><div style=\"padding:18px 20px;border-radius:18px;background:#f8fafc;border:1px solid #e5e7eb;\"><div style=\"font-size:13px;color:#64748b;font-weight:700;margin-bottom:8px;\">Mo ta cong viec</div><div style=\"font-size:15px;line-height:1.8;color:#334155;white-space:pre-line;\">{{ $json.taskDescription || 'Khong co mo ta chi tiet.' }}</div></div><div style=\"margin-top:24px;font-size:12px;color:#94a3b8;text-align:center;\">Deadline Automation • Canh bao qua han, dong bo trang thai va ho tro theo doi tien do tu dong</div></div></div></div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        5568,
+        4576
+      ],
+      "id": "871be461-7393-424c-ad1e-a0cfaa3aa230",
+      "name": "Send Escalation Gmail",
+      "webhookId": "83f86ce6-acc5-459a-bbc3-a5b5de172cf6",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Cjhnaex87bH9nxbe",
+          "name": "Gmail account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "7065866911",
+        "text": "={{ $json.opsMessage }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        5568,
+        4800
+      ],
+      "id": "473dde99-84b0-4efc-be09-fc58baf1e2d5",
+      "name": "Notify Health Ops Telegram",
+      "webhookId": "786bc7d0-2432-446d-ba5d-c2fa3499bc17",
+      "credentials": {
+        "telegramApi": {
+          "id": "y5tyBVQfSqBBBS4g",
+          "name": "Statistics"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    ...$json,\n    opsMessage: [\n      '📊 BAO CAO HE THONG CUOI NGAY',\n      '',\n      `📂 Tong task dang mo: ${$json.totalOpen ?? '-'}`,\n      `🚨 Task qua han: ${$json.overdueCount ?? '-'}`,\n      `🔥 Task uu tien cao: ${$json.highPriorityCount ?? '-'}`,\n      `⚙️ Task dang xu ly: ${$json.inProgressCount ?? '-'}`,\n      `✅ Task da hoan thanh: ${$json.doneCount ?? '-'}`,\n      `🕒 Thoi diem chup: ${new Date().toLocaleString('vi-VN')}`\n    ].join('\\n')\n  }\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5200,
-        4368
+        5344,
+        4800
       ],
-      "id": "2826cd6e-1522-4e3c-9dd3-dd62c3e801bb",
-      "name": "Calculate Workload Signals"
+      "id": "7a58a61f-fb85-46c9-8bf1-afb279ea3145",
+      "name": "Build Health Ops Message"
     },
     {
       "parameters": {
@@ -1249,8 +1276,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        5456,
-        4144
+        5792,
+        4992
       ],
       "id": "b57eebee-2fb8-4ba4-94b5-d4544c136676",
       "name": "Append Health Snapshot Log",
@@ -1263,199 +1290,457 @@
     },
     {
       "parameters": {
-        "jsCode": "const lines = [\n  '📊 BAO CAO HE THONG CUOI NGAY',\n  '',\n  `📂 Tong task dang mo: ${$json.totalOpen ?? 0}`,\n  `🚨 Task qua han: ${$json.overdueCount ?? 0}`,\n  `🔥 Task uu tien cao: ${$json.highPriorityCount ?? 0}`,\n  `⚙️ Task dang xu ly: ${$json.inProgressCount ?? 0}`,\n  `✅ Task da hoan thanh: ${$json.doneCount ?? 0}`,\n  `👤 Nhieu task nhat: ${$json.topAssigneeLabel || '-'}`,\n  `🕒 Thoi diem chup: ${$json.snapshotAt || new Date().toLocaleString('vi-VN')}`\n];\n\nreturn [{\n  json: {\n    ...$json,\n    opsMessage: lines.join('\\n')\n  }\n}];\n"
+        "jsCode": "const items = $input.all().map((entry) => entry.json ?? {});\nconst normalize = (value) => String(value || '').trim().toUpperCase().replace(/[\\s-]+/g, '_');\n\nconst totalOpen = items.length;\nconst highPriorityCount = items.filter((item) => normalize(item.priority) === 'HIGH').length;\nconst inProgressCount = items.filter((item) => normalize(item.status) === 'IN_PROGRESS').length;\nconst doneCount = items.filter((item) => normalize(item.status) === 'DONE').length;\nconst overdueCount = items.filter((item) => normalize(item.status) === 'OVERDUE').length;\n\nconst assigneeCounts = {};\nfor (const item of items) {\n  const assignee = item.assigneeEmail || item.ownerName || 'Chua ro';\n  assigneeCounts[assignee] = (assigneeCounts[assignee] || 0) + 1;\n}\n\nconst topAssignee = Object.entries(assigneeCounts).sort((a, b) => b[1] - a[1])[0] || null;\nconst topAssigneeLabel = topAssignee ? `${topAssignee[0]} (${topAssignee[1]})` : '-';\n\nconst focusTasks = [...items]\n  .filter((item) => ['OVERDUE', 'IN_PROGRESS', 'PENDING'].includes(normalize(item.status)))\n  .sort((a, b) => {\n    const priorityRank = { HIGH: 0, MEDIUM: 1, LOW: 2 };\n    const aPriority = priorityRank[normalize(a.priority)] ?? 9;\n    const bPriority = priorityRank[normalize(b.priority)] ?? 9;\n    if (aPriority !== bPriority) return aPriority - bPriority;\n    const aDeadline = Date.parse(a.deadline || '') || Number.MAX_SAFE_INTEGER;\n    const bDeadline = Date.parse(b.deadline || '') || Number.MAX_SAFE_INTEGER;\n    return aDeadline - bDeadline;\n  })\n  .slice(0, 3)\n  .map((item) => ({\n    taskId: item.taskId || null,\n    taskName: item.taskName || null,\n    assigneeEmail: item.assigneeEmail || null,\n    status: item.status || null,\n    deadline: item.deadline || null,\n    deadlineDisplay: item.deadlineDisplay || item.deadline || null\n  }));\n\nreturn [{\n  json: {\n    items,\n    totalOpen,\n    highPriorityCount,\n    inProgressCount,\n    doneCount,\n    overdueCount,\n    topAssigneeLabel,\n    focusTasks,\n    snapshotAt: items[0]?.snapshotAt || new Date().toISOString()\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5488,
-        4368
-      ],
-      "id": "7a58a61f-fb85-46c9-8bf1-afb279ea3145",
-      "name": "Build Health Ops Message"
-    },
-    {
-      "parameters": {
-        "chatId": "7065866911",
-        "text": "={{ $json.opsMessage }}",
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1,
-      "position": [
-        5696,
-        4368
-      ],
-      "id": "473dde99-84b0-4efc-be09-fc58baf1e2d5",
-      "name": "Notify Health Ops Telegram",
-      "webhookId": "786bc7d0-2432-446d-ba5d-c2fa3499bc17",
-      "credentials": {
-        "telegramApi": {
-          "id": "UvaiPAQZMFmVIwe5",
-          "name": "Telegram account 2"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "ai-generate-subtask",
-        "responseMode": "responseNode",
-        "options": {
-          "allowedOrigins": "https://quangchung.me,https://www.quangchung.me"
-        }
-      },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
-      "position": [
-        4480,
-        2032
-      ],
-      "id": "00353451-bd36-4e26-b5e6-56eeae6bdd1b",
-      "name": "Webhook",
-      "webhookId": "66bcd857-5088-4ce5-a0ca-e9e8fbca5709"
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=Tao 3 sub-task cho task: {{ $json.body.taskName }}. Tra ve DUY NHAT JSON array dung format nay: [{\"title\":\"...\"},{\"title\":\"...\"},{\"title\":\"...\"}]. Khong markdown, khong text khac.",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
-      "position": [
-        4736,
-        2032
-      ],
-      "id": "3c227b68-d327-417e-b94d-1863e6d3303f",
-      "name": "AI Agent",
-      "alwaysOutputData": false,
-      "executeOnce": false,
-      "retryOnFail": false
-    },
-    {
-      "parameters": {
-        "model": "openai/gpt-oss-120b:free",
-        "options": {
-          "maxTokens": 180,
-          "temperature": 0.2
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
-      "typeVersion": 1,
-      "position": [
-        4736,
-        2224
-      ],
-      "id": "f457c6e1-3ff6-4067-8400-859163336763",
-      "name": "OpenRouter Chat Model",
-      "credentials": {
-        "openRouterApi": {
-          "id": "674kXiuNEhUZ9uiP",
-          "name": "OpenRouter account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ $json.output }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.5,
-      "position": [
         5120,
-        2032
+        4896
       ],
-      "id": "6efaf2b6-fab9-410e-8ef0-ffad7f1af9b7",
-      "name": "Respond to Webhook"
+      "id": "2826cd6e-1522-4e3c-9dd3-dd62c3e801bb",
+      "name": "Calculate Workload Signals"
     },
     {
       "parameters": {
-        "chatId": "7065866911",
-        "text": "={{ [\n  '📌 THONG BAO GIAO TASK',\n  `🆔 Ma task: ${$node[\"Compose Assignment Context\"].json.taskId || '-'}`,\n  `📝 Ten task: ${$node[\"Compose Assignment Context\"].json.taskName || '-'}`,\n  `👤 Nguoi nhan: ${$node[\"Compose Assignment Context\"].json.assigneeEmail || '-'}`,\n  `🔥 Uu tien: ${$node[\"Compose Assignment Context\"].json.priority || '-'}`,\n  `📅 Deadline: ${$node[\"Compose Assignment Context\"].json.deadlineDisplay || 'Chua co deadline'}`,\n  $node[\"Compose Assignment Context\"].json.quote ? `💬 Ghi chu: ${$node[\"Compose Assignment Context\"].json.quote}` : null\n].filter(Boolean).join('\\n') }}",
-        "additionalFields": {}
+        "jsCode": "const snapshotAt = new Date().toISOString();\nreturn $input.all().map((entry) => ({\n  json: {\n    ...(entry.json ?? {}),\n    snapshotAt\n  }\n}));"
       },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1,
-      "position": [
-        6672,
-        2400
-      ],
-      "id": "b7c6e9e5-ebe5-4ade-be78-f579c7f564f7",
-      "name": "send Task Telegram",
-      "webhookId": "c48d6dd1-1d9c-4301-913a-bb968a021c7a",
-      "credentials": {
-        "telegramApi": {
-          "id": "UvaiPAQZMFmVIwe5",
-          "name": "Telegram account 2"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "sendTo": "={{ $json.assigneeEmail }}",
-        "subject": "=🚨 [QUA HAN] {{ $json.taskName }}",
-        "message": "=<div style=\"margin:0;padding:32px;background:linear-gradient(180deg,#fff1f2 0%,#fff7ed 100%);font-family:Arial,sans-serif;color:#1f2937;\"><div style=\"max-width:700px;margin:0 auto;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid #fecaca;box-shadow:0 22px 48px rgba(239,68,68,0.14);\"><div style=\"padding:28px 32px;background:linear-gradient(135deg,#dc2626,#f97316);color:#ffffff;\"><div style=\"display:flex;align-items:center;justify-content:space-between;gap:16px;\"><div style=\"display:flex;align-items:center;gap:14px;\"><div style=\"width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,0.16);text-align:center;line-height:52px;font-size:22px;font-weight:700;\">DA</div><div><div style=\"font-size:12px;letter-spacing:1.4px;text-transform:uppercase;opacity:0.9;\">Deadline Automation</div><div style=\"font-size:15px;opacity:0.95;\">Cảnh báo công việc quá hạn</div></div></div><div style=\"padding:10px 14px;border-radius:999px;background:rgba(255,255,255,0.18);font-size:13px;font-weight:700;\">{{ $json.daysLeft !== null && $json.daysLeft < 0 ? 'Tre ' + Math.abs($json.daysLeft) + ' ngay' : 'Can xu ly ngay' }}</div></div><h1 style=\"margin:20px 0 0;font-size:30px;line-height:1.25;\">{{ $json.taskName }}</h1><p style=\"margin:10px 0 0;font-size:15px;line-height:1.7;opacity:0.94;\">Task cua ban da qua han. Vui long kiem tra ngay de cap nhat tien do va tranh anh huong den ke hoach chung.</p></div><div style=\"padding:30px 32px;\"><div style=\"display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:22px;\"><div style=\"padding:16px;border-radius:18px;background:#fef2f2;border:1px solid #fecaca;\"><div style=\"font-size:12px;color:#b91c1c;text-transform:uppercase;letter-spacing:0.8px;\">Ma task</div><div style=\"margin-top:8px;font-size:18px;font-weight:700;color:#7f1d1d;\">{{ $json.taskId || 'Dang cap nhat' }}</div></div><div style=\"padding:16px;border-radius:18px;background:#fff7ed;border:1px solid #fdba74;\"><div style=\"font-size:12px;color:#c2410c;text-transform:uppercase;letter-spacing:0.8px;\">Uu tien</div><div style=\"margin-top:8px;font-size:18px;font-weight:700;color:#9a3412;\">{{ $json.priority || 'HIGH' }}</div></div><div style=\"padding:16px;border-radius:18px;background:#eff6ff;border:1px solid #bfdbfe;\"><div style=\"font-size:12px;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.8px;\">Deadline</div><div style=\"margin-top:8px;font-size:18px;font-weight:700;color:#1e3a8a;\">{{ $json.deadlineDisplay || $json.deadline || 'Chua co deadline' }}</div></div></div><div style=\"padding:20px;border-radius:20px;background:#fff7ed;border:1px dashed #fb7185;margin-bottom:22px;\"><div style=\"font-size:13px;color:#b91c1c;font-weight:700;margin-bottom:8px;\">Can thuc hien ngay</div><div style=\"font-size:15px;line-height:1.8;color:#7f1d1d;\">1. Kiem tra tinh trang hien tai cua task.<br/>2. Cap nhat tien do hoac tiep tuc xu ly ngay lap tuc.<br/>3. Neu co vuong mac, phan hoi lai cho quan ly som nhat.</div></div><div style=\"padding:18px 20px;border-radius:18px;background:#f8fafc;border:1px solid #e5e7eb;\"><div style=\"font-size:13px;color:#64748b;font-weight:700;margin-bottom:8px;\">Mo ta cong viec</div><div style=\"font-size:15px;line-height:1.8;color:#334155;white-space:pre-line;\">{{ $json.taskDescription || 'Khong co mo ta chi tiet.' }}</div></div><div style=\"margin-top:24px;font-size:12px;color:#94a3b8;text-align:center;\">Deadline Automation • Canh bao qua han, dong bo trang thai va ho tro theo doi tien do tu dong</div></div></div></div>",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.gmail",
+      "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        6048,
-        4048
+        4896,
+        4896
       ],
-      "id": "871be461-7393-424c-ad1e-a0cfaa3aa230",
-      "name": "Send Escalation Gmail",
-      "webhookId": "83f86ce6-acc5-459a-bbc3-a5b5de172cf6",
+      "id": "f195e96f-e54e-44ac-9afd-3d56371134f6",
+      "name": "Normalize Open Snapshot"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 23,
+              "triggerAtMinute": 59
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        4448,
+        4896
+      ],
+      "id": "0b158d8a-66a0-48f4-9676-cb5ff1b8406d",
+      "name": "Schedule 11:59PM"
+    },
+    {
+      "parameters": {
+        "url": "http://172.17.0.1:8080/api/webhooks/pending-reminders",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Webhook-Secret",
+              "value": "local-n8n-sync-secret"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        4672,
+        4896
+      ],
+      "id": "07451793-7cf8-4d7f-a133-881ce14ef845",
+      "name": "Fetch Open Task Snapshot"
+    },
+    {
+      "parameters": {
+        "jsCode": "const snapshotAt = $json.snapshotAt || new Date().toISOString();\nconst focusTasks = Array.isArray($json.focusTasks) ? $json.focusTasks : [];\n\nconst formatStatus = (status) => {\n  const value = String(status || '').toUpperCase();\n  if (value === 'IN_PROGRESS') return 'Dang xu ly';\n  if (value === 'OVERDUE') return 'Qua han';\n  if (value === 'DONE') return 'Da hoan thanh';\n  if (value === 'PENDING') return 'Cho xu ly';\n  return status || '-';\n};\n\nconst lines = [\n  '📊 BAO CAO HE THONG CUOI NGAY',\n  '',\n  `📂 Tong task dang mo: ${$json.totalOpen ?? 0}`,\n  `🚨 Task qua han: ${$json.overdueCount ?? 0}`,\n  `⚙️ Dang xu ly: ${$json.inProgressCount ?? 0}`,\n  `✅ Da hoan thanh: ${$json.doneCount ?? 0}`,\n  `🔥 Uu tien cao: ${$json.highPriorityCount ?? 0}`,\n  `👤 Nhieu task nhat: ${$json.topAssigneeLabel || '-'}`,\n  `🕒 Thoi diem chup: ${snapshotAt}`\n];\n\nif (focusTasks.length) {\n  lines.push('');\n  lines.push('🎯 TASK CAN CHU Y:');\n  focusTasks.forEach((task, index) => {\n    lines.push(\n      `${index + 1}. ${task.taskName || '-'} | ${task.assigneeEmail || '-'} | ${formatStatus(task.status)} | ${task.deadlineDisplay || task.deadline || '-'}`\n    );\n  });\n}\n\nreturn [{\n  json: {\n    ...$json,\n    fileContent: lines.join('\\n')\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5344,
+        4992
+      ],
+      "id": "cf3db3e6-ffe4-4dd2-be30-e29b8046f098",
+      "name": "Build Health Summary"
+    },
+    {
+      "parameters": {
+        "chatId": "7065866911",
+        "text": "=BOT he thong: {{ $json.fileContent }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        5568,
+        4992
+      ],
+      "id": "115c94dd-e8a1-4d78-a85a-5c94c5fc19b3",
+      "name": "Send Health Telegram",
+      "webhookId": "bf0ef731-2eba-44f2-9d1d-dad15d263c94",
       "credentials": {
-        "gmailOAuth2": {
-          "id": "Cjhnaex87bH9nxbe",
-          "name": "Gmail account 4"
+        "telegramApi": {
+          "id": "y5tyBVQfSqBBBS4g",
+          "name": "Statistics"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Flow 1 -  AI Generate Subtask",
+        "height": 412,
+        "width": 2384,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4336,
+        1872
+      ],
+      "id": "864b44dc-3582-4e28-8acb-6d530fe1a419",
+      "name": "Note - Main Flow1"
+    },
+    {
+      "parameters": {
+        "chatId": "7065866911",
+        "text": "={{ [\n  '✅ HOAN THANH SOM',\n  `👤 Nhan vien: ${$node[\"Evaluate Completion\"].json.assigneeEmail || '-'}`,\n  `📝 Task: ${$node[\"Evaluate Completion\"].json.taskName || '-'}`,\n  `📅 Deadline: ${$node[\"Evaluate Completion\"].json.deadlineDisplay || '-'}`,\n  `🕒 Hoan thanh luc: ${$node[\"Evaluate Completion\"].json.completedAtDisplay || '-'}`\n].join('\\n') }}\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        6016,
+        2848
+      ],
+      "id": "7f39d90c-7ed2-4f70-9d83-b9061f541413",
+      "name": "Report task complete early",
+      "webhookId": "223d1cfb-5e93-4b40-a905-8cbb098fa07e",
+      "credentials": {
+        "telegramApi": {
+          "id": "8FoWjXdJDyBiISIA",
+          "name": "New task"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Flow 6 - Employee Statistics 8:30AM",
+        "height": 716,
+        "width": 2384,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4336,
+        5440
+      ],
+      "id": "d5407e56-4d15-43eb-b5aa-c67a3f85a361",
+      "name": "Note - Employee Statistics"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 8,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        4448,
+        5728
+      ],
+      "id": "b7b2db0c-75a5-4a4a-a020-8f4ed7c35516",
+      "name": "Schedule Employee Stats 8:30AM"
+    },
+    {
+      "parameters": {
+        "url": "http://172.17.0.1:8080/api/webhooks/employee-statistics",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Webhook-Secret",
+              "value": "local-n8n-sync-secret"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        4672,
+        5728
+      ],
+      "id": "f2c90444-1cb2-4484-91b6-52f18ef2a779",
+      "name": "Fetch Employee Task Snapshot"
+    },
+    {
+      "parameters": {
+        "jsCode": "const parseDate = (value) => {\n  if (!value) return null;\n  if (Array.isArray(value)) {\n    const [year, month = 1, day = 1, hour = 0, minute = 0, second = 0, nano = 0] = value;\n    const millis = Math.floor(Number(nano) / 1000000);\n    const date = new Date(year, month - 1, day, hour, minute, second, millis);\n    return Number.isNaN(date.getTime()) ? null : date;\n  }\n  const date = new Date(value);\n  return Number.isNaN(date.getTime()) ? null : date;\n};\n\nconst formatDate = (date) => {\n  if (!date) return null;\n  const pad = (input) => String(input).padStart(2, '0');\n  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;\n};\n\nconst normalize = (value) => String(value || '').trim().toUpperCase().replace(/[\\s-]+/g, '_');\nconst snapshotAt = new Date().toISOString();\n\nreturn $input.all().map((entry) => {\n  const item = entry.json ?? {};\n  const deadline = parseDate(item.deadline);\n  const completedAt = parseDate(item.completedAt);\n  const assigneeEmail = item.assigneeEmail || 'chua-phan-cong';\n\n  return {\n    json: {\n      ...item,\n      assigneeEmail,\n      assigneeLabel: assigneeEmail === 'chua-phan-cong' ? 'Chua phan cong' : assigneeEmail,\n      priority: normalize(item.priority),\n      status: normalize(item.status),\n      deadline: deadline?.toISOString() ?? item.deadline ?? null,\n      deadlineDisplay: item.deadlineDisplay ?? formatDate(deadline) ?? 'Chua co deadline',\n      completedAt: completedAt?.toISOString() ?? item.completedAt ?? null,\n      completedAtDisplay: completedAt ? formatDate(completedAt) : null,\n      snapshotAt\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4896,
+        5728
+      ],
+      "id": "3873ff6d-89d4-4b20-a2e8-dd4f869e4cbf",
+      "name": "Normalize Employee Snapshot"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().map((entry) => entry.json ?? {});\nconst groups = {};\nconst now = Date.now();\nconst openStatuses = new Set(['PENDING', 'TODO', 'IN_PROGRESS', 'IN_REVIEW', 'OVERDUE']);\n\nfor (const item of items) {\n  const key = item.assigneeEmail || 'chua-phan-cong';\n  const deadlineValue = item.deadline ? Date.parse(item.deadline) : NaN;\n  const completedValue = item.completedAt ? Date.parse(item.completedAt) : NaN;\n  const hasDeadline = !Number.isNaN(deadlineValue);\n  const hasCompleted = !Number.isNaN(completedValue);\n  const daysToDeadline = hasDeadline ? Math.ceil((deadlineValue - now) / 86400000) : null;\n  const isOpen = openStatuses.has(item.status);\n  const isDoneThisWeek = item.status === 'DONE' && hasCompleted;\n  const isOnTime = isDoneThisWeek && hasDeadline && completedValue <= deadlineValue;\n  const isEarly = isDoneThisWeek && hasDeadline && completedValue < deadlineValue;\n  const isLate = isDoneThisWeek && hasDeadline && completedValue > deadlineValue;\n\n  if (!groups[key]) {\n    groups[key] = {\n      assigneeEmail: key,\n      assigneeLabel: item.assigneeLabel || key,\n      snapshotAt: item.snapshotAt || new Date().toISOString(),\n      totalOpenTasks: 0,\n      overdueCount: 0,\n      nearDeadlineCount: 0,\n      highPriorityCount: 0,\n      doneThisWeek: 0,\n      onTimeDoneCount: 0,\n      assessedDoneCount: 0,\n      earlyDoneCount: 0,\n      lateDoneCount: 0,\n      focusTasks: []\n    };\n  }\n\n  const employee = groups[key];\n\n  if (isOpen) {\n    employee.totalOpenTasks += 1;\n    if (item.status === 'OVERDUE') employee.overdueCount += 1;\n    if (item.priority === 'HIGH') employee.highPriorityCount += 1;\n    if (daysToDeadline !== null && daysToDeadline >= 0 && daysToDeadline <= 2) employee.nearDeadlineCount += 1;\n\n    employee.focusTasks.push({\n      taskId: item.taskId || '-',\n      taskName: item.taskName || '-',\n      status: item.status || '-',\n      priority: item.priority || '-',\n      deadlineDisplay: item.deadlineDisplay || item.deadline || '-'\n    });\n  }\n\n  if (isDoneThisWeek) {\n    employee.doneThisWeek += 1;\n    if (hasDeadline) {\n      employee.assessedDoneCount += 1;\n      if (isOnTime) employee.onTimeDoneCount += 1;\n      if (isEarly) employee.earlyDoneCount += 1;\n      if (isLate) employee.lateDoneCount += 1;\n    }\n  }\n}\n\nconst employees = Object.values(groups)\n  .map((employee) => {\n    const onTimeRate = employee.assessedDoneCount > 0\n      ? Math.round((employee.onTimeDoneCount / employee.assessedDoneCount) * 100)\n      : 0;\n\n    return {\n      ...employee,\n      onTimeRate,\n      alertLevel: employee.overdueCount >= 2 || employee.lateDoneCount >= 2 || employee.totalOpenTasks >= 6 || employee.nearDeadlineCount >= 3 ? 'OVERLOADED' : 'NORMAL',\n      focusTasks: employee.focusTasks\n        .sort((a, b) => {\n          const statusRank = { OVERDUE: 0, IN_PROGRESS: 1, IN_REVIEW: 2, PENDING: 3, TODO: 4 };\n          const priorityRank = { HIGH: 0, MEDIUM: 1, LOW: 2 };\n          const aStatus = statusRank[a.status] ?? 9;\n          const bStatus = statusRank[b.status] ?? 9;\n          if (aStatus !== bStatus) return aStatus - bStatus;\n          return (priorityRank[a.priority] ?? 9) - (priorityRank[b.priority] ?? 9);\n        })\n        .slice(0, 2)\n    };\n  });\n\nconst topEarlyEmployees = [...employees]\n  .filter((employee) => employee.earlyDoneCount > 0 || employee.doneThisWeek > 0)\n  .sort((a, b) => {\n    if (b.earlyDoneCount !== a.earlyDoneCount) return b.earlyDoneCount - a.earlyDoneCount;\n    if (b.onTimeRate !== a.onTimeRate) return b.onTimeRate - a.onTimeRate;\n    return b.doneThisWeek - a.doneThisWeek;\n  })\n  .slice(0, 3);\n\nconst topRiskEmployees = [...employees]\n  .filter((employee) => employee.overdueCount > 0 || employee.lateDoneCount > 0 || employee.totalOpenTasks > 0)\n  .sort((a, b) => {\n    if (b.overdueCount !== a.overdueCount) return b.overdueCount - a.overdueCount;\n    if (b.lateDoneCount !== a.lateDoneCount) return b.lateDoneCount - a.lateDoneCount;\n    if (b.nearDeadlineCount !== a.nearDeadlineCount) return b.nearDeadlineCount - a.nearDeadlineCount;\n    return b.totalOpenTasks - a.totalOpenTasks;\n  })\n  .slice(0, 3);\n\nconst totals = employees.reduce((acc, employee) => {\n  acc.totalOpenTasks += employee.totalOpenTasks;\n  acc.overdueCount += employee.overdueCount;\n  acc.nearDeadlineCount += employee.nearDeadlineCount;\n  acc.highPriorityCount += employee.highPriorityCount;\n  acc.doneThisWeek += employee.doneThisWeek;\n  acc.earlyDoneCount += employee.earlyDoneCount;\n  acc.lateDoneCount += employee.lateDoneCount;\n  acc.assessedDoneCount += employee.assessedDoneCount;\n  acc.onTimeDoneCount += employee.onTimeDoneCount;\n  return acc;\n}, {\n  totalOpenTasks: 0,\n  overdueCount: 0,\n  nearDeadlineCount: 0,\n  highPriorityCount: 0,\n  doneThisWeek: 0,\n  earlyDoneCount: 0,\n  lateDoneCount: 0,\n  assessedDoneCount: 0,\n  onTimeDoneCount: 0\n});\n\nreturn [{\n  json: {\n    snapshotAt: employees[0]?.snapshotAt || new Date().toISOString(),\n    totalEmployees: employees.length,\n    totalOpenTasks: totals.totalOpenTasks,\n    overdueCount: totals.overdueCount,\n    nearDeadlineCount: totals.nearDeadlineCount,\n    highPriorityCount: totals.highPriorityCount,\n    doneThisWeek: totals.doneThisWeek,\n    earlyDoneCount: totals.earlyDoneCount,\n    lateDoneCount: totals.lateDoneCount,\n    onTimeRate: totals.assessedDoneCount > 0 ? Math.round((totals.onTimeDoneCount / totals.assessedDoneCount) * 100) : 0,\n    overloadedCount: employees.filter((employee) => employee.alertLevel === 'OVERLOADED').length,\n    topEarlyEmployees,\n    topRiskEmployees,\n    employees\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5120,
+        5728
+      ],
+      "id": "a2f3cfc1-11f4-4f3d-8af8-30233f5c8ca2",
+      "name": "Aggregate Employee Statistics"
+    },
+    {
+      "parameters": {
+        "jsCode": "const topEarlyEmployees = Array.isArray($json.topEarlyEmployees) ? $json.topEarlyEmployees : [];\nconst topRiskEmployees = Array.isArray($json.topRiskEmployees) ? $json.topRiskEmployees : [];\n\nconst lines = [\n  '📈 BAO CAO THONG KE NHAN VIEN',\n  '',\n  `👥 Nhan vien co task: ${$json.totalEmployees ?? 0}`,\n  `📂 Task dang mo: ${$json.totalOpenTasks ?? 0}`,\n  `🚨 Task qua han: ${$json.overdueCount ?? 0}`,\n  `⏳ Task gan deadline: ${$json.nearDeadlineCount ?? 0}`,\n  `🔥 Task uu tien cao: ${$json.highPriorityCount ?? 0}`,\n  `✅ Hoan thanh tuan nay: ${$json.doneThisWeek ?? 0}`,\n  `🏁 Hoan thanh som: ${$json.earlyDoneCount ?? 0}`,\n  `🔴 Hoan thanh tre: ${$json.lateDoneCount ?? 0}`,\n  `🎯 Ty le dung han: ${$json.onTimeRate ?? 0}%`,\n  `🕒 Thoi diem thong ke: ${$json.snapshotAt || new Date().toISOString()}`\n];\n\nif (topEarlyEmployees.length) {\n  lines.push('');\n  lines.push('🌟 NHAN VIEN HOAN THANH SOM:');\n  topEarlyEmployees.forEach((employee, index) => {\n    lines.push(`${index + 1}. ${employee.assigneeLabel || '-'} | Som ${employee.earlyDoneCount} | Dung han ${employee.onTimeRate}% | Xong tuan nay ${employee.doneThisWeek}`);\n  });\n}\n\nif (topRiskEmployees.length) {\n  lines.push('');\n  lines.push('⚠️ NHAN VIEN HAY BI QUA HAN:');\n  topRiskEmployees.forEach((employee, index) => {\n    lines.push(`${index + 1}. ${employee.assigneeLabel || '-'} | Qua han ${employee.overdueCount} | Tre ${employee.lateDoneCount} | Dang mo ${employee.totalOpenTasks}`);\n  });\n}\n\nreturn [{\n  json: {\n    ...$json,\n    employeeReport: lines.join('\\n')\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5344,
+        5600
+      ],
+      "id": "f43917ca-c6de-41b6-9983-b5fdadbf9509",
+      "name": "Build Employee Summary"
+    },
+    {
+      "parameters": {
+        "chatId": "7065866911",
+        "text": "=BOT quan ly: {{ $json.employeeReport }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        5568,
+        5600
+      ],
+      "id": "248d6b52-d8a5-4b47-ae85-fd9202807ce4",
+      "name": "Send Employee Stats Telegram",
+      "webhookId": "1fcbb83b-34b0-4d96-9220-49ff6d84fdcf",
+      "credentials": {
+        "telegramApi": {
+          "id": "y5tyBVQfSqBBBS4g",
+          "name": "Statistics"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "employees",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 3,
+      "position": [
+        5344,
+        5888
+      ],
+      "id": "cb3b6c11-889f-4412-a300-1dca27aa18f4",
+      "name": "Split Employee Ranking"
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date().toISOString();\nconst overloaded = ($json.alertLevel || 'NORMAL') === 'OVERLOADED';\n\nreturn [{\n  json: {\n    ...$json,\n    taskId: 'EMPLOYEE_STATS',\n    taskName: `Stats ${$json.assigneeLabel || $json.assigneeEmail || 'Unknown'}`,\n    priority: `${$json.highPriorityCount ?? 0} HIGH | ${$json.onTimeRate ?? 0}% ONTIME`,\n    status: overloaded ? 'AT_RISK' : ($json.earlyDoneCount > 0 ? 'PERFORMING' : 'STABLE'),\n    deadline: $json.snapshotAt || now,\n    createdAt: now,\n    alertLevel: overloaded ? 'OVERLOADED' : 'NORMAL'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5568,
+        5888
+      ],
+      "id": "381978d2-4088-4f90-8969-74ee1819432f",
+      "name": "Prepare Employee Log Row"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1QeMzy6aDdgJekNqH6XQExigxrkirwMWDdS41xkien7Y",
+          "mode": "list",
+          "cachedResultName": "Task_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QeMzy6aDdgJekNqH6XQExigxrkirwMWDdS41xkien7Y/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 947514859,
+          "mode": "list",
+          "cachedResultName": "Logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QeMzy6aDdgJekNqH6XQExigxrkirwMWDdS41xkien7Y/edit#gid=947514859"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "taskId": "={{ $json.taskId }}",
+            "taskName": "={{ $json.taskName }}",
+            "assigneeEmail": "={{ $json.assigneeEmail }}",
+            "priority": "={{ $json.priority }}",
+            "status": "={{ $json.status }}",
+            "deadline": "={{ $json.deadline }}",
+            "createdAt": "={{ $json.createdAt }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "taskId",
+              "displayName": "taskId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "taskName",
+              "displayName": "taskName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assigneeEmail",
+              "displayName": "assigneeEmail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "deadline",
+              "displayName": "deadline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createdAt",
+              "displayName": "createdAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        5792,
+        5792
+      ],
+      "id": "e6c3ae95-4275-4441-8b06-391b7f530b0d",
+      "name": "Append Employee Stats Log",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gAxM423I89XeYwaH",
+          "name": "Google Sheets account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.alertLevel }}",
+              "operation": "equal",
+              "value2": "OVERLOADED"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        5792,
+        6016
+      ],
+      "id": "5f8c944c-0acf-4d89-8f42-f2a5ff1b1f4f",
+      "name": "If Employee Overloaded"
+    },
+    {
+      "parameters": {
+        "chatId": "7065866911",
+        "text": "={{ [\n  '⚠️ NHAN VIEN CAN CHU Y',\n  `👤 ${$json.assigneeLabel || $json.assigneeEmail || '-'}`,\n  `📂 Task dang mo: ${$json.totalOpenTasks ?? 0}`,\n  `🚨 Qua han hien tai: ${$json.overdueCount ?? 0}`,\n  `⏳ Gan deadline: ${$json.nearDeadlineCount ?? 0}`,\n  `🔴 Hoan thanh tre tuan nay: ${$json.lateDoneCount ?? 0}`,\n  `🎯 Ty le dung han: ${$json.onTimeRate ?? 0}%`\n].join('\\n') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        6016,
+        6016
+      ],
+      "id": "ecdd5ed1-db20-4f5e-9789-dd3a2a4c07f2",
+      "name": "Send Employee Overload Alert",
+      "webhookId": "61c5608b-9d3d-4f0e-9f0f-d09d7d979e42",
+      "credentials": {
+        "telegramApi": {
+          "id": "y5tyBVQfSqBBBS4g",
+          "name": "Statistics"
         }
       }
     }
   ],
   "connections": {
-    "Send Health Telegram": {
-      "main": [
-        []
-      ]
-    },
-    "Build Health Summary": {
-      "main": [
-        [
-          {
-            "node": "Send Health Telegram",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fetch Open Task Snapshot": {
-      "main": [
-        [
-          {
-            "node": "Normalize Open Snapshot",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Schedule 11:59PM": {
-      "main": [
-        [
-          {
-            "node": "Fetch Open Task Snapshot",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Sync Escalation To Backend": {
       "main": [
         []
@@ -1583,7 +1868,7 @@
       "main": [
         [
           {
-            "node": "Notify Early Completion Telegram",
+            "node": "Report task complete early",
             "type": "main",
             "index": 0
           }
@@ -1773,49 +2058,6 @@
         ]
       ]
     },
-    "Normalize Open Snapshot": {
-      "main": [
-        [
-          {
-            "node": "Calculate Workload Signals",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Calculate Workload Signals": {
-      "main": [
-        [
-          {
-            "node": "Build Health Summary",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Append Health Snapshot Log",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Build Health Ops Message",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Build Health Ops Message": {
-      "main": [
-        [
-          {
-            "node": "Notify Health Ops Telegram",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Webhook": {
       "main": [
         [
@@ -1847,6 +2089,187 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "Build Health Ops Message": {
+      "main": [
+        [
+          {
+            "node": "Notify Health Ops Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Workload Signals": {
+      "main": [
+        [
+          {
+            "node": "Build Health Ops Message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Build Health Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Open Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Calculate Workload Signals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule 11:59PM": {
+      "main": [
+        [
+          {
+            "node": "Fetch Open Task Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Open Task Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Normalize Open Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Health Summary": {
+      "main": [
+        [
+          {
+            "node": "Send Health Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Health Telegram": {
+      "main": [
+        [
+          {
+            "node": "Append Health Snapshot Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Employee Stats 8:30AM": {
+      "main": [
+        [
+          {
+            "node": "Fetch Employee Task Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Employee Task Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Normalize Employee Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Employee Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Employee Statistics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Employee Statistics": {
+      "main": [
+        [
+          {
+            "node": "Build Employee Summary",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Employee Ranking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Employee Summary": {
+      "main": [
+        [
+          {
+            "node": "Send Employee Stats Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Employee Ranking": {
+      "main": [
+        [
+          {
+            "node": "Prepare Employee Log Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Employee Log Row": {
+      "main": [
+        [
+          {
+            "node": "Append Employee Stats Log",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If Employee Overloaded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Employee Overloaded": {
+      "main": [
+        [
+          {
+            "node": "Send Employee Overload Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
       ]
     }
   },
