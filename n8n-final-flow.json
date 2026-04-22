@@ -2,42 +2,42 @@
   "nodes": [
     {
       "parameters": {
-        "chatId": "7801932240",
+        "chatId": "7065866911",
         "text": "=BOT he thong: {{ $json.fileContent }}",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        69168,
-        55184
+        5200,
+        4144
       ],
-      "id": "b3cf7dfc-b252-4f71-8718-be1ac0529050",
+      "id": "115c94dd-e8a1-4d78-a85a-5c94c5fc19b3",
       "name": "Send Health Telegram",
       "webhookId": "bf0ef731-2eba-44f2-9d1d-dad15d263c94",
       "credentials": {
         "telegramApi": {
-          "id": "SxcovgETCd4yFCuj",
-          "name": "Telegram account"
+          "id": "UvaiPAQZMFmVIwe5",
+          "name": "Telegram account 2"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all().map(item => item.json);\nreturn [{\n  json: {\n    fileContent: `Health check OK. Con ${items.length} task dang mo luc cuoi ngay.`\n  }\n}];\n"
+        "jsCode": "const snapshotAt = $json.snapshotAt || new Date().toISOString();\nconst focusTasks = Array.isArray($json.focusTasks) ? $json.focusTasks : [];\n\nconst lines = [\n  '📊 BAO CAO HE THONG CUOI NGAY',\n  '',\n  `📂 Tong task dang mo: ${$json.totalOpen ?? 0}`,\n  `🚨 Task qua han: ${$json.overdueCount ?? 0}`,\n  `⚙️ Dang xu ly: ${$json.inProgressCount ?? 0}`,\n  `✅ Da hoan thanh: ${$json.doneCount ?? 0}`,\n  `🔥 Uu tien cao: ${$json.highPriorityCount ?? 0}`,\n  `👤 Nhieu task nhat: ${$json.topAssigneeLabel || '-'}`,\n  `🕒 Thoi diem chup: ${snapshotAt}`\n];\n\nif (focusTasks.length) {\n  lines.push('');\n  lines.push('🎯 TASK CAN CHU Y:');\n  focusTasks.forEach((task, index) => {\n    lines.push(`${index + 1}. ${task.taskName || '-'} | ${task.assigneeEmail || '-'} | ${task.status || '-'} | ${task.deadlineDisplay || task.deadline || '-'}`);\n  });\n}\n\nreturn [{\n  json: {\n    ...$json,\n    fileContent: lines.join('\\n')\n  }\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        68928,
-        55184
+        4912,
+        3968
       ],
-      "id": "00936765-cece-4190-bb93-09c29d605a2b",
+      "id": "cf3db3e6-ffe4-4dd2-be30-e29b8046f098",
       "name": "Build Health Summary"
     },
     {
       "parameters": {
-        "url": "https://api.huuhai.me/api/webhooks/pending-reminders",
+        "url": "http://172.17.0.1:8080/api/webhooks/pending-reminders",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -54,10 +54,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        68688,
-        55184
+        4720,
+        4144
       ],
-      "id": "7b411d27-f393-46c4-ad9f-3dce14796624",
+      "id": "07451793-7cf8-4d7f-a133-881ce14ef845",
       "name": "Fetch Open Task Snapshot"
     },
     {
@@ -74,10 +74,10 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1,
       "position": [
-        68448,
-        55184
+        4480,
+        4144
       ],
-      "id": "b357f310-d0cc-43bc-9e67-7f2e19cc878e",
+      "id": "0b158d8a-66a0-48f4-9676-cb5ff1b8406d",
       "name": "Schedule 11:59PM"
     },
     {
@@ -90,16 +90,16 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        68384,
-        54992
+        3360,
+        4112
       ],
-      "id": "fb5cc2c2-8c7b-41d0-9ba6-bab49eab993b",
+      "id": "53a77ece-dbe6-4bc0-9d73-1de77a55ef90",
       "name": "Note - Daily Health"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.huuhai.me/api/webhooks/sync",
+        "url": "http://172.17.0.1:8080/api/webhooks/sync",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -119,10 +119,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        69408,
-        54752
+        5728,
+        3840
       ],
-      "id": "b4c6cc22-6dbe-4ac4-b799-b88247baa9c2",
+      "id": "ac5daf71-9783-42d3-9658-81cac1d4ad47",
       "name": "Sync Escalation To Backend"
     },
     {
@@ -133,50 +133,50 @@
       "type": "n8n-nodes-base.itemLists",
       "typeVersion": 3,
       "position": [
-        69168,
-        54752
+        5488,
+        3840
       ],
-      "id": "240d6e71-d012-4bc7-b279-99478325588a",
+      "id": "0f8df992-9706-4808-8ce5-105a04da827a",
       "name": "Split Overdue Tasks"
     },
     {
       "parameters": {
-        "chatId": "7801932240",
+        "chatId": "7065866911",
         "text": "={{ $json.report }}",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        69168,
-        54560
+        5424,
+        3520
       ],
-      "id": "930a082d-7c9e-4c3e-b570-580dc9e0eb72",
+      "id": "344d7db3-1dd7-424f-b9cd-cfe8b9db3301",
       "name": "Send Overdue Report Telegram",
       "webhookId": "68a80d74-52b2-499b-ade0-2f7877c1f298",
       "credentials": {
         "telegramApi": {
-          "id": "SxcovgETCd4yFCuj",
-          "name": "Telegram account"
+          "id": "UvaiPAQZMFmVIwe5",
+          "name": "Telegram account 2"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all().map(item => item.json);\n\nlet text = 'Bao cao task qua han tu dong:\\n';\nif (!items.length) {\n  text += '- Khong co task qua han.';\n} else {\n  for (const task of items) {\n    text += `- ${task.taskId}: ${task.taskName} | ${task.assigneeEmail} | deadline ${task.deadline}\\n`;\n  }\n}\n\nreturn [{\n  json: {\n    report: text,\n    count: items.length,\n    tasks: items\n  }\n}];\n"
+        "jsCode": "const items = $input.all().map(item => item.json);\n\nconst lines = ['🚨 BAO CAO TASK QUA HAN'];\n\nif (!items.length) {\n  lines.push('');\n  lines.push('✅ Khong co task qua han.');\n} else {\n  items.forEach((task, index) => {\n    lines.push('');\n    lines.push(`*TASK ${index + 1}*`);\n    lines.push(`🆔 *Ma task:* ${task.taskId || '-'}`);\n    lines.push(`📝 *Ten task:* ${task.taskName || '-'}`);\n    lines.push(`👤 Nguoi duoc giao: ${task.assigneeEmail || '-'}`);\n    lines.push(`🔥 Uu tien: ${task.priority || '-'}`);\n    lines.push(`📅 Deadline: ${task.deadlineDisplay || task.deadline || '-'}`);\n  });\n}\n\nreturn [{\n  json: {\n    report: lines.join('\\n'),\n    count: items.length,\n    tasks: items\n  }\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        68928,
-        54624
+        5248,
+        3712
       ],
-      "id": "e0f6be8c-4a79-485a-bffc-35606419d360",
+      "id": "4768bf5d-9516-4b34-942c-2e0538c737ff",
       "name": "Render Overdue Report"
     },
     {
       "parameters": {
-        "url": "https://api.huuhai.me/api/webhooks/overdue-escalations",
+        "url": "http://172.17.0.1:8080/api/webhooks/overdue-escalations",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -193,10 +193,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        68688,
-        54688
+        4800,
+        3712
       ],
-      "id": "352ac542-0054-470f-a1ab-9caed3673598",
+      "id": "1391ae7d-d9b9-43b3-bf62-323657d26ae8",
       "name": "Fetch Overdue Tasks"
     },
     {
@@ -216,10 +216,10 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1,
       "position": [
-        68448,
-        54688
+        4512,
+        3712
       ],
-      "id": "917312fa-9915-40b2-9406-cd04e7e9e678",
+      "id": "d316ce7f-c2f4-4b01-8064-7f339c49cb8e",
       "name": "Schedule Friday 5PM"
     },
     {
@@ -232,16 +232,16 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        68384,
-        54464
+        3104,
+        3504
       ],
-      "id": "9a1ea3a1-b7d0-4fd3-bb36-746efebe4f3f",
+      "id": "25800b78-11e1-4cdb-961f-2bbc31d4a4fd",
       "name": "Note - Escalation"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.huuhai.me/api/webhooks/sync",
+        "url": "http://172.17.0.1:8080/api/webhooks/sync",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -261,10 +261,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        69648,
-        54208
+        5664,
+        3152
       ],
-      "id": "6c5d8976-1d6f-45f9-933e-2eee5f006043",
+      "id": "5816e337-c2fd-4fa6-a47e-874733d5b2c6",
       "name": "Sync Reminder To Backend"
     },
     {
@@ -277,16 +277,16 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        69648,
-        54080
+        5536,
+        2960
       ],
-      "id": "e80a8c30-5d91-41aa-8710-950c69f87876",
+      "id": "2470db0d-61be-4c65-a2b6-8bc0ce1c4f61",
       "name": "Send Reminder Gmail",
       "webhookId": "1ee17254-5cf4-4407-83a3-f6b9933c88f3",
       "credentials": {
         "gmailOAuth2": {
-          "id": "K7891QYZq0qKi7VV",
-          "name": "Gmail account"
+          "id": "Cjhnaex87bH9nxbe",
+          "name": "Gmail account 4"
         }
       }
     },
@@ -309,10 +309,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        69408,
-        54144
+        5408,
+        3120
       ],
-      "id": "9ccf3a9d-b34b-4a75-8e48-c8dd705c86d8",
+      "id": "d7ce5c77-de17-4b06-ab01-cb8887621f97",
       "name": "If Due Soon"
     },
     {
@@ -322,15 +322,15 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        69168,
-        54144
+        5168,
+        3120
       ],
-      "id": "d24f8813-8089-4699-8bb0-b77c002d053b",
+      "id": "0752b17c-5ef5-4dd5-bbaf-da3a84809035",
       "name": "Compute Days Left"
     },
     {
       "parameters": {
-        "url": "https://api.huuhai.me/api/webhooks/pending-reminders",
+        "url": "http://172.17.0.1:8080/api/webhooks/pending-reminders",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -347,10 +347,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        68688,
-        54144
+        4688,
+        3120
       ],
-      "id": "d0b1943d-2c0e-45ed-a288-5d15dcf43a3c",
+      "id": "030847ed-b377-4400-a10f-114adb38bac3",
       "name": "Fetch Pending Reminders"
     },
     {
@@ -366,10 +366,10 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1,
       "position": [
-        68448,
-        54144
+        4448,
+        3120
       ],
-      "id": "c03bc38f-b034-492a-ab0f-6d5244e07ff4",
+      "id": "78438232-a94c-4d5b-b384-720877348128",
       "name": "Schedule 8AM"
     },
     {
@@ -382,10 +382,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        68384,
-        53920
+        3136,
+        2848
       ],
-      "id": "54d1db52-ecff-4517-82a2-24c579c8d817",
+      "id": "d5f66e34-8c19-493e-bc9e-3ffee85b9da2",
       "name": "Note - Reminders"
     },
     {
@@ -398,38 +398,38 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        69648,
-        53712
+        5840,
+        2800
       ],
-      "id": "18044733-533d-40a3-a3af-5995f617f7ab",
+      "id": "0b149dc9-31e3-4ea2-8087-f52215b88edf",
       "name": "Send Completion Gmail",
       "webhookId": "574e196e-94ed-4458-89ba-c9959c21daa3",
       "credentials": {
         "gmailOAuth2": {
-          "id": "K7891QYZq0qKi7VV",
-          "name": "Gmail account"
+          "id": "Cjhnaex87bH9nxbe",
+          "name": "Gmail account 4"
         }
       }
     },
     {
       "parameters": {
-        "chatId": "7801932240",
-        "text": "=Nhan vien {{ $json.assigneeEmail }} da hoan thanh som task {{ $json.taskName }}.",
+        "chatId": "7065866911",
+        "text": "={{ [\n  '✅ HOAN THANH SOM',\n  `👤 Nhan vien: ${$node[\"Evaluate Completion\"].json.assigneeEmail || '-'}`,\n  `📝 Task: ${$node[\"Evaluate Completion\"].json.taskName || '-'}`,\n  `📅 Deadline: ${$node[\"Evaluate Completion\"].json.deadlineDisplay || '-'}`,\n  `🕒 Hoan thanh luc: ${$node[\"Evaluate Completion\"].json.completedAtDisplay || '-'}`\n].join('\\n') }}\n",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        69888,
-        53552
+        6032,
+        2544
       ],
-      "id": "bcf0c7c5-93f9-4d87-b844-929b54cc75e1",
+      "id": "7f39d90c-7ed2-4f70-9d83-b9061f541413",
       "name": "Notify Early Completion Telegram",
       "webhookId": "223d1cfb-5e93-4b40-a905-8cbb098fa07e",
       "credentials": {
         "telegramApi": {
-          "id": "SxcovgETCd4yFCuj",
-          "name": "Telegram account"
+          "id": "UvaiPAQZMFmVIwe5",
+          "name": "Telegram account 2"
         }
       }
     },
@@ -443,16 +443,16 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        69648,
-        53552
+        5808,
+        2448
       ],
-      "id": "ba7d1512-1a4f-4386-91fb-2e499b42ed12",
+      "id": "802fa2d1-6daa-4afc-8961-e71cd80c8c59",
       "name": "Send Early Completion Gmail",
       "webhookId": "1e3d3cfd-aed5-4d22-ba20-fbdc40c89d97",
       "credentials": {
         "gmailOAuth2": {
-          "id": "K7891QYZq0qKi7VV",
-          "name": "Gmail account"
+          "id": "Cjhnaex87bH9nxbe",
+          "name": "Gmail account 4"
         }
       }
     },
@@ -470,10 +470,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        69408,
-        53632
+        5696,
+        2592
       ],
-      "id": "c735fff7-d913-4985-8a54-74e62f4f252e",
+      "id": "8441185d-b1ec-40e0-bcca-123534c5be6f",
       "name": "If Early Completion"
     },
     {
@@ -483,33 +483,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        69168,
-        53632
+        5504,
+        2592
       ],
-      "id": "ba2db2a5-3985-4511-9854-64769b3ee559",
+      "id": "645e7859-07d7-42e1-b2ab-2c355e9310a3",
       "name": "Evaluate Completion"
-    },
-    {
-      "parameters": {
-        "chatId": "7801932240",
-        "text": "=Da giao task {{ $json.taskId }} - {{ $json.taskName }} cho {{ $json.assigneeEmail }}. Priority: {{ $json.priority }}.",
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1,
-      "position": [
-        70368,
-        53328
-      ],
-      "id": "0485cbc8-a873-49be-8f41-b59a00340553",
-      "name": "Notify Manager Telegram",
-      "webhookId": "c48d6dd1-1d9c-4301-913a-bb968a021c7a",
-      "credentials": {
-        "telegramApi": {
-          "id": "SxcovgETCd4yFCuj",
-          "name": "Telegram account"
-        }
-      }
     },
     {
       "parameters": {
@@ -521,16 +499,16 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        70128,
-        53408
+        6080,
+        2368
       ],
-      "id": "ce2c58db-190d-4632-9e51-d0c5c85bce9e",
+      "id": "5d536efc-8853-4a99-97dd-1559c94c725e",
       "name": "Send Assignment Gmail",
       "webhookId": "ac1a647e-a052-41e4-9668-70841afbe19f",
       "credentials": {
         "gmailOAuth2": {
-          "id": "K7891QYZq0qKi7VV",
-          "name": "Gmail account"
+          "id": "Cjhnaex87bH9nxbe",
+          "name": "Gmail account 4"
         }
       }
     },
@@ -544,16 +522,16 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        70128,
-        53248
+        6304,
+        2208
       ],
-      "id": "8cd001ce-7f0f-406a-90bd-2490ef2dd274",
+      "id": "c4043527-9a90-443b-9631-30df1a1a72fc",
       "name": "Send High Priority Gmail",
       "webhookId": "a67bf02b-a979-4132-84cd-34ad6f5bd130",
       "credentials": {
         "gmailOAuth2": {
-          "id": "K7891QYZq0qKi7VV",
-          "name": "Gmail account"
+          "id": "Cjhnaex87bH9nxbe",
+          "name": "Gmail account 4"
         }
       }
     },
@@ -571,10 +549,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        69888,
-        53328
+        5872,
+        2272
       ],
-      "id": "11231dea-9407-426a-926c-cefa4a61da31",
+      "id": "8921d7ed-b1b7-4c2a-971d-52f336fc8b5a",
       "name": "If High Priority"
     },
     {
@@ -582,17 +560,17 @@
         "operation": "append",
         "documentId": {
           "__rl": true,
-          "value": "1K4XV7cV4Jvtv5ZdVTe0gDpRXsn8Awb2f4YzmZkF8f2A",
+          "value": "1QeMzy6aDdgJekNqH6XQExigxrkirwMWDdS41xkien7Y",
           "mode": "list",
-          "cachedResultName": "TaskLog",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K4XV7cV4Jvtv5ZdVTe0gDpRXsn8Awb2f4YzmZkF8f2A/edit?usp=drivesdk"
+          "cachedResultName": "Task_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QeMzy6aDdgJekNqH6XQExigxrkirwMWDdS41xkien7Y/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
-          "value": "gid=0",
+          "value": 947514859,
           "mode": "list",
           "cachedResultName": "Logs",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K4XV7cV4Jvtv5ZdVTe0gDpRXsn8Awb2f4YzmZkF8f2A/edit#gid=0"
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QeMzy6aDdgJekNqH6XQExigxrkirwMWDdS41xkien7Y/edit#gid=947514859"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -679,15 +657,15 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        69648,
-        53328
+        5776,
+        2096
       ],
-      "id": "ba7bc224-0471-4dde-8c85-2fd960b7871d",
+      "id": "d888afb8-279b-43e7-addc-3f4a9ad8a29b",
       "name": "Append Audit Log",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "8ohxwIBB7GyiwqF6",
-          "name": "Google Sheets account"
+          "id": "gAxM423I89XeYwaH",
+          "name": "Google Sheets account 5"
         }
       }
     },
@@ -698,10 +676,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        69168,
-        53328
+        5664,
+        2272
       ],
-      "id": "dfee9678-71bf-45f6-b5b8-75ec5be3f721",
+      "id": "38c179ed-a0ea-41b0-a5cb-9d98b597085b",
       "name": "Compose Assignment Context"
     },
     {
@@ -714,16 +692,16 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        69168,
-        53072
+        4976,
+        2624
       ],
-      "id": "f4118cea-7857-4817-acdb-521d0c491f4b",
+      "id": "200023bd-1919-44ee-9982-b631ca53e259",
       "name": "Send Task Cancelled Gmail",
       "webhookId": "7ce5b9c2-9e63-494d-a9b7-c19a757f1ef7",
       "credentials": {
         "gmailOAuth2": {
-          "id": "K7891QYZq0qKi7VV",
-          "name": "Gmail account"
+          "id": "Cjhnaex87bH9nxbe",
+          "name": "Gmail account 4"
         }
       }
     },
@@ -737,16 +715,16 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        69168,
-        53184
+        5200,
+        2432
       ],
-      "id": "b85b1815-0030-4827-8bcd-42622557f2fb",
+      "id": "eaf05ed1-79c7-456d-8084-cafa337c9bcd",
       "name": "Send Task Updated Gmail",
       "webhookId": "b20eeb21-5741-4616-9f2a-d6fb9af50112",
       "credentials": {
         "gmailOAuth2": {
-          "id": "K7891QYZq0qKi7VV",
-          "name": "Gmail account"
+          "id": "Cjhnaex87bH9nxbe",
+          "name": "Gmail account 4"
         }
       }
     },
@@ -769,10 +747,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 1,
       "position": [
-        68928,
-        53552
+        5392,
+        2288
       ],
-      "id": "55a98e93-5c7e-420d-b8e8-024d03c777ea",
+      "id": "c7ba341d-05c6-4dd0-82f5-47c0287883c3",
       "name": "Switch Status"
     },
     {
@@ -801,10 +779,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 1,
       "position": [
-        68928,
-        53296
+        4960,
+        2336
       ],
-      "id": "bb8a91cd-8471-415a-af3c-ec0b33841c17",
+      "id": "55e8aa81-e4ac-4af6-baf8-9ea0c744f44a",
       "name": "Switch Event Type"
     },
     {
@@ -814,10 +792,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        68688,
-        53424
+        4720,
+        2624
       ],
-      "id": "5db7bd6b-e4e4-4ab1-8ee3-b774da4dd910",
+      "id": "f59ae152-6678-4118-8abd-0df753d41130",
       "name": "Normalize Task Payload"
     },
     {
@@ -829,10 +807,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        68448,
-        53424
+        4480,
+        2624
       ],
-      "id": "b51bcd05-6c96-401c-b7b6-f95087d1024c",
+      "id": "8ad5fcf6-5c81-40f4-bd61-a60a08628028",
       "name": "Webhook Task Events",
       "webhookId": "375eeee0-ce3e-47a8-9102-83ef442120f6"
     },
@@ -846,10 +824,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        68384,
-        53200
+        3296,
+        2576
       ],
-      "id": "e24dbb8b-9377-4f35-9c3d-1e91d56184a0",
+      "id": "b0b88b0c-1cab-4b0e-a35a-e2e95615ff45",
       "name": "Note - Main Flow"
     },
     {
@@ -859,10 +837,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        68928,
-        54144
+        4928,
+        3120
       ],
-      "id": "3b4f24f8-ce0b-44e6-a797-243a4783a9ac",
+      "id": "a701ec42-892a-4e00-b66a-ccb308dd5b4b",
       "name": "Normalize Reminder Payload"
     },
     {
@@ -870,17 +848,17 @@
         "operation": "append",
         "documentId": {
           "__rl": true,
-          "value": "1K4XV7cV4Jvtv5ZdVTe0gDpRXsn8Awb2f4YzmZkF8f2A",
+          "value": "1QeMzy6aDdgJekNqH6XQExigxrkirwMWDdS41xkien7Y",
           "mode": "list",
-          "cachedResultName": "TaskLog",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K4XV7cV4Jvtv5ZdVTe0gDpRXsn8Awb2f4YzmZkF8f2A/edit?usp=drivesdk"
+          "cachedResultName": "Task_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QeMzy6aDdgJekNqH6XQExigxrkirwMWDdS41xkien7Y/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
-          "value": "gid=0",
+          "value": 947514859,
           "mode": "list",
           "cachedResultName": "Logs",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K4XV7cV4Jvtv5ZdVTe0gDpRXsn8Awb2f4YzmZkF8f2A/edit#gid=0"
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QeMzy6aDdgJekNqH6XQExigxrkirwMWDdS41xkien7Y/edit#gid=947514859"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -967,64 +945,66 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        69648,
-        54304
+        5568,
+        3312
       ],
-      "id": "1fb3f976-2af6-4284-9f76-6d2aa9d0202c",
+      "id": "086d7035-943c-4c3f-a739-8137b5464c57",
       "name": "Append Reminder Audit Log",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "8ohxwIBB7GyiwqF6",
-          "name": "Google Sheets account"
+          "id": "gAxM423I89XeYwaH",
+          "name": "Google Sheets account 5"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "return [{\n  json: {\n    ...$json,\n    opsMessage: [\n      'THONG BAO NHAC VIEC',\n      `Task: ${$json.taskName || '-'}`,\n      `Ma task: ${$json.taskId || '-'}`,\n      `Nguoi duoc giao: ${$json.assigneeEmail || '-'}`,\n      `Con lai: ${$json.daysLeft ?? 'NA'} ngay`,\n      `Deadline: ${$json.deadlineDisplay || $json.deadline || '-'}`\n    ].join('\\n')\n  }\n}];"
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  json: {\n    ...$json,\n    opsMessage: [\n      '⏰ THONG BAO NHAC VIEC',\n      `📝 Task: ${$json.taskName || '-'}`,\n      `🆔 Ma task: ${$json.taskId || '-'}`,\n      `👤 Nguoi duoc giao: ${$json.assigneeEmail || '-'}`,\n      `📉 Con lai: ${$json.daysLeft ?? 'NA'} ngay`,\n      `📅 Deadline: ${$json.deadlineDisplay || $json.deadline || '-'}`\n    ].join('\\n')\n  }\n};\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        69888,
-        54080
+        5888,
+        3056
       ],
-      "id": "f48706c1-373e-4674-b3d0-5c0997138799",
+      "id": "b3cf7e3a-0742-48a1-b46a-b3b9ef076dbd",
       "name": "Build Reminder Ops Message"
     },
     {
       "parameters": {
-        "chatId": "7801932240",
+        "chatId": "7065866911",
         "text": "={{ $json.opsMessage }}",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        70128,
-        54080
+        6128,
+        3056
       ],
-      "id": "eb55b461-2794-4c0f-8d31-0a591f3738ea",
+      "id": "061a4da4-1295-43e0-861a-d49bfa30d7cd",
       "name": "Notify Reminder Ops Telegram",
       "webhookId": "d2c7d160-1fcd-4457-838f-82d52d600799",
       "credentials": {
         "telegramApi": {
-          "id": "SxcovgETCd4yFCuj",
-          "name": "Telegram account"
+          "id": "UvaiPAQZMFmVIwe5",
+          "name": "Telegram account 2"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "const item = $json ?? {};\nreturn [{ json: { ...item, overdueDays: item.overdueDays ?? null, escalatedAt: new Date().toISOString() } }];"
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  json: {\n    ...$json,\n    overdueDays: $json.overdueDays ?? null,\n    escalatedAt: new Date().toISOString()\n  }\n};\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        68928,
-        54688
+        5024,
+        3712
       ],
-      "id": "0dfd12e7-9c0e-459b-b3c9-00446f99571a",
+      "id": "1e4cc828-2b67-4a4f-bf62-564074c7ddd8",
       "name": "Normalize Overdue Payload"
     },
     {
@@ -1032,17 +1012,17 @@
         "operation": "append",
         "documentId": {
           "__rl": true,
-          "value": "1K4XV7cV4Jvtv5ZdVTe0gDpRXsn8Awb2f4YzmZkF8f2A",
+          "value": "1QeMzy6aDdgJekNqH6XQExigxrkirwMWDdS41xkien7Y",
           "mode": "list",
-          "cachedResultName": "TaskLog",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K4XV7cV4Jvtv5ZdVTe0gDpRXsn8Awb2f4YzmZkF8f2A/edit?usp=drivesdk"
+          "cachedResultName": "Task_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QeMzy6aDdgJekNqH6XQExigxrkirwMWDdS41xkien7Y/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
-          "value": "gid=0",
+          "value": 947514859,
           "mode": "list",
           "cachedResultName": "Logs",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K4XV7cV4Jvtv5ZdVTe0gDpRXsn8Awb2f4YzmZkF8f2A/edit#gid=0"
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QeMzy6aDdgJekNqH6XQExigxrkirwMWDdS41xkien7Y/edit#gid=947514859"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -1129,77 +1109,42 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        69408,
-        54560
+        5728,
+        3648
       ],
-      "id": "09e8aa1e-7c8c-4092-88b3-4354d943a590",
+      "id": "a122251f-1073-44d2-b68a-4b8d56b68629",
       "name": "Append Overdue Report Log",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "8ohxwIBB7GyiwqF6",
-          "name": "Google Sheets account"
+          "id": "gAxM423I89XeYwaH",
+          "name": "Google Sheets account 5"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "return [{\n  json: {\n    ...$json,\n    opsMessage: [\n      'BAO CAO QUA HAN',\n      `Task: ${$json.taskName || '-'}`,\n      `Ma task: ${$json.taskId || '-'}`,\n      `Nguoi duoc giao: ${$json.assigneeEmail || '-'}`,\n      `Deadline: ${$json.deadlineDisplay || $json.deadline || '-'}`\n    ].join('\\n')\n  }\n}];"
+        "jsCode": "const snapshotAt = new Date().toISOString();\nreturn $input.all().map((entry) => ({\n  json: {\n    ...(entry.json ?? {}),\n    snapshotAt\n  }\n}));"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        69648,
-        54752
+        5024,
+        4144
       ],
-      "id": "89858e85-edbe-462d-9411-be1f39a5519e",
-      "name": "Build Escalation Ops Message"
-    },
-    {
-      "parameters": {
-        "chatId": "7801932240",
-        "text": "={{ $json.opsMessage }}",
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1,
-      "position": [
-        69888,
-        54752
-      ],
-      "id": "fbec7fab-cd40-41c3-b610-22ebc3413ab6",
-      "name": "Notify Escalation Telegram",
-      "webhookId": "7c6197ac-f901-45f5-87e0-681e82b212e3",
-      "credentials": {
-        "telegramApi": {
-          "id": "SxcovgETCd4yFCuj",
-          "name": "Telegram account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const item=$json??{}; return [{json:{...item, snapshotAt:new Date().toISOString()}}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        68928,
-        55184
-      ],
-      "id": "2713745f-07e8-4d8c-b059-2c2df4245bcd",
+      "id": "f195e96f-e54e-44ac-9afd-3d56371134f6",
       "name": "Normalize Open Snapshot"
     },
     {
       "parameters": {
-        "jsCode": "const items=$input.all().map(i=>i.json);\nconst high=items.filter(i=>i.priority==='HIGH').length;\nconst inProgress=items.filter(i=>i.status==='IN_PROGRESS').length;\nreturn [{json:{items,totalOpen:items.length,highPriorityCount:high,inProgressCount:inProgress,snapshotAt:new Date().toISOString()}}];"
+        "jsCode": "const items = $input.all().map((entry) => entry.json ?? {});\nconst normalize = (value) => String(value || '').trim().toUpperCase().replace(/[\\s-]+/g, '_');\n\nconst totalOpen = items.length;\nconst highPriorityCount = items.filter((item) => normalize(item.priority) === 'HIGH').length;\nconst inProgressCount = items.filter((item) => normalize(item.status) === 'IN_PROGRESS').length;\nconst doneCount = items.filter((item) => normalize(item.status) === 'DONE').length;\nconst overdueCount = items.filter((item) => normalize(item.status) === 'OVERDUE').length;\n\nconst assigneeCounts = {};\nfor (const item of items) {\n  const assignee = item.assigneeEmail || item.ownerName || 'Chua ro';\n  assigneeCounts[assignee] = (assigneeCounts[assignee] || 0) + 1;\n}\n\nconst topAssignee = Object.entries(assigneeCounts).sort((a, b) => b[1] - a[1])[0] || null;\nconst topAssigneeLabel = topAssignee ? `${topAssignee[0]} (${topAssignee[1]})` : '-';\n\nconst focusTasks = [...items]\n  .filter((item) => ['OVERDUE', 'IN_PROGRESS', 'PENDING'].includes(normalize(item.status)))\n  .sort((a, b) => {\n    const priorityRank = { HIGH: 0, MEDIUM: 1, LOW: 2 };\n    const aPriority = priorityRank[normalize(a.priority)] ?? 9;\n    const bPriority = priorityRank[normalize(b.priority)] ?? 9;\n    if (aPriority !== bPriority) return aPriority - bPriority;\n    const aDeadline = Date.parse(a.deadline || '') || Number.MAX_SAFE_INTEGER;\n    const bDeadline = Date.parse(b.deadline || '') || Number.MAX_SAFE_INTEGER;\n    return aDeadline - bDeadline;\n  })\n  .slice(0, 3)\n  .map((item) => ({\n    taskId: item.taskId || null,\n    taskName: item.taskName || null,\n    assigneeEmail: item.assigneeEmail || null,\n    status: item.status || null,\n    deadline: item.deadline || null,\n    deadlineDisplay: item.deadlineDisplay || item.deadline || null\n  }));\n\nreturn [{\n  json: {\n    items,\n    totalOpen,\n    highPriorityCount,\n    inProgressCount,\n    doneCount,\n    overdueCount,\n    topAssigneeLabel,\n    focusTasks,\n    snapshotAt: items[0]?.snapshotAt || new Date().toISOString()\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        69168,
-        55184
+        5200,
+        4368
       ],
-      "id": "076ae985-7823-4e20-bd64-3b66aea6bddc",
+      "id": "2826cd6e-1522-4e3c-9dd3-dd62c3e801bb",
       "name": "Calculate Workload Signals"
     },
     {
@@ -1207,17 +1152,17 @@
         "operation": "append",
         "documentId": {
           "__rl": true,
-          "value": "1K4XV7cV4Jvtv5ZdVTe0gDpRXsn8Awb2f4YzmZkF8f2A",
+          "value": "1QeMzy6aDdgJekNqH6XQExigxrkirwMWDdS41xkien7Y",
           "mode": "list",
-          "cachedResultName": "TaskLog",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K4XV7cV4Jvtv5ZdVTe0gDpRXsn8Awb2f4YzmZkF8f2A/edit?usp=drivesdk"
+          "cachedResultName": "Task_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QeMzy6aDdgJekNqH6XQExigxrkirwMWDdS41xkien7Y/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
-          "value": "gid=0",
+          "value": 947514859,
           "mode": "list",
           "cachedResultName": "Logs",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K4XV7cV4Jvtv5ZdVTe0gDpRXsn8Awb2f4YzmZkF8f2A/edit#gid=0"
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QeMzy6aDdgJekNqH6XQExigxrkirwMWDdS41xkien7Y/edit#gid=947514859"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -1304,50 +1249,50 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        69408,
-        55264
+        5456,
+        4144
       ],
-      "id": "a4c5ee39-583a-4c49-bf20-f035102722d8",
+      "id": "b57eebee-2fb8-4ba4-94b5-d4544c136676",
       "name": "Append Health Snapshot Log",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "8ohxwIBB7GyiwqF6",
-          "name": "Google Sheets account"
+          "id": "gAxM423I89XeYwaH",
+          "name": "Google Sheets account 5"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "return [{\n  json: {\n    ...$json,\n    opsMessage: [\n      'BAO CAO HE THONG CUOI NGAY',\n      `Tong task dang mo: ${$json.totalOpen ?? '-'}`,\n      `Task uu tien cao: ${$json.highPriorityCount ?? '-'}`,\n      `Task dang xu ly: ${$json.inProgressCount ?? '-'}`,\n      `Thoi diem chup: ${$json.snapshotAt || '-'}`\n    ].join('\\n')\n  }\n}];"
+        "jsCode": "const lines = [\n  '📊 BAO CAO HE THONG CUOI NGAY',\n  '',\n  `📂 Tong task dang mo: ${$json.totalOpen ?? 0}`,\n  `🚨 Task qua han: ${$json.overdueCount ?? 0}`,\n  `🔥 Task uu tien cao: ${$json.highPriorityCount ?? 0}`,\n  `⚙️ Task dang xu ly: ${$json.inProgressCount ?? 0}`,\n  `✅ Task da hoan thanh: ${$json.doneCount ?? 0}`,\n  `👤 Nhieu task nhat: ${$json.topAssigneeLabel || '-'}`,\n  `🕒 Thoi diem chup: ${$json.snapshotAt || new Date().toLocaleString('vi-VN')}`\n];\n\nreturn [{\n  json: {\n    ...$json,\n    opsMessage: lines.join('\\n')\n  }\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        69648,
-        55264
+        5488,
+        4368
       ],
-      "id": "7624d5fd-f9c7-4025-b319-1c67d7ca1a32",
+      "id": "7a58a61f-fb85-46c9-8bf1-afb279ea3145",
       "name": "Build Health Ops Message"
     },
     {
       "parameters": {
-        "chatId": "7801932240",
+        "chatId": "7065866911",
         "text": "={{ $json.opsMessage }}",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        69888,
-        55264
+        5696,
+        4368
       ],
-      "id": "e9ca72a8-be29-440c-8e63-80c8b43cc2cb",
+      "id": "473dde99-84b0-4efc-be09-fc58baf1e2d5",
       "name": "Notify Health Ops Telegram",
       "webhookId": "786bc7d0-2432-446d-ba5d-c2fa3499bc17",
       "credentials": {
         "telegramApi": {
-          "id": "SxcovgETCd4yFCuj",
-          "name": "Telegram account"
+          "id": "UvaiPAQZMFmVIwe5",
+          "name": "Telegram account 2"
         }
       }
     },
@@ -1357,16 +1302,16 @@
         "path": "ai-generate-subtask",
         "responseMode": "responseNode",
         "options": {
-          "allowedOrigins": "https://quangchung.me"
+          "allowedOrigins": "https://quangchung.me,https://www.quangchung.me"
         }
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        68448,
-        52960
+        4480,
+        2032
       ],
-      "id": "23589ae8-db09-4d97-87ad-daef62c593c5",
+      "id": "00353451-bd36-4e26-b5e6-56eeae6bdd1b",
       "name": "Webhook",
       "webhookId": "66bcd857-5088-4ce5-a0ca-e9e8fbca5709"
     },
@@ -1379,10 +1324,10 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        68704,
-        52912
+        4736,
+        2032
       ],
-      "id": "0c53e67a-30e3-4792-a74d-952d0c87d552",
+      "id": "3c227b68-d327-417e-b94d-1863e6d3303f",
       "name": "AI Agent",
       "alwaysOutputData": false,
       "executeOnce": false,
@@ -1399,14 +1344,14 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
       "typeVersion": 1,
       "position": [
-        68704,
-        53088
+        4736,
+        2224
       ],
-      "id": "d2c86fe0-c675-4c13-a7b4-62d5cc85afc9",
+      "id": "f457c6e1-3ff6-4067-8400-859163336763",
       "name": "OpenRouter Chat Model",
       "credentials": {
         "openRouterApi": {
-          "id": "CNTD5oL4GwYPUI1a",
+          "id": "674kXiuNEhUZ9uiP",
           "name": "OpenRouter account"
         }
       }
@@ -1420,23 +1365,62 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        68960,
-        52960
+        5120,
+        2032
       ],
-      "id": "a1fc6793-b4bb-42b0-9c22-bdb171c71204",
+      "id": "6efaf2b6-fab9-410e-8ef0-ffad7f1af9b7",
       "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "chatId": "7065866911",
+        "text": "={{ [\n  '📌 THONG BAO GIAO TASK',\n  `🆔 Ma task: ${$node[\"Compose Assignment Context\"].json.taskId || '-'}`,\n  `📝 Ten task: ${$node[\"Compose Assignment Context\"].json.taskName || '-'}`,\n  `👤 Nguoi nhan: ${$node[\"Compose Assignment Context\"].json.assigneeEmail || '-'}`,\n  `🔥 Uu tien: ${$node[\"Compose Assignment Context\"].json.priority || '-'}`,\n  `📅 Deadline: ${$node[\"Compose Assignment Context\"].json.deadlineDisplay || 'Chua co deadline'}`,\n  $node[\"Compose Assignment Context\"].json.quote ? `💬 Ghi chu: ${$node[\"Compose Assignment Context\"].json.quote}` : null\n].filter(Boolean).join('\\n') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        6672,
+        2400
+      ],
+      "id": "b7c6e9e5-ebe5-4ade-be78-f579c7f564f7",
+      "name": "send Task Telegram",
+      "webhookId": "c48d6dd1-1d9c-4301-913a-bb968a021c7a",
+      "credentials": {
+        "telegramApi": {
+          "id": "UvaiPAQZMFmVIwe5",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.assigneeEmail }}",
+        "subject": "=🚨 [QUA HAN] {{ $json.taskName }}",
+        "message": "=<div style=\"margin:0;padding:32px;background:linear-gradient(180deg,#fff1f2 0%,#fff7ed 100%);font-family:Arial,sans-serif;color:#1f2937;\"><div style=\"max-width:700px;margin:0 auto;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid #fecaca;box-shadow:0 22px 48px rgba(239,68,68,0.14);\"><div style=\"padding:28px 32px;background:linear-gradient(135deg,#dc2626,#f97316);color:#ffffff;\"><div style=\"display:flex;align-items:center;justify-content:space-between;gap:16px;\"><div style=\"display:flex;align-items:center;gap:14px;\"><div style=\"width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,0.16);text-align:center;line-height:52px;font-size:22px;font-weight:700;\">DA</div><div><div style=\"font-size:12px;letter-spacing:1.4px;text-transform:uppercase;opacity:0.9;\">Deadline Automation</div><div style=\"font-size:15px;opacity:0.95;\">Cảnh báo công việc quá hạn</div></div></div><div style=\"padding:10px 14px;border-radius:999px;background:rgba(255,255,255,0.18);font-size:13px;font-weight:700;\">{{ $json.daysLeft !== null && $json.daysLeft < 0 ? 'Tre ' + Math.abs($json.daysLeft) + ' ngay' : 'Can xu ly ngay' }}</div></div><h1 style=\"margin:20px 0 0;font-size:30px;line-height:1.25;\">{{ $json.taskName }}</h1><p style=\"margin:10px 0 0;font-size:15px;line-height:1.7;opacity:0.94;\">Task cua ban da qua han. Vui long kiem tra ngay de cap nhat tien do va tranh anh huong den ke hoach chung.</p></div><div style=\"padding:30px 32px;\"><div style=\"display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:22px;\"><div style=\"padding:16px;border-radius:18px;background:#fef2f2;border:1px solid #fecaca;\"><div style=\"font-size:12px;color:#b91c1c;text-transform:uppercase;letter-spacing:0.8px;\">Ma task</div><div style=\"margin-top:8px;font-size:18px;font-weight:700;color:#7f1d1d;\">{{ $json.taskId || 'Dang cap nhat' }}</div></div><div style=\"padding:16px;border-radius:18px;background:#fff7ed;border:1px solid #fdba74;\"><div style=\"font-size:12px;color:#c2410c;text-transform:uppercase;letter-spacing:0.8px;\">Uu tien</div><div style=\"margin-top:8px;font-size:18px;font-weight:700;color:#9a3412;\">{{ $json.priority || 'HIGH' }}</div></div><div style=\"padding:16px;border-radius:18px;background:#eff6ff;border:1px solid #bfdbfe;\"><div style=\"font-size:12px;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.8px;\">Deadline</div><div style=\"margin-top:8px;font-size:18px;font-weight:700;color:#1e3a8a;\">{{ $json.deadlineDisplay || $json.deadline || 'Chua co deadline' }}</div></div></div><div style=\"padding:20px;border-radius:20px;background:#fff7ed;border:1px dashed #fb7185;margin-bottom:22px;\"><div style=\"font-size:13px;color:#b91c1c;font-weight:700;margin-bottom:8px;\">Can thuc hien ngay</div><div style=\"font-size:15px;line-height:1.8;color:#7f1d1d;\">1. Kiem tra tinh trang hien tai cua task.<br/>2. Cap nhat tien do hoac tiep tuc xu ly ngay lap tuc.<br/>3. Neu co vuong mac, phan hoi lai cho quan ly som nhat.</div></div><div style=\"padding:18px 20px;border-radius:18px;background:#f8fafc;border:1px solid #e5e7eb;\"><div style=\"font-size:13px;color:#64748b;font-weight:700;margin-bottom:8px;\">Mo ta cong viec</div><div style=\"font-size:15px;line-height:1.8;color:#334155;white-space:pre-line;\">{{ $json.taskDescription || 'Khong co mo ta chi tiet.' }}</div></div><div style=\"margin-top:24px;font-size:12px;color:#94a3b8;text-align:center;\">Deadline Automation • Canh bao qua han, dong bo trang thai va ho tro theo doi tien do tu dong</div></div></div></div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        6048,
+        4048
+      ],
+      "id": "871be461-7393-424c-ad1e-a0cfaa3aa230",
+      "name": "Send Escalation Gmail",
+      "webhookId": "83f86ce6-acc5-459a-bbc3-a5b5de172cf6",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Cjhnaex87bH9nxbe",
+          "name": "Gmail account 4"
+        }
+      }
     }
   ],
   "connections": {
     "Send Health Telegram": {
       "main": [
-        [
-          {
-            "node": "Append Health Snapshot Log",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Build Health Summary": {
@@ -1474,13 +1458,7 @@
     },
     "Sync Escalation To Backend": {
       "main": [
-        [
-          {
-            "node": "Build Escalation Ops Message",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Split Overdue Tasks": {
@@ -1488,6 +1466,11 @@
         [
           {
             "node": "Sync Escalation To Backend",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Escalation Gmail",
             "type": "main",
             "index": 0
           }
@@ -1640,7 +1623,7 @@
       "main": [
         [
           {
-            "node": "Notify Manager Telegram",
+            "node": "send Task Telegram",
             "type": "main",
             "index": 0
           }
@@ -1651,7 +1634,7 @@
       "main": [
         [
           {
-            "node": "Notify Manager Telegram",
+            "node": "send Task Telegram",
             "type": "main",
             "index": 0
           }
@@ -1790,17 +1773,6 @@
         ]
       ]
     },
-    "Build Escalation Ops Message": {
-      "main": [
-        [
-          {
-            "node": "Notify Escalation Telegram",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Normalize Open Snapshot": {
       "main": [
         [
@@ -1831,11 +1803,6 @@
             "index": 0
           }
         ]
-      ]
-    },
-    "Append Health Snapshot Log": {
-      "main": [
-        []
       ]
     },
     "Build Health Ops Message": {
@@ -1886,6 +1853,6 @@
   "pinData": {},
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "86908ced7abe74099e3172e110ad6bb646d8398960a8a2727cadc20e59bf7ede"
+    "instanceId": "7db58615eea76af926b37c9ce792f3a3b6a538b566b08c5a92cda41e96ff375c"
   }
 }
