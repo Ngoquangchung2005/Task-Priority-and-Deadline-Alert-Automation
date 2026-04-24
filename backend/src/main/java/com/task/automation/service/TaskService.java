@@ -25,6 +25,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.Duration;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -365,6 +368,18 @@ public class TaskService {
     public List<Task> getPendingReminders() {
         return syncOverdueStatuses(
                 taskRepository.findTasksByStatuses(List.of(TaskStatus.PENDING, TaskStatus.IN_PROGRESS, TaskStatus.IN_REVIEW, TaskStatus.OVERDUE)));
+    }
+
+    public List<Task> getEmployeeStatisticsTasks() {
+        LocalDateTime startOfWeek = LocalDate.now()
+                .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                .atStartOfDay();
+
+        return syncOverdueStatuses(
+                taskRepository.findTasksForEmployeeStatistics(
+                        List.of(TaskStatus.PENDING, TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.IN_REVIEW, TaskStatus.OVERDUE),
+                        TaskStatus.DONE,
+                        startOfWeek));
     }
 
     @Transactional

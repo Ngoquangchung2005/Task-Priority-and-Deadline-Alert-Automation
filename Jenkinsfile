@@ -38,14 +38,17 @@ pipeline {
                 // 'vps-ssh-key' là ID của Credentials chứa Private Key SSH của bạn trong Jenkins
                 sshagent(credentials: ['vps-ssh-key']) {
                     sh '''
-                        # 1. Đẩy file jar mới lên VPS đè file cũ
+                        # 1. Đảm bảo thư mục tồn tại trên VPS trước khi copy
+                        ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} "mkdir -p ${APP_DIR}"
+
+                        # 2. Đẩy file jar mới lên VPS đè file cũ
                         # Dùng -o StrictHostKeyChecking=no để tránh lỗi xác nhận fingerprint lần đầu
                         scp -o StrictHostKeyChecking=no backend/target/${JAR_NAME} ${VPS_USER}@${VPS_HOST}:${APP_DIR}/
 
-                        # 2. Chạy lệnh trên VPS để kill app cũ và bắt đầu app mới
+                        # 3. Chạy lệnh trên VPS để kill app cũ và bắt đầu app mới
                         ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} "
                             echo '==> Đang vào thư mục app...'
-                            cd ${APP_DIR} || mkdir -p ${APP_DIR} && cd ${APP_DIR}
+                            cd ${APP_DIR}
                             
                             echo '==> Tìm process đang chạy port 8080...'
                             pid=\\$(sudo lsof -t -i:8080)

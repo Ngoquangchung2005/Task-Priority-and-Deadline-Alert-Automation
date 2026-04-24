@@ -27,8 +27,7 @@ public class SecurityConfig {
         return new AuthTokenFilter();
     }
 
-    // Auto-configured by Spring Boot 3 using UserDetailsService and PasswordEncoder
-    // beans.
+// Auto-configured by Spring Boot 3 using UserDetailsService and PasswordEncoder beans,,,.
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
@@ -43,13 +42,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configure(http))
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/login").permitAll()
-                        .requestMatchers("/error").permitAll()
-                        .requestMatchers("/api/webhooks/**").permitAll() // Ensure n8n can hit webhooks easily
-                        .anyRequest().authenticated());
+            .cors(cors -> cors.configure(http))
+            .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> 
+                auth.requestMatchers("/api/auth/login").permitAll()
+                    .requestMatchers("/error").permitAll()
+                    .requestMatchers("/api/webhooks/**").permitAll() // Ensure n8n can hit webhooks easily
+                    .anyRequest().authenticated()
+            );
+
 
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 

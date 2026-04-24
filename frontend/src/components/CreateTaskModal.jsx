@@ -122,11 +122,23 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, editTask }) => {
                 body: JSON.stringify(payload)
             });
 
+            const rawResponse = await res.text();
+
             if (!res.ok) {
-                throw new Error(`Webhook error: ${res.status}`);
+                const errorMessage = rawResponse.trim() || `Webhook error: ${res.status}`;
+                throw new Error(errorMessage);
             }
 
-            const responseData = await res.json();
+            if (!rawResponse.trim()) {
+                throw new Error('Webhook returned empty response');
+            }
+
+            let responseData;
+            try {
+                responseData = JSON.parse(rawResponse);
+            } catch {
+                throw new Error('Webhook returned invalid JSON');
+            }
 
             const parseMaybeJson = (value) => {
                 if (typeof value !== 'string') return value;
