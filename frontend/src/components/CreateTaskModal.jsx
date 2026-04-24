@@ -1,21 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Sparkles } from 'lucide-react';
 
 const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, editTask }) => {
+    const n8nSubtaskWebhookUrl =
+        import.meta.env.VITE_N8N_SUBTASK_WEBHOOK_URL ||
+        (import.meta.env.PROD
+            ? 'https://n8nserver.email/webhook/ai-generate-subtask'
+            : 'http://localhost:5678/webhook/ai-generate-subtask');
     const [formData, setFormData] = useState({
         taskName: '',
         taskDescription: '',
         assigneeEmail: '',
         priority: 'MEDIUM',
+        deadline: '',
         adminNote: ''
     });
     const [subtaskTitles, setSubtaskTitles] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [generatingAI, setGeneratingAI] = useState(false);
     const [error, setError] = useState('');
     const [errors, setErrors] = useState({});
 
     const deadlineMap = { HIGH: '7 ngày', MEDIUM: '14 ngày', LOW: '30 ngày' };
+    const isEditing = Boolean(editTask);
+    const isInProgressEdit = editTask?.status === 'IN_PROGRESS';
+    const isReadOnlyEdit = editTask?.status === 'DONE' || editTask?.status === 'CANCELLED' || editTask?.archived;
+
+    const toDatetimeLocalValue = (value) => {
+        if (!value) return '';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '';
+
+        const pad = (input) => String(input).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    };
 
     useEffect(() => {
         if (editTask) {
@@ -24,11 +43,12 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, editTask }) => {
                 taskDescription: editTask.taskDescription || '',
                 assigneeEmail: editTask.assigneeEmail || '',
                 priority: editTask.priority || 'MEDIUM',
+                deadline: toDatetimeLocalValue(editTask.deadline),
                 adminNote: editTask.adminNote || ''
             });
             setSubtaskTitles([]);
         } else {
-            setFormData({ taskName: '', taskDescription: '', assigneeEmail: '', priority: 'MEDIUM', adminNote: '' });
+            setFormData({ taskName: '', taskDescription: '', assigneeEmail: '', priority: 'MEDIUM', deadline: '', adminNote: '' });
             setSubtaskTitles([]);
         }
         setError('');
@@ -54,6 +74,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, editTask }) => {
         try {
             const payload = {
                 ...formData,
+                deadline: formData.deadline || null,
                 subtaskTitles: subtaskTitles.filter(t => t.trim() !== '')
             };
             if (editTask) {
@@ -62,7 +83,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, editTask }) => {
                 await api.post('/tasks', payload);
             }
             onTaskCreated();
-            setFormData({ taskName: '', taskDescription: '', assigneeEmail: '', priority: 'MEDIUM', adminNote: '' });
+            setFormData({ taskName: '', taskDescription: '', assigneeEmail: '', priority: 'MEDIUM', deadline: '', adminNote: '' });
             setSubtaskTitles([]);
             onClose();
         } catch (err) {
@@ -80,6 +101,84 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, editTask }) => {
         setSubtaskTitles(updated);
     };
 
+    const handleGenerateSubtasksAI = async () => {
+        if (!formData.taskName.trim()) {
+            setErrors(prev => ({ ...prev, taskName: 'Task name is required to generate AI subtasks' }));
+            return;
+        }
+        setError('');
+        setGeneratingAI(true);
+        try {
+            const payload = {
+                taskName: formData.taskName,
+                taskDescription: formData.taskDescription,
+                priority: formData.priority,
+                adminNote: formData.adminNote,
+                deadline: null
+            };
+            const res = await fetch(n8nSubtaskWebhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const rawResponse = await res.text();
+
+            if (!res.ok) {
+                const errorMessage = rawResponse.trim() || `Webhook error: ${res.status}`;
+                throw new Error(errorMessage);
+            }
+
+            if (!rawResponse.trim()) {
+                throw new Error('Webhook returned empty response');
+            }
+
+            let responseData;
+            try {
+                responseData = JSON.parse(rawResponse);
+            } catch {
+                throw new Error('Webhook returned invalid JSON');
+            }
+
+            const parseMaybeJson = (value) => {
+                if (typeof value !== 'string') return value;
+                try {
+                    return JSON.parse(value);
+                } catch {
+                    return value;
+                }
+            };
+
+            const normalized = parseMaybeJson(responseData?.output ?? responseData);
+
+            let generated = [];
+            if (Array.isArray(normalized)) {
+                generated = normalized
+                    .map((item) => (typeof item === 'string' ? item : item?.title))
+                    .filter((item) => typeof item === 'string' && item.trim().length > 0)
+                    .map((item) => item.trim());
+            } else if (Array.isArray(normalized?.subtasks)) {
+                generated = normalized.subtasks
+                    .map((item) => (typeof item === 'string' ? item : item?.title))
+                    .filter((item) => typeof item === 'string' && item.trim().length > 0)
+                    .map((item) => item.trim());
+            }
+
+            const uniqueSubtasks = [...new Set(generated.map((item) => item.toLowerCase()))]
+                .map((key) => generated.find((item) => item.toLowerCase() === key))
+                .slice(0, 10);
+
+            setSubtaskTitles(uniqueSubtasks);
+            if (!uniqueSubtasks.length) {
+                setError('AI không tạo được subtask, thử mô tả task chi tiết hơn.');
+            }
+        } catch (err) {
+            setError(err?.message || 'Error generating AI subtasks');
+        } finally {
+            setGeneratingAI(false);
+        }
+    };
+
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content glass-panel" onClick={e => e.stopPropagation()} style={{ maxWidth: '540px', padding: '2rem', animation: 'slideUp 0.3s ease', borderRadius: '20px', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -87,24 +186,34 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, editTask }) => {
                     {editTask ? '✏️ Edit Task' : '➕ Create New Task'}
                 </h3>
                 {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem', textAlign: 'left', fontSize: '0.9rem', background: 'var(--danger-bg)', padding: '0.6rem 1rem', borderRadius: '8px' }}>{error}</div>}
+                {isInProgressEdit && (
+                    <div style={{ marginBottom: '1rem', textAlign: 'left', fontSize: '0.9rem', background: 'rgba(59,130,246,0.12)', color: '#1d4ed8', padding: '0.75rem 1rem', borderRadius: '10px' }}>
+                        Task đang thực hiện. Bạn chỉ có thể cập nhật độ ưu tiên và ghi chú quản lý.
+                    </div>
+                )}
+                {isReadOnlyEdit && (
+                    <div style={{ marginBottom: '1rem', textAlign: 'left', fontSize: '0.9rem', background: 'rgba(100,116,139,0.12)', color: '#475569', padding: '0.75rem 1rem', borderRadius: '10px' }}>
+                        Task {editTask?.archived ? 'đã được archive' : `ở trạng thái ${editTask.status}`}. Hệ thống chỉ cho phép xem lại, không chỉnh sửa thêm.
+                    </div>
+                )}
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Task Name <span style={{ color: 'var(--danger)' }}>*</span></label>
-                        <input className={`input-field ${errors.taskName ? 'input-error' : ''}`} required value={formData.taskName} onChange={e => setFormData({...formData, taskName: e.target.value})} placeholder="Enter task name" />
+                        <input className={`input-field ${errors.taskName ? 'input-error' : ''}`} required disabled={isInProgressEdit || isReadOnlyEdit} value={formData.taskName} onChange={e => setFormData({...formData, taskName: e.target.value})} placeholder="Enter task name" />
                         {errors.taskName && <span className="field-error">{errors.taskName}</span>}
                     </div>
                     <div className="form-group">
                         <label>Description</label>
-                        <textarea className="input-field" rows="2" value={formData.taskDescription} onChange={e => setFormData({...formData, taskDescription: e.target.value})} placeholder="Optional description"></textarea>
+                        <textarea className="input-field" rows="2" disabled={isInProgressEdit || isReadOnlyEdit} value={formData.taskDescription} onChange={e => setFormData({...formData, taskDescription: e.target.value})} placeholder="Optional description"></textarea>
                     </div>
                     <div className="form-group">
                         <label>Assignee Email <span style={{ color: 'var(--danger)' }}>*</span></label>
-                        <input type="email" className={`input-field ${errors.assigneeEmail ? 'input-error' : ''}`} required value={formData.assigneeEmail} onChange={e => setFormData({...formData, assigneeEmail: e.target.value})} placeholder="user@example.com" />
+                        <input type="email" className={`input-field ${errors.assigneeEmail ? 'input-error' : ''}`} required disabled={isInProgressEdit || isReadOnlyEdit} value={formData.assigneeEmail} onChange={e => setFormData({...formData, assigneeEmail: e.target.value})} placeholder="user@example.com" />
                         {errors.assigneeEmail && <span className="field-error">{errors.assigneeEmail}</span>}
                     </div>
                     <div className="form-group">
                         <label>Priority</label>
-                        <select className="input-field" value={formData.priority} onChange={e => setFormData({...formData, priority: e.target.value})}>
+                        <select className="input-field" disabled={isReadOnlyEdit} value={formData.priority} onChange={e => setFormData({...formData, priority: e.target.value})}>
                             <option value="HIGH">🔴 High</option>
                             <option value="MEDIUM">🟡 Medium</option>
                             <option value="LOW">🟢 Low</option>
@@ -114,8 +223,18 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, editTask }) => {
                         </span>
                     </div>
                     <div className="form-group">
+                        <label>Deadline</label>
+                        <input
+                            type="datetime-local"
+                            className="input-field"
+                            disabled={isReadOnlyEdit}
+                            value={formData.deadline}
+                            onChange={e => setFormData({ ...formData, deadline: e.target.value })}
+                        />
+                    </div>
+                    <div className="form-group">
                         <label>Admin Note</label>
-                        <textarea className="input-field" rows="2" value={formData.adminNote} onChange={e => setFormData({...formData, adminNote: e.target.value})} placeholder="Internal note for this task (optional)"></textarea>
+                        <textarea className="input-field" rows="2" disabled={isReadOnlyEdit} value={formData.adminNote} onChange={e => setFormData({...formData, adminNote: e.target.value})} placeholder="Internal note for this task (optional)"></textarea>
                     </div>
 
                     {/* Subtask Section */}
@@ -123,9 +242,14 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, editTask }) => {
                         <div className="form-group">
                             <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <span>Subtasks</span>
-                                <button type="button" className="btn-ghost btn-sm" onClick={addSubtask} style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <Plus size={14} /> Add
-                                </button>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <button type="button" className="btn-ghost btn-sm" onClick={handleGenerateSubtasksAI} disabled={generatingAI} style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <Sparkles size={14} /> {generatingAI ? 'Generating...' : 'Generate Subtasks AI'}
+                                    </button>
+                                    <button type="button" className="btn-ghost btn-sm" onClick={addSubtask} style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <Plus size={14} /> Add
+                                    </button>
+                                </div>
                             </label>
                             {subtaskTitles.length > 0 && (
                                 <div className="subtask-input-list">
@@ -154,8 +278,8 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, editTask }) => {
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
                         <button type="button" className="btn-glass" onClick={onClose}>Cancel</button>
-                        <button type="submit" className="btn-primary" disabled={loading}>
-                            {loading ? (editTask ? 'Saving...' : 'Creating...') : (editTask ? 'Save Changes' : 'Create Task')}
+                        <button type="submit" className="btn-primary" disabled={loading || isReadOnlyEdit}>
+                            {loading ? (editTask ? 'Saving...' : 'Creating...') : (isEditing ? 'Save Changes' : 'Create Task')}
                         </button>
                     </div>
                 </form>
