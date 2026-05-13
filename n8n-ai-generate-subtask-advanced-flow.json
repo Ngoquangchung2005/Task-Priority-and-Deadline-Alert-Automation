@@ -1,0 +1,322 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Flow 1 - AI Generate Subtask Advanced\nValidate input -> AI generate -> parse JSON -> fallback -> response",
+        "height": 620,
+        "width": 2384,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4336,
+        1872
+      ],
+      "id": "864b44dc-3582-4e28-8acb-6d530fe1a419",
+      "name": "Note - AI Generate Advanced"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-generate-subtask",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "http://localhost:5173,http://127.0.0.1:5173,https://quangchung.me,https://www.quangchung.me"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        4448,
+        2112
+      ],
+      "id": "00353451-bd36-4e26-b5e6-56eeae6bdd1b",
+      "name": "Webhook AI Generate Subtask",
+      "webhookId": "66bcd857-5088-4ce5-a0ca-e9e8fbca5709"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body ?? $json;\n\nconst clampCount = (value) => {\n  const number = Number(value);\n  if (!Number.isFinite(number)) return 3;\n  return Math.min(Math.max(Math.round(number), 1), 8);\n};\n\nconst normalizePriority = (value) => {\n  const priority = String(value || 'MEDIUM').trim().toUpperCase();\n  return ['HIGH', 'MEDIUM', 'LOW'].includes(priority) ? priority : 'MEDIUM';\n};\n\nconst taskName = String(body.taskName || body.title || '').trim();\nconst taskDescription = String(body.taskDescription || body.description || '').trim();\nconst adminNote = String(body.adminNote || body.note || '').trim();\nconst sourceInput = String(body.sourceInput || '').trim();\nconst desiredCount = clampCount(body.desiredCount || body.count || 3);\nconst priority = normalizePriority(body.priority);\nconst assigneeEmail = body.assigneeEmail || body.assignedTo || null;\nconst deadline = body.deadline || body.dueDate || body.endDate || null;\n\nif (!taskName) {\n  return [{\n    json: {\n      ok: false,\n      error: 'taskName is required',\n      subtasks: []\n    }\n  }];\n}\n\nconst contextLines = [\n  'Ban la tro ly quan ly du an. Hay chia task cha thanh cac subtask ro rang, co the giao viec truc tiep.',\n  '',\n  'THONG TIN TASK CHA:',\n  'Ten task: ' + taskName,\n  'Mo ta: ' + (taskDescription || 'Khong co'),\n  'Ghi chu quan ly: ' + (adminNote || sourceInput || 'Khong co'),\n  'Do uu tien task cha: ' + priority,\n  'Deadline task cha: ' + (deadline || 'Chua co'),\n  'Nguoi duoc giao mac dinh: ' + (assigneeEmail || 'Chua co'),\n  '',\n  'YEU CAU:',\n  '- Tao dung ' + desiredCount + ' subtask.',\n  '- Moi title phai la hanh dong cu the, ngan gon, tieng Viet, khong trung nhau.',\n  '- Khong tao subtask mo ho nhu \"Lam task\" hoac \"Xu ly cong viec\".',\n  '- Priority chi duoc la HIGH, MEDIUM, LOW. Khong cao hon priority task cha neu khong that su can thiet.',\n  '- Status luon la TODO.',\n  '- positionIndex bat dau tu 0.',\n  '',\n  'TRA VE DUY NHAT JSON object dung format nay, khong markdown, khong giai thich:',\n  '{\"subtasks\":[{\"title\":\"...\",\"priority\":\"MEDIUM\",\"status\":\"TODO\",\"positionIndex\":0}]}'\n];\n\nreturn [{\n  json: {\n    ok: true,\n    taskName,\n    taskDescription,\n    adminNote,\n    sourceInput,\n    desiredCount,\n    priority,\n    assigneeEmail,\n    deadline,\n    prompt: contextLines.join('\\n')\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4672,
+        2112
+      ],
+      "id": "98cba4fb-4f79-45ee-8eb4-000000000101",
+      "name": "Normalize AI Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.ok }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        4896,
+        2112
+      ],
+      "id": "608f4d81-1b09-4049-97b5-000000000102",
+      "name": "If Valid AI Request"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, error: $json.error || 'Invalid request', subtasks: [] } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        5120,
+        2272
+      ],
+      "id": "77ea9884-1b44-4814-a504-000000000103",
+      "name": "Respond Invalid AI Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        5120,
+        2032
+      ],
+      "id": "3c227b68-d327-417e-b94d-1863e6d3303f",
+      "name": "AI Agent Generate Subtasks",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "model": "google/gemma-3-4b-it:free",
+        "options": {
+          "maxTokens": 420,
+          "temperature": 0.15
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        5120,
+        2240
+      ],
+      "id": "f457c6e1-3ff6-4067-8400-859163336763",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "HgXZW4MAiNfUBw0N",
+          "name": "OpenRouter account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const original = $items('Normalize AI Request')[0]?.json ?? {};\nconst rawOutput = $json.output ?? $json.text ?? $json.response ?? '';\nconst fence = String.fromCharCode(96).repeat(3);\n\nconst stripFence = (value) => {\n  let text = String(value || '').trim();\n  const lower = text.toLowerCase();\n\n  if (lower.startsWith(fence + 'json')) {\n    text = text.slice((fence + 'json').length).trim();\n  } else if (text.startsWith(fence)) {\n    text = text.slice(fence.length).trim();\n  }\n\n  if (text.endsWith(fence)) {\n    text = text.slice(0, -fence.length).trim();\n  }\n\n  return text;\n};\n\nconst normalizePriority = (value) => {\n  const priority = String(value || original.priority || 'MEDIUM').trim().toUpperCase();\n  if (!['HIGH', 'MEDIUM', 'LOW'].includes(priority)) return original.priority || 'MEDIUM';\n\n  const rank = { LOW: 1, MEDIUM: 2, HIGH: 3 };\n  const parentPriority = original.priority || 'MEDIUM';\n  return rank[priority] > rank[parentPriority] ? parentPriority : priority;\n};\n\nlet parsed = null;\ntry {\n  parsed = JSON.parse(stripFence(rawOutput));\n} catch (error) {\n  parsed = null;\n}\n\nconst rows = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.subtasks) ? parsed.subtasks : []);\nconst seen = new Set();\nconst subtasks = [];\n\nfor (const row of rows) {\n  const title = String(row?.title || row?.name || '').trim();\n  const key = title.toLowerCase();\n\n  if (!title || seen.has(key)) continue;\n  seen.add(key);\n\n  subtasks.push({\n    title,\n    assignedTo: row?.assignedTo || row?.assigneeEmail || original.assigneeEmail || null,\n    deadline: row?.deadline || original.deadline || null,\n    priority: normalizePriority(row?.priority),\n    status: 'TODO',\n    positionIndex: subtasks.length\n  });\n\n  if (subtasks.length >= original.desiredCount) break;\n}\n\nreturn [{\n  json: {\n    ...original,\n    ok: subtasks.length > 0,\n    needsFallback: subtasks.length === 0,\n    subtasks,\n    count: subtasks.length,\n    rawOutput: String(rawOutput || '')\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5472,
+        2032
+      ],
+      "id": "e78d1467-6ea2-4525-aa19-000000000104",
+      "name": "Parse And Validate AI Output"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.needsFallback }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        5696,
+        2032
+      ],
+      "id": "5acaa9d8-d2e6-46b3-88cc-000000000105",
+      "name": "If Needs Fallback"
+    },
+    {
+      "parameters": {
+        "jsCode": "const original = $items('Normalize AI Request')[0]?.json ?? $json;\nconst desiredCount = Math.min(Math.max(Number(original.desiredCount || 3), 1), 8);\nconst titles = [\n  'Phan tich yeu cau va pham vi cong viec',\n  'Thiet ke phuong an xu ly chi tiet',\n  'Trien khai phan viec chinh',\n  'Kiem thu va ra soat ket qua',\n  'Ban giao va cap nhat tai lieu lien quan',\n  'Theo doi phan hoi sau ban giao',\n  'Toi uu va xu ly cac diem phat sinh',\n  'Tong hop bao cao hoan thanh'\n];\n\nconst subtasks = titles.slice(0, desiredCount).map((title, index) => ({\n  title,\n  assignedTo: original.assigneeEmail || null,\n  deadline: original.deadline || null,\n  priority: original.priority || 'MEDIUM',\n  status: 'TODO',\n  positionIndex: index\n}));\n\nreturn [{\n  json: {\n    ...original,\n    ok: true,\n    needsFallback: false,\n    fallbackUsed: true,\n    subtasks,\n    count: subtasks.length\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5920,
+        1904
+      ],
+      "id": "86b786d4-8fb3-4727-bc30-000000000106",
+      "name": "Build Fallback Subtasks"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    ok: $json.ok !== false,\n    taskName: $json.taskName,\n    priority: $json.priority,\n    desiredCount: $json.desiredCount,\n    count: Array.isArray($json.subtasks) ? $json.subtasks.length : 0,\n    fallbackUsed: Boolean($json.fallbackUsed),\n    subtasks: Array.isArray($json.subtasks) ? $json.subtasks : []\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6144,
+        2032
+      ],
+      "id": "50951665-190d-4dfc-9c99-000000000107",
+      "name": "Format AI Response"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        6368,
+        2032
+      ],
+      "id": "6efaf2b6-fab9-410e-8ef0-ffad7f1af9b7",
+      "name": "Respond AI Subtasks"
+    }
+  ],
+  "connections": {
+    "Webhook AI Generate Subtask": {
+      "main": [
+        [
+          {
+            "node": "Normalize AI Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize AI Request": {
+      "main": [
+        [
+          {
+            "node": "If Valid AI Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Valid AI Request": {
+      "main": [
+        [
+          {
+            "node": "AI Agent Generate Subtasks",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Invalid AI Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Generate Subtasks": {
+      "main": [
+        [
+          {
+            "node": "Parse And Validate AI Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent Generate Subtasks",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse And Validate AI Output": {
+      "main": [
+        [
+          {
+            "node": "If Needs Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Needs Fallback": {
+      "main": [
+        [
+          {
+            "node": "Build Fallback Subtasks",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Fallback Subtasks": {
+      "main": [
+        [
+          {
+            "node": "Format AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format AI Response": {
+      "main": [
+        [
+          {
+            "node": "Respond AI Subtasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7db58615eea76af926b37c9ce792f3a3b6a538b566b08c5a92cda41e96ff375c"
+  }
+}
