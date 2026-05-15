@@ -2,366 +2,58 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Flow 4 - Overdue Escalation Friday 5PM\n",
-        "height": 660,
+        "content": "## Flow 1 - AI Generate Subtask Advanced\nValidate input -> AI generate -> parse JSON -> fallback -> response",
+        "height": 620,
         "width": 2384,
-        "color": 5
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        4336,
-        4064
-      ],
-      "id": "53a77ece-dbe6-4bc0-9d73-1de77a55ef90",
-      "name": "Note - Overdue Escalation"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $env.BACKEND_API_BASE_URL + \"/api/webhooks/sync\" }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-Webhook-Secret",
-              "value": "={{ $env.APP_WEBHOOK_SECRET }}"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ taskId: $json.taskId, itemType: $json.itemType || 'TASK', id: $json.id || null, subtaskId: $json.subtaskId || null, assigneeEmail: $json.assigneeEmail || null, actionType: 'ESCALATED', actionMessage: 'Escalation sent by n8n for ' + (($json.itemType || 'TASK') === 'SUBTASK' ? 'subtask ' + ($json.subtaskId || $json.id || '-') + ' under task ' : 'task ') + ($json.taskId || '-') }) }}",
-        "options": {
-          "timeout": 10000
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        5568,
-        4384
-      ],
-      "id": "ac5daf71-9783-42d3-9658-81cac1d4ad47",
-      "name": "Sync Escalation To Backend"
-    },
-    {
-      "parameters": {
-        "fieldToSplitOut": "tasks",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.itemLists",
-      "typeVersion": 3,
-      "position": [
-        5344,
-        4480
-      ],
-      "id": "0f8df992-9706-4808-8ce5-105a04da827a",
-      "name": "Split Overdue Tasks"
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
-        "text": "={{ $json.report }}",
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1,
-      "position": [
-        5344,
-        4096
-      ],
-      "id": "344d7db3-1dd7-424f-b9cd-cfe8b9db3301",
-      "name": "Send Overdue Report Telegram",
-      "webhookId": "68a80d74-52b2-499b-ade0-2f7877c1f298",
-      "credentials": {
-        "telegramApi": {
-          "id": "UAsMsCKR480oPfOn",
-          "name": "Overdue"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const items = $input.all().map(item => item.json);\n\nconst lines = ['🚨 BAO CAO TASK QUA HAN'];\n\nif (!items.length) {\n  lines.push('');\n  lines.push('✅ Khong co task qua han.');\n} else {\n  items.forEach((task, index) => {\n    lines.push('');\n    lines.push(`*TASK ${index + 1}*`);\n    lines.push(`🆔 *Ma task:* ${task.taskId || '-'}`);\n    lines.push(`📝 *Ten task:* ${task.taskName || '-'}`);\n    lines.push(`👤 Nguoi duoc giao: ${task.assigneeEmail || '-'}`);\n    lines.push(`🔥 Uu tien: ${task.priority || '-'}`);\n    lines.push(`📅 Deadline: ${task.deadlineDisplay || task.deadline || '-'}`);\n  });\n}\n\nreturn [{\n  json: {\n    report: lines.join('\\n'),\n    count: items.length,\n    tasks: items\n  }\n}];\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        5120,
-        4288
-      ],
-      "id": "4768bf5d-9516-4b34-942c-2e0538c737ff",
-      "name": "Render Overdue Report"
-    },
-    {
-      "parameters": {
-        "url": "={{ $env.BACKEND_API_BASE_URL + \"/api/webhooks/overdue-escalations\" }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-Webhook-Secret",
-              "value": "={{ $env.APP_WEBHOOK_SECRET }}"
-            }
-          ]
-        },
-        "options": {
-          "timeout": 10000
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        4672,
-        4288
-      ],
-      "id": "1391ae7d-d9b9-43b3-bf62-323657d26ae8",
-      "name": "Fetch Overdue Tasks"
-    },
-    {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "weeks",
-              "triggerAtDay": [
-                5
-              ],
-              "triggerAtHour": 17
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1,
-      "position": [
-        4448,
-        4288
-      ],
-      "id": "d316ce7f-c2f4-4b01-8064-7f339c49cb8e",
-      "name": "Schedule Friday 5PM"
-    },
-    {
-      "parameters": {
-        "content": "## Flow 5 - Health Check 11:59PM",
-        "height": 556,
-        "width": 2376,
         "color": 4
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        4336,
-        4752
+        4320,
+        1664
       ],
-      "id": "25800b78-11e1-4cdb-961f-2bbc31d4a4fd",
-      "name": "Note - Health Check"
+      "id": "48f9ddd1-7335-491e-8c3e-8de7b3b9dba8",
+      "name": "Note - AI Generate Advanced"
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "={{ $env.BACKEND_API_BASE_URL + \"/api/webhooks/sync\" }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-Webhook-Secret",
-              "value": "={{ $env.APP_WEBHOOK_SECRET }}"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ taskId: $json.taskId, itemType: $json.itemType || 'TASK', id: $json.id || null, subtaskId: $json.subtaskId || null, assigneeEmail: $json.assigneeEmail || null, actionType: 'REMINDER_SENT', actionMessage: 'Reminder sent by n8n for ' + (($json.itemType || 'TASK') === 'SUBTASK' ? 'subtask ' + ($json.subtaskId || $json.id || '-') + ' under task ' : 'task ') + ($json.taskId || '-') }) }}",
+        "httpMethod": "POST",
+        "path": "ai-generate-subtask",
+        "responseMode": "responseNode",
         "options": {
-          "timeout": 10000
+          "allowedOrigins": "http://localhost:5173,http://127.0.0.1:5173,https://quangchung.me,https://www.quangchung.me"
         }
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
       "position": [
-        5568,
-        3680
+        4368,
+        1904
       ],
-      "id": "5816e337-c2fd-4fa6-a47e-874733d5b2c6",
-      "name": "Sync Reminder To Backend"
+      "id": "562404b6-b064-46c9-84e5-a321d05983a8",
+      "name": "Webhook AI Generate Subtask",
+      "webhookId": "66bcd857-5088-4ce5-a0ca-e9e8fbca5709"
     },
     {
       "parameters": {
-        "sendTo": "={{ $json.assigneeEmail }}",
-        "subject": "=Nhắc nhở: {{ $json.taskName }} sắp tới hạn",
-        "message": "=<div style=\"margin:0;padding:32px;background:linear-gradient(180deg,#fff7ed 0%,#fffbeb 100%);font-family:Arial,sans-serif;color:#1f2937;\"><div style=\"max-width:680px;margin:0 auto;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid #fed7aa;box-shadow:0 20px 45px rgba(194,65,12,0.12);\"><div style=\"padding:28px 32px;background:linear-gradient(135deg,#c2410c,#fb923c);color:#ffffff;\"><div style=\"display:flex;align-items:center;justify-content:space-between;gap:16px;\"><div style=\"display:flex;align-items:center;gap:14px;\"><div style=\"width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,0.16);text-align:center;line-height:52px;font-size:22px;font-weight:700;\">DA</div><div><div style=\"font-size:12px;letter-spacing:1.4px;text-transform:uppercase;opacity:0.9;\">Deadline Automation</div><div style=\"font-size:15px;opacity:0.95;\">Nhắc nhở công việc sắp đến hạn</div></div></div><div style=\"padding:10px 14px;border-radius:999px;background:rgba(255,255,255,0.18);font-size:13px;font-weight:700;\">{{ $json.daysLeft === 0 ? 'Đến hạn hôm nay' : ($json.daysLeft === 1 ? 'Còn 1 ngày' : 'Còn ' + $json.daysLeft + ' ngày') }}</div></div><h1 style=\"margin:20px 0 0;font-size:30px;line-height:1.25;\">{{ $json.taskName }}</h1><p style=\"margin:10px 0 0;font-size:15px;line-height:1.7;opacity:0.94;\">Task của bạn đang tiến gần deadline. Hãy ưu tiên xử lý để tránh bị trễ hạn.</p></div><div style=\"padding:30px 32px;\"><div style=\"display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:22px;\"><div style=\"padding:16px;border-radius:18px;background:#fff7ed;border:1px solid #fed7aa;\"><div style=\"font-size:12px;color:#9a3412;text-transform:uppercase;letter-spacing:0.8px;\">Mã task</div><div style=\"margin-top:8px;font-size:18px;font-weight:700;color:#7c2d12;\">{{ $json.taskId || 'Đang cập nhật' }}</div></div><div style=\"padding:16px;border-radius:18px;background:#f8fafc;border:1px solid #e2e8f0;\"><div style=\"font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:0.8px;\">Ưu tiên</div><div style=\"margin-top:8px;font-size:18px;font-weight:700;color:#0f172a;\">{{ $json.priority || 'MEDIUM' }}</div></div><div style=\"padding:16px;border-radius:18px;background:#eff6ff;border:1px solid #bfdbfe;\"><div style=\"font-size:12px;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.8px;\">Deadline</div><div style=\"margin-top:8px;font-size:18px;font-weight:700;color:#1e3a8a;\">{{ $json.deadlineDisplay || 'Chưa có deadline' }}</div></div></div><div style=\"padding:20px;border-radius:20px;background:#fffaf0;border:1px dashed #fdba74;margin-bottom:22px;\"><div style=\"font-size:13px;color:#9a3412;font-weight:700;margin-bottom:8px;\">Gợi ý xử lý</div><div style=\"font-size:15px;line-height:1.8;color:#7c2d12;\">1. Kiểm tra phần việc còn lại của task.<br/>2. Ưu tiên hoàn tất các mục quan trọng trước deadline.<br/>3. Báo lại cho quản lý nếu có rủi ro trễ hạn.</div></div><div style=\"padding:18px 20px;border-radius:18px;background:#f8fafc;border:1px solid #e5e7eb;\"><div style=\"font-size:13px;color:#64748b;font-weight:700;margin-bottom:8px;\">Mô tả công việc</div><div style=\"font-size:15px;line-height:1.8;color:#334155;white-space:pre-line;\">{{ $json.taskDescription || 'Không có mô tả chi tiết.' }}</div></div><div style=\"margin-top:24px;font-size:12px;color:#94a3b8;text-align:center;\">Deadline Automation • Theo dõi tiến độ, nhắc việc và đồng bộ báo cáo tự động</div></div></div></div>",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2,
-      "position": [
-        5568,
-        3296
-      ],
-      "id": "2470db0d-61be-4c65-a2b6-8bc0ce1c4f61",
-      "name": "Send Reminder Gmail",
-      "webhookId": "1ee17254-5cf4-4407-83a3-f6b9933c88f3",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "Cjhnaex87bH9nxbe",
-          "name": "Gmail account 4"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "number": [
-            {
-              "value1": "={{ $json.daysLeft }}",
-              "operation": "smallerEqual",
-              "value2": 3
-            },
-            {
-              "value1": "={{ $json.daysLeft }}",
-              "operation": "largerEqual",
-              "value2": 0
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
-      "position": [
-        5344,
-        3584
-      ],
-      "id": "d7ce5c77-de17-4b06-ab01-cb8887621f97",
-      "name": "If Due Soon"
-    },
-    {
-      "parameters": {
-        "jsCode": "const parseDate = (value) => {\n  if (!value) return null;\n\n  if (Array.isArray(value)) {\n    const [year, month = 1, day = 1, hour = 0, minute = 0, second = 0, nano = 0] = value;\n    const millis = Math.floor(Number(nano) / 1000000);\n    const date = new Date(year, month - 1, day, hour, minute, second, millis);\n    return Number.isNaN(date.getTime()) ? null : date;\n  }\n\n  const date = new Date(value);\n  return Number.isNaN(date.getTime()) ? null : date;\n};\n\nconst formatDate = (value) => {\n  const date = parseDate(value);\n  if (!date) return null;\n\n  const pad = (input) => String(input).padStart(2, '0');\n  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;\n};\n\nconst now = new Date();\n\nreturn $input.all().map((entry) => {\n  const item = entry.json ?? {};\n  const deadline = parseDate(item.deadline);\n  const daysLeft = deadline ? Math.floor((deadline.getTime() - now.getTime()) / 86400000) : null;\n\n  return {\n    json: {\n      ...item,\n      deadline: deadline?.toISOString() ?? item.deadline ?? null,\n      deadlineDisplay: item.deadlineDisplay ?? formatDate(item.deadline) ?? 'Chua co deadline',\n      daysLeft\n    }\n  };\n});"
+        "jsCode": "const body = $json.body ?? $json;\n\nconst clampCount = (value) => {\n  const number = Number(value);\n  if (!Number.isFinite(number)) return 3;\n  return Math.min(Math.max(Math.round(number), 1), 8);\n};\n\nconst normalizePriority = (value) => {\n  const priority = String(value || 'MEDIUM').trim().toUpperCase();\n  return ['HIGH', 'MEDIUM', 'LOW'].includes(priority) ? priority : 'MEDIUM';\n};\n\nconst taskName = String(body.taskName || body.title || '').trim();\nconst taskDescription = String(body.taskDescription || body.description || '').trim();\nconst adminNote = String(body.adminNote || body.note || '').trim();\nconst sourceInput = String(body.sourceInput || '').trim();\nconst desiredCount = clampCount(body.desiredCount || body.count || 3);\nconst priority = normalizePriority(body.priority);\nconst assigneeEmail = body.assigneeEmail || body.assignedTo || null;\nconst deadline = body.deadline || body.dueDate || body.endDate || null;\n\nif (!taskName) {\n  return [{\n    json: {\n      ok: false,\n      error: 'taskName is required',\n      subtasks: []\n    }\n  }];\n}\n\nconst contextLines = [\n  'Ban la tro ly quan ly du an. Hay chia task cha thanh cac subtask ro rang, co the giao viec truc tiep.',\n  '',\n  'THONG TIN TASK CHA:',\n  'Ten task: ' + taskName,\n  'Mo ta: ' + (taskDescription || 'Khong co'),\n  'Ghi chu quan ly: ' + (adminNote || sourceInput || 'Khong co'),\n  'Do uu tien task cha: ' + priority,\n  'Deadline task cha: ' + (deadline || 'Chua co'),\n  'Nguoi duoc giao mac dinh: ' + (assigneeEmail || 'Chua co'),\n  '',\n  'YEU CAU:',\n  '- Tao dung ' + desiredCount + ' subtask.',\n  '- Moi title phai la hanh dong cu the, ngan gon, tieng Viet, khong trung nhau.',\n  '- Khong tao subtask mo ho nhu \"Lam task\" hoac \"Xu ly cong viec\".',\n  '- Priority chi duoc la HIGH, MEDIUM, LOW. Khong cao hon priority task cha neu khong that su can thiet.',\n  '- Status luon la TODO.',\n  '- positionIndex bat dau tu 0.',\n  '',\n  'TRA VE DUY NHAT JSON object dung format nay, khong markdown, khong giai thich:',\n  '{\"subtasks\":[{\"title\":\"...\",\"priority\":\"MEDIUM\",\"status\":\"TODO\",\"positionIndex\":0}]}'\n];\n\nreturn [{\n  json: {\n    ok: true,\n    taskName,\n    taskDescription,\n    adminNote,\n    sourceInput,\n    desiredCount,\n    priority,\n    assigneeEmail,\n    deadline,\n    prompt: contextLines.join('\\n')\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5120,
-        3584
+        4592,
+        1904
       ],
-      "id": "0752b17c-5ef5-4dd5-bbaf-da3a84809035",
-      "name": "Compute Days Left"
-    },
-    {
-      "parameters": {
-        "url": "={{ $env.BACKEND_API_BASE_URL + \"/api/webhooks/pending-reminders\" }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-Webhook-Secret",
-              "value": "={{ $env.APP_WEBHOOK_SECRET }}"
-            }
-          ]
-        },
-        "options": {
-          "timeout": 10000
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        4672,
-        3584
-      ],
-      "id": "030847ed-b377-4400-a10f-114adb38bac3",
-      "name": "Fetch Pending Reminders"
-    },
-    {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "triggerAtHour": 8,
-              "triggerAtMinute": 0
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1,
-      "position": [
-        4448,
-        3584
-      ],
-      "id": "78438232-a94c-4d5b-b384-720877348128",
-      "name": "Schedule 8AM"
-    },
-    {
-      "parameters": {
-        "content": "## Flow 3 - Reminder 8AM",
-        "height": 764,
-        "width": 2384,
-        "color": 3
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        4336,
-        3280
-      ],
-      "id": "d5f66e34-8c19-493e-bc9e-3ffee85b9da2",
-      "name": "Note - Reminders"
-    },
-    {
-      "parameters": {
-        "sendTo": "={{ $json.assigneeEmail }}",
-        "subject": "=Task {{ $json.taskName }} đã được hoàn thành",
-        "message": "=<div style=\"margin:0;padding:24px;background:#f4f6fb;font-family:Arial,sans-serif;color:#1f2937;\"><div style=\"max-width:640px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #e5e7eb;box-shadow:0 12px 32px rgba(15,23,42,0.08);\"><div style=\"padding:24px 28px;background:linear-gradient(135deg,#0f766e,#2dd4bf);color:#ffffff;\"><div style=\"display:flex;align-items:center;gap:14px;\"><div style=\"width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,0.18);text-align:center;line-height:48px;font-size:20px;font-weight:700;\">DA</div><div><div style=\"font-size:12px;letter-spacing:1.2px;text-transform:uppercase;opacity:0.9;\">Deadline Automation</div><div style=\"font-size:15px;opacity:0.95;\">Hệ thống điều phối công việc</div></div></div><h1 style=\"margin:18px 0 0;font-size:28px;line-height:1.3;\">Task đã được cập nhật hoàn thành</h1></div><div style=\"padding:28px;\"><p style=\"margin:0 0 16px;font-size:16px;\">Xin chào,</p><p style=\"margin:0 0 20px;font-size:16px;line-height:1.7;\">Task của bạn đã được đánh dấu hoàn thành trong hệ thống. Vui lòng xem lại kết quả nếu cần bổ sung hoặc điều chỉnh thêm.</p><div style=\"padding:20px;border-radius:16px;background:#f0fdfa;border:1px solid #99f6e4;margin-bottom:20px;\"><div style=\"font-size:24px;font-weight:700;color:#0f766e;margin-bottom:6px;\">{{ $json.taskName }}</div><div style=\"font-size:14px;color:#115e59;\">Mã task: {{ $json.taskId || 'Đang cập nhật' }}</div></div><table role=\"presentation\" style=\"width:100%;border-collapse:separate;border-spacing:0 12px;\"><tr><td style=\"width:50%;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;vertical-align:top;\"><div style=\"font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.6px;\">Ngày hoàn thành</div><div style=\"margin-top:6px;font-size:18px;font-weight:700;color:#111827;\">{{ $json.completedAtDisplay || 'Vừa cập nhật' }}</div></td><td style=\"width:50%;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;vertical-align:top;\"><div style=\"font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.6px;\">Deadline</div><div style=\"margin-top:6px;font-size:18px;font-weight:700;color:#111827;\">{{ $json.deadlineDisplay || 'Chưa có deadline' }}</div></td></tr></table><div style=\"margin-top:22px;font-size:12px;color:#94a3b8;text-align:center;\">Deadline Automation • Theo dõi tiến độ, nhắc việc, và báo cáo tự động</div></div></div></div>",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2,
-      "position": [
-        5792,
-        3040
-      ],
-      "id": "0b149dc9-31e3-4ea2-8087-f52215b88edf",
-      "name": "Send Completion Gmail",
-      "webhookId": "574e196e-94ed-4458-89ba-c9959c21daa3",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "Cjhnaex87bH9nxbe",
-          "name": "Gmail account 4"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "sendTo": "={{ $json.assigneeEmail }}",
-        "subject": "=Chúc mừng! Bạn đã hoàn thành sớm {{ $json.taskName }}",
-        "message": "=<div style=\"margin:0;padding:24px;background:#f4f6fb;font-family:Arial,sans-serif;color:#1f2937;\"><div style=\"max-width:640px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #e5e7eb;box-shadow:0 12px 32px rgba(15,23,42,0.08);\"><div style=\"padding:24px 28px;background:linear-gradient(135deg,#059669,#34d399);color:#ffffff;\"><div style=\"display:flex;align-items:center;gap:14px;\"><div style=\"width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,0.18);text-align:center;line-height:48px;font-size:20px;font-weight:700;\">DA</div><div><div style=\"font-size:12px;letter-spacing:1.2px;text-transform:uppercase;opacity:0.9;\">Deadline Automation</div><div style=\"font-size:15px;opacity:0.95;\">Hệ thống điều phối công việc</div></div></div><h1 style=\"margin:18px 0 0;font-size:28px;line-height:1.3;\">Hoàn thành sớm, rất tốt</h1></div><div style=\"padding:28px;\"><p style=\"margin:0 0 16px;font-size:16px;\">Xin chúc mừng,</p><p style=\"margin:0 0 20px;font-size:16px;line-height:1.7;\">Bạn đã hoàn thành task trước deadline. Đây là một kết quả rất tích cực cho tiến độ công việc.</p><div style=\"padding:20px;border-radius:16px;background:#ecfdf5;border:1px solid #bbf7d0;margin-bottom:20px;\"><div style=\"font-size:24px;font-weight:700;color:#047857;margin-bottom:6px;\">{{ $json.taskName }}</div><div style=\"font-size:14px;color:#065f46;\">Hoàn thành lúc: {{ $json.completedAtDisplay || 'Vừa cập nhật' }}</div></div><table role=\"presentation\" style=\"width:100%;border-collapse:separate;border-spacing:0 12px;\"><tr><td style=\"width:50%;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;vertical-align:top;\"><div style=\"font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.6px;\">Mã task</div><div style=\"margin-top:6px;font-size:18px;font-weight:700;color:#111827;\">{{ $json.taskId || 'Đang cập nhật' }}</div></td><td style=\"width:50%;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;vertical-align:top;\"><div style=\"font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.6px;\">Deadline</div><div style=\"margin-top:6px;font-size:18px;font-weight:700;color:#111827;\">{{ $json.deadlineDisplay || 'Chưa có deadline' }}</div></td></tr></table><div style=\"margin-top:22px;font-size:12px;color:#94a3b8;text-align:center;\">Deadline Automation • Theo dõi tiến độ, nhắc việc, và báo cáo tự động</div></div></div></div>",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2,
-      "position": [
-        5792,
-        2848
-      ],
-      "id": "802fa2d1-6daa-4afc-8961-e71cd80c8c59",
-      "name": "Send Early Completion Gmail",
-      "webhookId": "1e3d3cfd-aed5-4d22-ba20-fbdc40c89d97",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "Cjhnaex87bH9nxbe",
-          "name": "Gmail account 4"
-        }
-      }
+      "id": "f23cae04-d17b-4d98-84ba-f9a2ead372f6",
+      "name": "Normalize AI Request"
     },
     {
       "parameters": {
         "conditions": {
           "boolean": [
             {
-              "value1": "={{ $json.isEarly }}",
+              "value1": "={{ $json.ok }}",
               "value2": true
             }
           ]
@@ -370,24 +62,261 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        5568,
-        2944
+        4816,
+        1904
       ],
-      "id": "8441185d-b1ec-40e0-bcca-123534c5be6f",
-      "name": "If Early Completion"
+      "id": "3fe27d63-07bd-446e-bc9c-d8afc6cc5f18",
+      "name": "If Valid AI Request"
     },
     {
       "parameters": {
-        "jsCode": "const parseDate = (value) => {\n  if (!value) return null;\n\n  if (Array.isArray(value)) {\n    const [year, month = 1, day = 1, hour = 0, minute = 0, second = 0, nano = 0] = value;\n    const millis = Math.floor(Number(nano) / 1000000);\n    const date = new Date(year, month - 1, day, hour, minute, second, millis);\n    return Number.isNaN(date.getTime()) ? null : date;\n  }\n\n  const date = new Date(value);\n  return Number.isNaN(date.getTime()) ? null : date;\n};\n\nconst formatDate = (value) => {\n  const date = parseDate(value);\n  if (!date) return null;\n\n  const pad = (input) => String(input).padStart(2, '0');\n  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;\n};\n\nconst deadline = parseDate($json.deadline);\nconst completedAt = parseDate($json.completedAt) ?? new Date();\nconst isEarly = deadline ? completedAt.getTime() <= deadline.getTime() : false;\n\nreturn [{\n  json: {\n    ...$json,\n    deadline: deadline?.toISOString() ?? $json.deadline ?? null,\n    deadlineDisplay: $json.deadlineDisplay ?? formatDate($json.deadline) ?? 'Chua co deadline',\n    completedAt: completedAt.toISOString(),\n    completedAtDisplay: formatDate(completedAt),\n    isEarly\n  }\n}];"
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, error: $json.error || 'Invalid request', subtasks: [] } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        5152,
+        2144
+      ],
+      "id": "e25edb78-37d2-443e-91f1-46234550c585",
+      "name": "Respond Invalid AI Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        5040,
+        1824
+      ],
+      "id": "a1ad1b8a-70bc-4efc-b3de-57dbe384aaea",
+      "name": "AI Agent Generate Subtasks",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const original = $items('Normalize AI Request')[0]?.json ?? {};\nconst rawOutput = $json.output ?? $json.text ?? $json.response ?? '';\nconst fence = String.fromCharCode(96).repeat(3);\n\nconst stripFence = (value) => {\n  let text = String(value || '').trim();\n  const lower = text.toLowerCase();\n\n  if (lower.startsWith(fence + 'json')) {\n    text = text.slice((fence + 'json').length).trim();\n  } else if (text.startsWith(fence)) {\n    text = text.slice(fence.length).trim();\n  }\n\n  if (text.endsWith(fence)) {\n    text = text.slice(0, -fence.length).trim();\n  }\n\n  return text;\n};\n\nconst normalizePriority = (value) => {\n  const priority = String(value || original.priority || 'MEDIUM').trim().toUpperCase();\n  if (!['HIGH', 'MEDIUM', 'LOW'].includes(priority)) return original.priority || 'MEDIUM';\n\n  const rank = { LOW: 1, MEDIUM: 2, HIGH: 3 };\n  const parentPriority = original.priority || 'MEDIUM';\n  return rank[priority] > rank[parentPriority] ? parentPriority : priority;\n};\n\nlet parsed = null;\ntry {\n  parsed = JSON.parse(stripFence(rawOutput));\n} catch (error) {\n  parsed = null;\n}\n\nconst rows = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.subtasks) ? parsed.subtasks : []);\nconst seen = new Set();\nconst subtasks = [];\n\nfor (const row of rows) {\n  const title = String(row?.title || row?.name || '').trim();\n  const key = title.toLowerCase();\n\n  if (!title || seen.has(key)) continue;\n  seen.add(key);\n\n  subtasks.push({\n    title,\n    assignedTo: row?.assignedTo || row?.assigneeEmail || original.assigneeEmail || null,\n    deadline: row?.deadline || original.deadline || null,\n    priority: normalizePriority(row?.priority),\n    status: 'TODO',\n    positionIndex: subtasks.length\n  });\n\n  if (subtasks.length >= original.desiredCount) break;\n}\n\nreturn [{\n  json: {\n    ...original,\n    ok: subtasks.length > 0,\n    needsFallback: subtasks.length === 0,\n    subtasks,\n    count: subtasks.length,\n    rawOutput: String(rawOutput || '')\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5344,
-        2944
+        5392,
+        1824
       ],
-      "id": "645e7859-07d7-42e1-b2ab-2c355e9310a3",
-      "name": "Evaluate Completion"
+      "id": "e4582c26-0087-4fb6-9409-7b2e585fe5eb",
+      "name": "Parse And Validate AI Output"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.needsFallback }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        5616,
+        1824
+      ],
+      "id": "8537fe78-21ad-4a50-9a31-808cee060552",
+      "name": "If Needs Fallback"
+    },
+    {
+      "parameters": {
+        "jsCode": "const original = $items('Normalize AI Request')[0]?.json ?? $json;\nconst desiredCount = Math.min(Math.max(Number(original.desiredCount || 3), 1), 8);\nconst titles = [\n  'Phan tich yeu cau va pham vi cong viec',\n  'Thiet ke phuong an xu ly chi tiet',\n  'Trien khai phan viec chinh',\n  'Kiem thu va ra soat ket qua',\n  'Ban giao va cap nhat tai lieu lien quan',\n  'Theo doi phan hoi sau ban giao',\n  'Toi uu va xu ly cac diem phat sinh',\n  'Tong hop bao cao hoan thanh'\n];\n\nconst subtasks = titles.slice(0, desiredCount).map((title, index) => ({\n  title,\n  assignedTo: original.assigneeEmail || null,\n  deadline: original.deadline || null,\n  priority: original.priority || 'MEDIUM',\n  status: 'TODO',\n  positionIndex: index\n}));\n\nreturn [{\n  json: {\n    ...original,\n    ok: true,\n    needsFallback: false,\n    fallbackUsed: true,\n    subtasks,\n    count: subtasks.length\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5840,
+        1696
+      ],
+      "id": "9946c1b5-f392-4622-a90b-0c81d1a5df53",
+      "name": "Build Fallback Subtasks"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    ok: $json.ok !== false,\n    taskName: $json.taskName,\n    priority: $json.priority,\n    desiredCount: $json.desiredCount,\n    count: Array.isArray($json.subtasks) ? $json.subtasks.length : 0,\n    fallbackUsed: Boolean($json.fallbackUsed),\n    subtasks: Array.isArray($json.subtasks) ? $json.subtasks : []\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6064,
+        1824
+      ],
+      "id": "bc15bae2-b490-4e9a-bb54-205ac25d8bc8",
+      "name": "Format AI Response"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        6288,
+        1824
+      ],
+      "id": "1ec3a794-3df2-437c-9600-03dd219c5187",
+      "name": "Respond AI Subtasks"
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-3.1-flash-lite",
+        "options": {
+          "maxTokens": 420,
+          "temperature": 0.15
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        5040,
+        2032
+      ],
+      "id": "e3285f9e-914c-4471-917e-e36beb634c48",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "HgXZW4MAiNfUBw0N",
+          "name": "OpenRouter account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Flow 2 - Task Events\n",
+        "height": 956,
+        "width": 2384,
+        "color": "#EDF2E3"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4320,
+        2304
+      ],
+      "id": "32d001da-fafb-441b-999a-caf61150d9ae",
+      "name": "Note - Main Flow"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "task-events",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        4432,
+        2880
+      ],
+      "id": "54683817-07c5-49d0-9b30-64d9e578b338",
+      "name": "Webhook Task Events",
+      "webhookId": "375eeee0-ce3e-47a8-9102-83ef442120f6"
+    },
+    {
+      "parameters": {
+        "jsCode": "const parseDate = (value) => {\n  if (!value) return null;\n\n  if (Array.isArray(value)) {\n    const [year, month = 1, day = 1, hour = 0, minute = 0, second = 0, nano = 0] = value;\n    const millis = Math.floor(Number(nano) / 1000000);\n    const date = new Date(year, month - 1, day, hour, minute, second, millis);\n    return Number.isNaN(date.getTime()) ? null : date;\n  }\n\n  const date = new Date(value);\n  return Number.isNaN(date.getTime()) ? null : date;\n};\n\nconst formatDate = (value) => {\n  const date = value instanceof Date ? value : parseDate(value);\n  if (!date) return null;\n\n  const pad = (input) => String(input).padStart(2, '0');\n  return pad(date.getDate()) + '/' + pad(date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes());\n};\n\nconst body = $json.body ?? $json;\nconst deadlineRaw = body.deadline ?? body.dueDate ?? body.endDate;\nconst description = body.taskDescription ?? body.adminNote ?? body.sourceInput ?? body.description ?? null;\nconst note = body.adminNote ?? body.sourceInput ?? body.taskDescription ?? null;\n\nconst deadlineDate = parseDate(deadlineRaw);\nconst completedDate = parseDate(body.completedAt);\nconst createdDate = parseDate(body.createdAt);\nconst itemType = String(body.itemType || (body.subtaskId ? 'SUBTASK' : 'TASK')).toUpperCase();\nconst subtaskId = body.subtaskId ?? null;\nconst taskName = body.taskName ?? body.subtaskTitle ?? 'Untitled task';\nconst subtasks = Array.isArray(body.subtasks) ? body.subtasks : [];\n\nreturn [\n  {\n    json: {\n      itemType,\n      id: body.id ?? null,\n      taskId: body.taskId,\n      taskName,\n      taskDescription: description,\n      adminNote: body.adminNote ?? null,\n      sourceInput: body.sourceInput ?? null,\n\n      assigneeEmail: body.assigneeEmail ?? body.assignedTo ?? null,\n      managerEmail: body.managerEmail,\n      ownerName: body.ownerName,\n\n      priority: body.priority,\n      status: body.status,\n      eventType: body.eventType ?? null,\n      eventMessage: body.eventMessage ?? null,\n\n      deadline: deadlineDate?.toISOString() ?? deadlineRaw ?? null,\n      deadlineDisplay:\n        formatDate(deadlineRaw) ??\n        (typeof deadlineRaw === 'string' ? deadlineRaw : null) ??\n        'Chưa có deadline',\n\n      createdAt: createdDate?.toISOString() ?? body.createdAt ?? null,\n      createdAtDisplay: formatDate(body.createdAt),\n\n      completedAt: completedDate?.toISOString() ?? null,\n      completedAtDisplay: formatDate(body.completedAt),\n\n      reminderCount: body.reminderCount ?? 0,\n      note,\n\n      parentTaskCode: body.parentTaskCode ?? body.taskId ?? null,\n      parentTaskName: body.parentTaskName ?? null,\n      parentDeadline: body.parentDeadline ?? null,\n      subtaskId,\n      subtaskTitle: body.subtaskTitle ?? (itemType === 'SUBTASK' ? taskName : null),\n      positionIndex: body.positionIndex ?? null,\n      workItemLabel: itemType === 'SUBTASK' ? 'Subtask: ' + (body.subtaskTitle || taskName || '-') : 'Task: ' + (taskName || '-'),\n\n      subtasks,\n\n      receivedAt: new Date().toISOString()\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4656,
+        2880
+      ],
+      "id": "dc81b0d0-c5b3-4255-968d-68e016ef93cd",
+      "name": "Normalize Task Payload"
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.eventType || '' }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "TASK_CREATED"
+            },
+            {
+              "value2": "TASK_STATUS_CHANGED"
+            },
+            {
+              "value2": "TASK_COMPLETED"
+            },
+            {
+              "value2": "TASK_UPDATED",
+              "output": 1
+            },
+            {
+              "value2": "TASK_CANCELLED",
+              "output": 2
+            },
+            {
+              "value2": "SUBTASK_CREATED",
+              "output": 3
+            },
+            {
+              "value2": "SUBTASK_UPDATED",
+              "output": 3
+            },
+            {
+              "value2": "SUBTASK_DELETED",
+              "output": 3
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        4880,
+        2848
+      ],
+      "id": "a7734a2e-19ea-48ef-a3d9-aa48868f135a",
+      "name": "Switch Event Type"
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.status }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "PENDING"
+            },
+            {
+              "value2": "TODO"
+            },
+            {
+              "value2": "DONE",
+              "output": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        5056,
+        2624
+      ],
+      "id": "78031841-1c92-4151-a7f9-6add722d74de",
+      "name": "Switch Status"
     },
     {
       "parameters": {
@@ -491,38 +420,15 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        5568,
+        5552,
         2368
       ],
-      "id": "d888afb8-279b-43e7-addc-3f4a9ad8a29b",
+      "id": "c2b13abf-2837-495c-bbd5-bc27b034537e",
       "name": "Append Audit Log",
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "gAxM423I89XeYwaH",
           "name": "Google Sheets account 5"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "sendTo": "={{ $json.assigneeEmail }}",
-        "subject": "=Task bị hủy: {{ $json.taskName }}",
-        "message": "=<div style=\"margin:0;padding:24px;background:#f4f6fb;font-family:Arial,sans-serif;color:#1f2937;\"><div style=\"max-width:640px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #e5e7eb;box-shadow:0 12px 32px rgba(15,23,42,0.08);\"><div style=\"padding:24px 28px;background:linear-gradient(135deg,#64748b,#94a3b8);color:#ffffff;\"><div style=\"display:flex;align-items:center;gap:14px;\"><div style=\"width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,0.18);text-align:center;line-height:48px;font-size:20px;font-weight:700;\">DA</div><div><div style=\"font-size:12px;letter-spacing:1.2px;text-transform:uppercase;opacity:0.9;\">Deadline Automation</div><div style=\"font-size:15px;opacity:0.95;\">Hệ thống điều phối công việc</div></div></div><h1 style=\"margin:18px 0 0;font-size:28px;line-height:1.3;\">Task đã được hủy</h1></div><div style=\"padding:28px;\"><p style=\"margin:0 0 16px;font-size:16px;\">Xin chào,</p><p style=\"margin:0 0 18px;font-size:16px;line-height:1.7;\">Task dưới đây đã được quản lý hủy trong hệ thống. Bạn không cần tiếp tục xử lý task này nữa.</p><div style=\"padding:20px;border-radius:16px;background:#f8fafc;border:1px solid #cbd5e1;margin-bottom:20px;\"><div style=\"font-size:24px;font-weight:700;color:#334155;margin-bottom:6px;\">{{ $json.taskName }}</div><div style=\"font-size:14px;color:#475569;\">Mã task: {{ $json.taskId || 'Đang cập nhật' }}</div></div><div style=\"padding:16px 18px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0;\"><div style=\"font-size:13px;color:#475569;font-weight:700;margin-bottom:6px;\">Ghi chú</div><div style=\"font-size:15px;line-height:1.7;color:#334155;\">{{ $json.eventMessage || 'Task đã được hủy bởi quản lý.' }}</div></div><div style=\"margin-top:22px;font-size:12px;color:#94a3b8;text-align:center;\">Deadline Automation • Theo dõi tiến độ, nhắc việc, và báo cáo tự động</div></div></div></div>",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2,
-      "position": [
-        5120,
-        3072
-      ],
-      "id": "200023bd-1919-44ee-9982-b631ca53e259",
-      "name": "Send Task Cancelled Gmail",
-      "webhookId": "7ce5b9c2-9e63-494d-a9b7-c19a757f1ef7",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "Cjhnaex87bH9nxbe",
-          "name": "Gmail account 4"
         }
       }
     },
@@ -536,10 +442,10 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        5120,
+        5104,
         2880
       ],
-      "id": "eaf05ed1-79c7-456d-8084-cafa337c9bcd",
+      "id": "2b49c12d-8ac4-448d-a5c7-50aa49365a98",
       "name": "Send Task Updated Gmail",
       "webhookId": "b20eeb21-5741-4616-9f2a-d6fb9af50112",
       "credentials": {
@@ -551,111 +457,541 @@
     },
     {
       "parameters": {
-        "dataType": "string",
-        "value1": "={{ $json.status }}",
-        "rules": {
-          "rules": [
-            {
-              "value2": "PENDING"
-            },
-            {
-              "value2": "TODO"
-            },
-            {
-              "value2": "DONE",
-              "output": 1
-            }
-          ]
-        }
+        "sendTo": "={{ $json.assigneeEmail }}",
+        "subject": "=Task bị hủy: {{ $json.taskName }}",
+        "message": "=<div style=\"margin:0;padding:24px;background:#f4f6fb;font-family:Arial,sans-serif;color:#1f2937;\"><div style=\"max-width:640px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #e5e7eb;box-shadow:0 12px 32px rgba(15,23,42,0.08);\"><div style=\"padding:24px 28px;background:linear-gradient(135deg,#64748b,#94a3b8);color:#ffffff;\"><div style=\"display:flex;align-items:center;gap:14px;\"><div style=\"width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,0.18);text-align:center;line-height:48px;font-size:20px;font-weight:700;\">DA</div><div><div style=\"font-size:12px;letter-spacing:1.2px;text-transform:uppercase;opacity:0.9;\">Deadline Automation</div><div style=\"font-size:15px;opacity:0.95;\">Hệ thống điều phối công việc</div></div></div><h1 style=\"margin:18px 0 0;font-size:28px;line-height:1.3;\">Task đã được hủy</h1></div><div style=\"padding:28px;\"><p style=\"margin:0 0 16px;font-size:16px;\">Xin chào,</p><p style=\"margin:0 0 18px;font-size:16px;line-height:1.7;\">Task dưới đây đã được quản lý hủy trong hệ thống. Bạn không cần tiếp tục xử lý task này nữa.</p><div style=\"padding:20px;border-radius:16px;background:#f8fafc;border:1px solid #cbd5e1;margin-bottom:20px;\"><div style=\"font-size:24px;font-weight:700;color:#334155;margin-bottom:6px;\">{{ $json.taskName }}</div><div style=\"font-size:14px;color:#475569;\">Mã task: {{ $json.taskId || 'Đang cập nhật' }}</div></div><div style=\"padding:16px 18px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0;\"><div style=\"font-size:13px;color:#475569;font-weight:700;margin-bottom:6px;\">Ghi chú</div><div style=\"font-size:15px;line-height:1.7;color:#334155;\">{{ $json.eventMessage || 'Task đã được hủy bởi quản lý.' }}</div></div><div style=\"margin-top:22px;font-size:12px;color:#94a3b8;text-align:center;\">Deadline Automation • Theo dõi tiến độ, nhắc việc, và báo cáo tự động</div></div></div></div>",
+        "options": {}
       },
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
       "position": [
-        5072,
-        2624
+        5104,
+        3072
       ],
-      "id": "c7ba341d-05c6-4dd0-82f5-47c0287883c3",
-      "name": "Switch Status"
+      "id": "2192411a-6076-4ad8-9191-dadb93d42704",
+      "name": "Send Task Cancelled Gmail",
+      "webhookId": "7ce5b9c2-9e63-494d-a9b7-c19a757f1ef7",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Cjhnaex87bH9nxbe",
+          "name": "Gmail account 4"
+        }
+      }
     },
     {
       "parameters": {
-        "dataType": "string",
-        "value1": "={{ $json.eventType || '' }}",
-        "rules": {
-          "rules": [
-            {
-              "value2": "TASK_CREATED"
-            },
-            {
-              "value2": "TASK_STATUS_CHANGED"
-            },
-            {
-              "value2": "TASK_COMPLETED"
-            },
-            {
-              "value2": "TASK_UPDATED",
-              "output": 1
-            },
-            {
-              "value2": "TASK_CANCELLED",
-              "output": 2
-            }
-          ]
-        }
+        "sendTo": "={{ $json.assigneeEmail }}",
+        "subject": "={{ $json.eventType === 'SUBTASK_CREATED' ? 'Bạn được giao task con mới: ' : ($json.eventType === 'SUBTASK_UPDATED' ? 'Task con được cập nhật: ' : 'Task con đã bị xóa: ') }}{{ $json.subtaskTitle || $json.taskName }}",
+        "message": "=<div style=\"margin:0;padding:24px;background:#f4f6fb;font-family:Arial,sans-serif;color:#1f2937;\"><div style=\"max-width:640px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #e5e7eb;box-shadow:0 12px 32px rgba(15,23,42,0.08);\"><div style=\"padding:24px 28px;background:linear-gradient(135deg,#0f766e,#2dd4bf);color:#ffffff;\"><div style=\"font-size:12px;letter-spacing:1.2px;text-transform:uppercase;opacity:0.9;\">Deadline Automation</div><h1 style=\"margin:12px 0 0;font-size:26px;line-height:1.3;\">{{ $json.eventType === 'SUBTASK_CREATED' ? 'Bạn được giao task con mới' : ($json.eventType === 'SUBTASK_UPDATED' ? 'Task con của bạn vừa được cập nhật' : 'Task con của bạn đã bị xóa') }}</h1></div><div style=\"padding:28px;\"><p style=\"margin:0 0 16px;font-size:16px;\">Xin chào,</p><p style=\"margin:0 0 18px;font-size:16px;line-height:1.7;\">{{ $json.eventMessage || 'Có thay đổi liên quan tới task con được giao cho bạn.' }}</p><div style=\"padding:20px;border-radius:16px;background:#ecfeff;border:1px solid #99f6e4;margin-bottom:18px;\"><div style=\"font-size:24px;font-weight:700;color:#0f766e;margin-bottom:6px;\">{{ $json.subtaskTitle || $json.taskName }}</div><div style=\"font-size:14px;color:#0f766e;\">Thuộc task cha: {{ $json.parentTaskName || '-' }} ({{ $json.parentTaskCode || $json.taskId || '-' }})</div></div><table role=\"presentation\" style=\"width:100%;border-collapse:separate;border-spacing:0 12px;margin-bottom:18px;\"><tr><td style=\"width:50%;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;vertical-align:top;\"><div style=\"font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.6px;\">Deadline task con</div><div style=\"margin-top:6px;font-size:18px;font-weight:700;color:#111827;\">{{ $json.deadlineDisplay || 'Chưa có deadline' }}</div></td><td style=\"width:50%;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;vertical-align:top;\"><div style=\"font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.6px;\">Priority</div><div style=\"margin-top:6px;font-size:18px;font-weight:700;color:#111827;\">{{ $json.priority || 'Chưa xác định' }}</div></td></tr></table><div style=\"padding:16px 18px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0;\"><div style=\"font-size:13px;color:#475569;font-weight:700;margin-bottom:6px;\">Trạng thái</div><div style=\"font-size:15px;line-height:1.7;color:#334155;\">{{ $json.status || '-' }}</div></div><div style=\"margin-top:22px;font-size:12px;color:#94a3b8;text-align:center;\">Deadline Automation • Theo dõi tiến độ, nhắc việc, và báo cáo tự động</div></div></div></div>",
+        "options": {}
       },
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
       "position": [
-        4896,
-        2848
+        5104,
+        3264
       ],
-      "id": "55e8aa81-e4ac-4af6-baf8-9ea0c744f44a",
-      "name": "Switch Event Type"
+      "id": "37d11431-d7aa-4ed8-b598-759167e4771c",
+      "name": "Send Subtask Change Gmail",
+      "webhookId": "ed184c28-3da1-4d2d-ad5f-d58a5d4fb889",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Cjhnaex87bH9nxbe",
+          "name": "Gmail account 4"
+        }
+      }
     },
     {
       "parameters": {
-        "jsCode": "const parseDate = (value) => {\n  if (!value) return null;\n\n  if (Array.isArray(value)) {\n    const [year, month = 1, day = 1, hour = 0, minute = 0, second = 0, nano = 0] = value;\n    const millis = Math.floor(Number(nano) / 1000000);\n    const date = new Date(year, month - 1, day, hour, minute, second, millis);\n    return Number.isNaN(date.getTime()) ? null : date;\n  }\n\n  const date = new Date(value);\n  return Number.isNaN(date.getTime()) ? null : date;\n};\n\nconst formatDate = (value) => {\n  const date = value instanceof Date ? value : parseDate(value);\n  if (!date) return null;\n\n  const pad = (input) => String(input).padStart(2, '0');\n  return pad(date.getDate()) + '/' + pad(date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes());\n};\n\nconst body = $json.body ?? $json;\nconst deadlineRaw = body.deadline ?? body.dueDate ?? body.endDate;\nconst description = body.taskDescription ?? body.adminNote ?? body.sourceInput ?? body.description ?? null;\nconst note = body.adminNote ?? body.sourceInput ?? body.taskDescription ?? null;\n\nconst deadlineDate = parseDate(deadlineRaw);\nconst completedDate = parseDate(body.completedAt);\nconst createdDate = parseDate(body.createdAt);\nconst itemType = String(body.itemType || (body.subtaskId ? 'SUBTASK' : 'TASK')).toUpperCase();\nconst subtaskId = body.subtaskId ?? null;\nconst taskName = body.taskName ?? body.subtaskTitle ?? 'Untitled task';\nconst subtasks = Array.isArray(body.subtasks) ? body.subtasks : [];\n\nreturn [\n  {\n    json: {\n      itemType,\n      id: body.id ?? null,\n      taskId: body.taskId,\n      taskName,\n      taskDescription: description,\n      adminNote: body.adminNote ?? null,\n      sourceInput: body.sourceInput ?? null,\n\n      assigneeEmail: body.assigneeEmail ?? body.assignedTo ?? null,\n      managerEmail: body.managerEmail,\n      ownerName: body.ownerName,\n\n      priority: body.priority,\n      status: body.status,\n      eventType: body.eventType ?? null,\n      eventMessage: body.eventMessage ?? null,\n\n      deadline: deadlineDate?.toISOString() ?? deadlineRaw ?? null,\n      deadlineDisplay:\n        formatDate(deadlineRaw) ??\n        (typeof deadlineRaw === 'string' ? deadlineRaw : null) ??\n        'Chưa có deadline',\n\n      createdAt: createdDate?.toISOString() ?? body.createdAt ?? null,\n      createdAtDisplay: formatDate(body.createdAt),\n\n      completedAt: completedDate?.toISOString() ?? null,\n      completedAtDisplay: formatDate(body.completedAt),\n\n      reminderCount: body.reminderCount ?? 0,\n      note,\n\n      parentTaskCode: body.parentTaskCode ?? body.taskId ?? null,\n      parentTaskName: body.parentTaskName ?? null,\n      parentDeadline: body.parentDeadline ?? null,\n      subtaskId,\n      subtaskTitle: body.subtaskTitle ?? (itemType === 'SUBTASK' ? taskName : null),\n      positionIndex: body.positionIndex ?? null,\n      workItemLabel: itemType === 'SUBTASK' ? 'Subtask: ' + (body.subtaskTitle || taskName || '-') : 'Task: ' + (taskName || '-'),\n\n      subtasks,\n\n      receivedAt: new Date().toISOString()\n    }\n  }\n];"
+        "jsCode": "const parseDate = (value) => {\n  if (!value) return null;\n\n  if (Array.isArray(value)) {\n    const [year, month = 1, day = 1, hour = 0, minute = 0, second = 0, nano = 0] = value;\n    const millis = Math.floor(Number(nano) / 1000000);\n    const date = new Date(year, month - 1, day, hour, minute, second, millis);\n    return Number.isNaN(date.getTime()) ? null : date;\n  }\n\n  const date = new Date(value);\n  return Number.isNaN(date.getTime()) ? null : date;\n};\n\nconst formatDate = (value) => {\n  const date = parseDate(value);\n  if (!date) return null;\n\n  const pad = (input) => String(input).padStart(2, '0');\n  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;\n};\n\nconst deadline = parseDate($json.deadline);\nconst completedAt = parseDate($json.completedAt) ?? new Date();\nconst isEarly = deadline ? completedAt.getTime() <= deadline.getTime() : false;\n\nreturn [{\n  json: {\n    ...$json,\n    deadline: deadline?.toISOString() ?? $json.deadline ?? null,\n    deadlineDisplay: $json.deadlineDisplay ?? formatDate($json.deadline) ?? 'Chua co deadline',\n    completedAt: completedAt.toISOString(),\n    completedAtDisplay: formatDate(completedAt),\n    isEarly\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4672,
-        2880
+        5328,
+        2944
       ],
-      "id": "f59ae152-6678-4118-8abd-0df753d41130",
-      "name": "Normalize Task Payload"
+      "id": "bb6104f8-c3bc-44e7-b64c-8e58a31a452f",
+      "name": "Evaluate Completion"
     },
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "task-events",
-        "options": {}
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.isEarly }}",
+              "value2": true
+            }
+          ]
+        }
       },
-      "type": "n8n-nodes-base.webhook",
+      "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        4448,
-        2880
+        5552,
+        2944
       ],
-      "id": "8ad5fcf6-5c81-40f4-bd61-a60a08628028",
-      "name": "Webhook Task Events",
-      "webhookId": "375eeee0-ce3e-47a8-9102-83ef442120f6"
+      "id": "d1cefbc0-1188-407e-a5e8-7505d492047b",
+      "name": "If Early Completion"
     },
     {
       "parameters": {
-        "content": "## Flow 2 - Task Events\n",
-        "height": 956,
+        "sendTo": "={{ $json.assigneeEmail }}",
+        "subject": "=Chúc mừng! Bạn đã hoàn thành sớm {{ $json.taskName }}",
+        "message": "=<div style=\"margin:0;padding:24px;background:#f4f6fb;font-family:Arial,sans-serif;color:#1f2937;\"><div style=\"max-width:640px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #e5e7eb;box-shadow:0 12px 32px rgba(15,23,42,0.08);\"><div style=\"padding:24px 28px;background:linear-gradient(135deg,#059669,#34d399);color:#ffffff;\"><div style=\"display:flex;align-items:center;gap:14px;\"><div style=\"width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,0.18);text-align:center;line-height:48px;font-size:20px;font-weight:700;\">DA</div><div><div style=\"font-size:12px;letter-spacing:1.2px;text-transform:uppercase;opacity:0.9;\">Deadline Automation</div><div style=\"font-size:15px;opacity:0.95;\">Hệ thống điều phối công việc</div></div></div><h1 style=\"margin:18px 0 0;font-size:28px;line-height:1.3;\">Hoàn thành sớm, rất tốt</h1></div><div style=\"padding:28px;\"><p style=\"margin:0 0 16px;font-size:16px;\">Xin chúc mừng,</p><p style=\"margin:0 0 20px;font-size:16px;line-height:1.7;\">Bạn đã hoàn thành task trước deadline. Đây là một kết quả rất tích cực cho tiến độ công việc.</p><div style=\"padding:20px;border-radius:16px;background:#ecfdf5;border:1px solid #bbf7d0;margin-bottom:20px;\"><div style=\"font-size:24px;font-weight:700;color:#047857;margin-bottom:6px;\">{{ $json.taskName }}</div><div style=\"font-size:14px;color:#065f46;\">Hoàn thành lúc: {{ $json.completedAtDisplay || 'Vừa cập nhật' }}</div></div><table role=\"presentation\" style=\"width:100%;border-collapse:separate;border-spacing:0 12px;\"><tr><td style=\"width:50%;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;vertical-align:top;\"><div style=\"font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.6px;\">Mã task</div><div style=\"margin-top:6px;font-size:18px;font-weight:700;color:#111827;\">{{ $json.taskId || 'Đang cập nhật' }}</div></td><td style=\"width:50%;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;vertical-align:top;\"><div style=\"font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.6px;\">Deadline</div><div style=\"margin-top:6px;font-size:18px;font-weight:700;color:#111827;\">{{ $json.deadlineDisplay || 'Chưa có deadline' }}</div></td></tr></table><div style=\"margin-top:22px;font-size:12px;color:#94a3b8;text-align:center;\">Deadline Automation • Theo dõi tiến độ, nhắc việc, và báo cáo tự động</div></div></div></div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        5776,
+        2848
+      ],
+      "id": "097dd9ca-e064-4b57-88c9-f66535e374fe",
+      "name": "Send Early Completion Gmail",
+      "webhookId": "1e3d3cfd-aed5-4d22-ba20-fbdc40c89d97",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Cjhnaex87bH9nxbe",
+          "name": "Gmail account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.assigneeEmail }}",
+        "subject": "=Task {{ $json.taskName }} đã được hoàn thành",
+        "message": "=<div style=\"margin:0;padding:24px;background:#f4f6fb;font-family:Arial,sans-serif;color:#1f2937;\"><div style=\"max-width:640px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #e5e7eb;box-shadow:0 12px 32px rgba(15,23,42,0.08);\"><div style=\"padding:24px 28px;background:linear-gradient(135deg,#0f766e,#2dd4bf);color:#ffffff;\"><div style=\"display:flex;align-items:center;gap:14px;\"><div style=\"width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,0.18);text-align:center;line-height:48px;font-size:20px;font-weight:700;\">DA</div><div><div style=\"font-size:12px;letter-spacing:1.2px;text-transform:uppercase;opacity:0.9;\">Deadline Automation</div><div style=\"font-size:15px;opacity:0.95;\">Hệ thống điều phối công việc</div></div></div><h1 style=\"margin:18px 0 0;font-size:28px;line-height:1.3;\">Task đã được cập nhật hoàn thành</h1></div><div style=\"padding:28px;\"><p style=\"margin:0 0 16px;font-size:16px;\">Xin chào,</p><p style=\"margin:0 0 20px;font-size:16px;line-height:1.7;\">Task của bạn đã được đánh dấu hoàn thành trong hệ thống. Vui lòng xem lại kết quả nếu cần bổ sung hoặc điều chỉnh thêm.</p><div style=\"padding:20px;border-radius:16px;background:#f0fdfa;border:1px solid #99f6e4;margin-bottom:20px;\"><div style=\"font-size:24px;font-weight:700;color:#0f766e;margin-bottom:6px;\">{{ $json.taskName }}</div><div style=\"font-size:14px;color:#115e59;\">Mã task: {{ $json.taskId || 'Đang cập nhật' }}</div></div><table role=\"presentation\" style=\"width:100%;border-collapse:separate;border-spacing:0 12px;\"><tr><td style=\"width:50%;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;vertical-align:top;\"><div style=\"font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.6px;\">Ngày hoàn thành</div><div style=\"margin-top:6px;font-size:18px;font-weight:700;color:#111827;\">{{ $json.completedAtDisplay || 'Vừa cập nhật' }}</div></td><td style=\"width:50%;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;vertical-align:top;\"><div style=\"font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.6px;\">Deadline</div><div style=\"margin-top:6px;font-size:18px;font-weight:700;color:#111827;\">{{ $json.deadlineDisplay || 'Chưa có deadline' }}</div></td></tr></table><div style=\"margin-top:22px;font-size:12px;color:#94a3b8;text-align:center;\">Deadline Automation • Theo dõi tiến độ, nhắc việc, và báo cáo tự động</div></div></div></div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        5776,
+        3040
+      ],
+      "id": "927180a7-13e5-4207-89f4-ef1bc99150ff",
+      "name": "Send Completion Gmail",
+      "webhookId": "574e196e-94ed-4458-89ba-c9959c21daa3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Cjhnaex87bH9nxbe",
+          "name": "Gmail account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "7065866911",
+        "text": "={{ [\n  '✅ HOAN THANH SOM',\n  `👤 Nhan vien: ${$node[\"Evaluate Completion\"].json.assigneeEmail || '-'}`,\n  `📝 Task: ${$node[\"Evaluate Completion\"].json.taskName || '-'}`,\n  `📅 Deadline: ${$node[\"Evaluate Completion\"].json.deadlineDisplay || '-'}`,\n  `🕒 Hoan thanh luc: ${$node[\"Evaluate Completion\"].json.completedAtDisplay || '-'}`\n].join('\\n') }}\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        6000,
+        2848
+      ],
+      "id": "a723a9a7-5212-48ec-8e04-dd3b4de7071c",
+      "name": "Report task complete early",
+      "webhookId": "223d1cfb-5e93-4b40-a905-8cbb098fa07e",
+      "credentials": {
+        "telegramApi": {
+          "id": "8FoWjXdJDyBiISIA",
+          "name": "New task"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const parseDate = (value) => {\n  if (!value) return null;\n\n  if (Array.isArray(value)) {\n    const [year, month = 1, day = 1, hour = 0, minute = 0, second = 0, nano = 0] = value;\n    const millis = Math.floor(Number(nano) / 1000000);\n    const date = new Date(year, month - 1, day, hour, minute, second, millis);\n    return Number.isNaN(date.getTime()) ? null : date;\n  }\n\n  const date = new Date(value);\n  return Number.isNaN(date.getTime()) ? null : date;\n};\n\nconst formatDate = (value) => {\n  const date = parseDate(value);\n  if (!date) return null;\n\n  const pad = (input) => String(input).padStart(2, '0');\n  return pad(date.getDate()) + '/' + pad(date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes());\n};\n\nconst task = $json;\nconst status = String(task.status || '').toUpperCase();\nconst itemType = String(task.itemType || (task.subtaskId ? 'SUBTASK' : 'TASK')).toUpperCase();\nconst lineBreak = String.fromCharCode(10);\n\nif (itemType === 'SUBTASK' || task.subtaskId) {\n  return [];\n}\n\nif (task.eventType && task.eventType !== 'TASK_CREATED') {\n  return [];\n}\n\nif (status && !['PENDING', 'TODO'].includes(status)) {\n  return [];\n}\n\nconst subtasks = Array.isArray(task.subtasks) ? task.subtasks : [];\nconst assignmentMap = {};\n\nif (task.assigneeEmail) {\n  assignmentMap[task.assigneeEmail] = {\n    email: task.assigneeEmail,\n    isMainAssignee: true,\n    subtasks: []\n  };\n}\n\nfor (const subtask of subtasks) {\n  const email =\n    subtask.assignedTo ??\n    subtask.assigned_to ??\n    subtask.assigneeEmail ??\n    subtask.assignee_email;\n\n  if (!email) continue;\n\n  if (!assignmentMap[email]) {\n    assignmentMap[email] = {\n      email,\n      isMainAssignee: false,\n      subtasks: []\n    };\n  }\n\n  const subDeadlineRaw = subtask.deadline ?? subtask.dueDate ?? subtask.endDate;\n\n  assignmentMap[email].subtasks.push({\n    id: subtask.id ?? null,\n    title: subtask.title ?? subtask.name ?? 'Subtask chưa có tên',\n    deadline: parseDate(subDeadlineRaw)?.toISOString() ?? subDeadlineRaw ?? null,\n    deadlineDisplay:\n      subtask.deadlineDisplay ??\n      formatDate(subDeadlineRaw) ??\n      subDeadlineRaw ??\n      'Chưa có deadline',\n    priority: subtask.priority ?? 'MEDIUM',\n    status: subtask.status ?? 'TODO'\n  });\n}\n\nconst assignments = Object.values(assignmentMap);\n\nreturn assignments.map((assignment) => {\n  const subtaskLines = assignment.subtasks.length\n    ? assignment.subtasks\n        .map((s, index) => {\n          return (index + 1) + '. ' + s.title\n            + lineBreak + '   Deadline: ' + s.deadlineDisplay\n            + lineBreak + '   Priority: ' + s.priority\n            + lineBreak + '   Status: ' + s.status;\n        })\n        .join(lineBreak + lineBreak)\n    : 'Bạn không có task con riêng trong task này.';\n\n  return {\n    json: {\n      taskId: task.taskId,\n      taskName: task.taskName,\n      taskDescription: task.taskDescription,\n      adminNote: task.adminNote,\n      sourceInput: task.sourceInput,\n\n      managerEmail: task.managerEmail,\n      ownerName: task.ownerName,\n\n      priority: task.priority,\n      status: task.status,\n\n      deadline: task.deadline,\n      deadlineDisplay: task.deadlineDisplay,\n\n      eventType: task.eventType,\n      eventMessage: task.eventMessage,\n\n      recipientEmail: assignment.email,\n      isMainAssignee: assignment.isMainAssignee,\n      assignedSubtasks: assignment.subtasks,\n      subtaskCount: assignment.subtasks.length,\n      subtaskLines,\n\n      roleText: assignment.isMainAssignee\n        ? 'Bạn là người phụ trách chính của task cha.'\n        : 'Bạn là thành viên được giao task con.',\n\n      receivedAt: task.receivedAt\n    }\n  };\n});"
+      },
+      "id": "8fc84d57-4a22-4763-9783-618ee03a5cdc",
+      "name": "Group Assignments By Email1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5344,
+        2624
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.recipientEmail }}",
+        "subject": "={{ $json.priority === 'HIGH' ? '🔥 [KHẨN CẤP] Bạn được phân công: ' + $json.taskName : 'Bạn được phân công: ' + $json.taskName }}",
+        "message": "=<div style=\"margin:0;padding:24px;background:#f4f6fb;font-family:Arial,sans-serif;color:#1f2937;\">\n  <div style=\"max-width:680px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #e5e7eb;box-shadow:0 12px 32px rgba(15,23,42,0.08);\">\n\n    <div style=\"padding:24px 28px;background:linear-gradient(135deg,#2563eb,#60a5fa);color:#ffffff;\">\n      <div style=\"font-size:12px;letter-spacing:1.2px;text-transform:uppercase;opacity:0.9;\">Deadline Automation</div>\n      <h1 style=\"margin:12px 0 0;font-size:26px;line-height:1.3;\">Bạn được phân công trong task</h1>\n    </div>\n\n    <div style=\"padding:28px;\">\n      <p style=\"margin:0 0 16px;font-size:16px;\">Xin chào,</p>\n\n      <p style=\"margin:0 0 20px;font-size:16px;line-height:1.7;\">\n        Bạn được phân công trong task sau. Vui lòng xem thông tin và các phần việc được giao.\n      </p>\n\n      <div style=\"padding:20px;border-radius:16px;background:#eff6ff;border:1px solid #bfdbfe;margin-bottom:20px;\">\n        <div style=\"font-size:24px;font-weight:700;color:#1d4ed8;margin-bottom:6px;\">\n          {{ $json.taskName }}\n        </div>\n        <div style=\"font-size:14px;color:#1e40af;\">\n          Mã task: {{ $json.taskId || 'Đang cập nhật' }}\n        </div>\n      </div>\n\n      <div style=\"padding:16px;border-radius:14px;background:#f9fafb;border:1px solid #e5e7eb;margin-bottom:16px;\">\n        <div style=\"font-size:13px;color:#6b7280;font-weight:700;margin-bottom:8px;\">Vai trò của bạn</div>\n        <div style=\"font-size:15px;line-height:1.7;color:#374151;\">\n          {{ $json.roleText }}\n        </div>\n      </div>\n\n      <div style=\"padding:16px;border-radius:14px;background:#fff7ed;border:1px solid #fed7aa;margin-bottom:16px;\">\n        <div style=\"font-size:13px;color:#9a3412;font-weight:700;margin-bottom:8px;\">Thông tin task cha</div>\n        <div style=\"font-size:15px;line-height:1.8;color:#7c2d12;\">\n          Độ ưu tiên: {{ $json.priority || 'Chưa xác định' }}<br/>\n          Deadline: {{ $json.deadlineDisplay || $json.deadline || 'Chưa có deadline' }}\n        </div>\n      </div>\n\n      <div style=\"padding:16px;border-radius:14px;background:#f8fafc;border:1px solid #e5e7eb;margin-bottom:20px;\">\n        <div style=\"font-size:13px;color:#334155;font-weight:700;margin-bottom:10px;\">\n          Task con được giao cho bạn: {{ $json.subtaskCount || 0 }}\n        </div>\n\n        <div style=\"font-size:15px;line-height:1.8;color:#334155;white-space:pre-line;\">\n          {{ $json.subtaskLines }}\n        </div>\n      </div>\n\n      <div style=\"padding:16px;border-radius:14px;background:#f0fdf4;border:1px solid #bbf7d0;\">\n        <div style=\"font-size:13px;color:#15803d;font-weight:700;margin-bottom:6px;\">Ghi chú</div>\n        <div style=\"font-size:15px;line-height:1.7;color:#166534;\">\n          {{ $json.adminNote || $json.sourceInput || $json.taskDescription || 'Không có ghi chú.' }}\n        </div>\n      </div>\n\n      <div style=\"margin-top:22px;font-size:12px;color:#94a3b8;text-align:center;\">\n        Deadline Automation • Theo dõi tiến độ, nhắc việc và báo cáo tự động\n      </div>\n    </div>\n  </div>\n</div>",
+        "options": {}
+      },
+      "id": "00def124-bdb9-43d7-9e6d-9ff62a548d03",
+      "name": "Send Grouped Assignment Gmail1",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        5776,
+        2656
+      ],
+      "webhookId": "b67cbd22-397d-46f6-bece-8d6ebeea2b21",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Cjhnaex87bH9nxbe",
+          "name": "Gmail account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "7065866911",
+        "text": "={{ [\n  '📌 THÔNG BÁO GIAO TASK',\n  `🆔 Mã task: ${$node[\"Group Assignments By Email1\"].json.taskId || '-'}`,\n  `📝 Tên task: ${$node[\"Group Assignments By Email1\"].json.taskName || '-'}`,\n  `👤 Người nhận: ${$node[\"Group Assignments By Email1\"].json.recipientEmail || '-'}`,\n  `⭐ Vai trò: ${$node[\"Group Assignments By Email1\"].json.isMainAssignee ? 'Phụ trách chính task cha' : 'Thành viên task con'}`,\n  `📋 Số task con được giao: ${$node[\"Group Assignments By Email1\"].json.subtaskCount ?? 0}`,\n  `🔥 Ưu tiên: ${$node[\"Group Assignments By Email1\"].json.priority || '-'}`,\n  `📅 Deadline task cha: ${$node[\"Group Assignments By Email1\"].json.deadlineDisplay || 'Chưa có deadline'}`\n].join(String.fromCharCode(10)) }}",
+        "additionalFields": {}
+      },
+      "id": "0bf50775-1a90-497d-a430-b35e46211306",
+      "name": "Send Grouped Assignment Telegram1",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        6000,
+        2560
+      ],
+      "webhookId": "7366faf6-7503-4332-a779-2934a34d3225",
+      "credentials": {
+        "telegramApi": {
+          "id": "8FoWjXdJDyBiISIA",
+          "name": "New task"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Flow 4 - Overdue Escalation Friday 5PM\n",
+        "height": 660,
         "width": 2384,
-        "color": "#EDF2E3"
+        "color": 5
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        4336,
-        2304
+        4320,
+        4064
       ],
-      "id": "b0b88b0c-1cab-4b0e-a35a-e2e95615ff45",
-      "name": "Note - Main Flow"
+      "id": "b3a123ba-a5e6-4d1b-9d33-d2f501c43d09",
+      "name": "Note - Overdue Escalation"
+    },
+    {
+      "parameters": {
+        "content": "## Flow 5 - Health Check 11:59PM",
+        "height": 556,
+        "width": 2376,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4320,
+        4752
+      ],
+      "id": "c5401352-a61f-4015-bab9-0ad0efc4cf46",
+      "name": "Note - Health Check"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.huuhai.me/api/webhooks/employee-statistics",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Webhook-Secret",
+              "value": "=local-n8n-sync-secret"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        4640,
+        5616
+      ],
+      "id": "d484bf27-9239-4f42-94aa-9e46e0458573",
+      "name": "Fetch Employee Task Snapshot"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.huuhai.me/api/webhooks/sync",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Webhook-Secret",
+              "value": "=local-n8n-sync-secret"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ taskId: $json.taskId, itemType: $json.itemType || 'TASK', id: $json.id || null, subtaskId: $json.subtaskId || null, assigneeEmail: $json.assigneeEmail || null, actionType: 'ESCALATED', actionMessage: 'Escalation sent by n8n for ' + (($json.itemType || 'TASK') === 'SUBTASK' ? 'subtask ' + ($json.subtaskId || $json.id || '-') + ' under task ' : 'task ') + ($json.taskId || '-') }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        5552,
+        4384
+      ],
+      "id": "2f307d38-bea3-4cc6-aba5-3f660761f7b5",
+      "name": "Sync Escalation To Backend1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "tasks",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 3,
+      "position": [
+        5328,
+        4480
+      ],
+      "id": "66593f57-f636-4fdf-855a-ee19b2faca38",
+      "name": "Split Overdue Tasks1"
+    },
+    {
+      "parameters": {
+        "chatId": "=7065866911",
+        "text": "={{ $json.report }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        5328,
+        4096
+      ],
+      "id": "ecd36f8f-41d5-413d-baec-f89d975b5d26",
+      "name": "Send Overdue Report Telegram1",
+      "webhookId": "68a80d74-52b2-499b-ade0-2f7877c1f298",
+      "credentials": {
+        "telegramApi": {
+          "id": "UAsMsCKR480oPfOn",
+          "name": "Overdue"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().map(item => item.json);\n\nconst lines = ['🚨 BAO CAO TASK QUA HAN'];\n\nif (!items.length) {\n  lines.push('');\n  lines.push('✅ Khong co task qua han.');\n} else {\n  items.forEach((task, index) => {\n    lines.push('');\n    lines.push(`*TASK ${index + 1}*`);\n    lines.push(`🆔 *Ma task:* ${task.taskId || '-'}`);\n    lines.push(`📝 *Ten task:* ${task.taskName || '-'}`);\n    lines.push(`👤 Nguoi duoc giao: ${task.assigneeEmail || '-'}`);\n    lines.push(`🔥 Uu tien: ${task.priority || '-'}`);\n    lines.push(`📅 Deadline: ${task.deadlineDisplay || task.deadline || '-'}`);\n  });\n}\n\nreturn [{\n  json: {\n    report: lines.join('\\n'),\n    count: items.length,\n    tasks: items\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5104,
+        4288
+      ],
+      "id": "f9043ec8-51a5-4e9c-9ffd-85bd793f4d4d",
+      "name": "Render Overdue Report1"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.huuhai.me/api/webhooks/overdue-escalations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Webhook-Secret",
+              "value": "=local-n8n-sync-secret"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        4656,
+        4288
+      ],
+      "id": "f57a7214-3a51-4bc1-8e7a-fda3cf769ea4",
+      "name": "Fetch Overdue Tasks1"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                5
+              ],
+              "triggerAtHour": 17
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        4432,
+        4288
+      ],
+      "id": "7f92a35f-36cb-4b3d-aa7a-9305650d5ce7",
+      "name": "Schedule Friday 5PM1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.huuhai.me/api/webhooks/sync",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Webhook-Secret",
+              "value": "=local-n8n-sync-secret"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ taskId: $json.taskId, itemType: $json.itemType || 'TASK', id: $json.id || null, subtaskId: $json.subtaskId || null, assigneeEmail: $json.assigneeEmail || null, actionType: 'REMINDER_SENT', actionMessage: 'Reminder sent by n8n for ' + (($json.itemType || 'TASK') === 'SUBTASK' ? 'subtask ' + ($json.subtaskId || $json.id || '-') + ' under task ' : 'task ') + ($json.taskId || '-') }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        5552,
+        3680
+      ],
+      "id": "911aaad3-b9a9-4b56-8efe-d6c5210aded7",
+      "name": "Sync Reminder To Backend1"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.assigneeEmail }}",
+        "subject": "=Nhắc nhở: {{ $json.taskName }} sắp tới hạn",
+        "message": "=<div style=\"margin:0;padding:32px;background:linear-gradient(180deg,#fff7ed 0%,#fffbeb 100%);font-family:Arial,sans-serif;color:#1f2937;\"><div style=\"max-width:680px;margin:0 auto;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid #fed7aa;box-shadow:0 20px 45px rgba(194,65,12,0.12);\"><div style=\"padding:28px 32px;background:linear-gradient(135deg,#c2410c,#fb923c);color:#ffffff;\"><div style=\"display:flex;align-items:center;justify-content:space-between;gap:16px;\"><div style=\"display:flex;align-items:center;gap:14px;\"><div style=\"width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,0.16);text-align:center;line-height:52px;font-size:22px;font-weight:700;\">DA</div><div><div style=\"font-size:12px;letter-spacing:1.4px;text-transform:uppercase;opacity:0.9;\">Deadline Automation</div><div style=\"font-size:15px;opacity:0.95;\">Nhắc nhở công việc sắp đến hạn</div></div></div><div style=\"padding:10px 14px;border-radius:999px;background:rgba(255,255,255,0.18);font-size:13px;font-weight:700;\">{{ $json.daysLeft === 0 ? 'Đến hạn hôm nay' : ($json.daysLeft === 1 ? 'Còn 1 ngày' : 'Còn ' + $json.daysLeft + ' ngày') }}</div></div><h1 style=\"margin:20px 0 0;font-size:30px;line-height:1.25;\">{{ $json.taskName }}</h1><p style=\"margin:10px 0 0;font-size:15px;line-height:1.7;opacity:0.94;\">Task của bạn đang tiến gần deadline. Hãy ưu tiên xử lý để tránh bị trễ hạn.</p></div><div style=\"padding:30px 32px;\"><div style=\"display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:22px;\"><div style=\"padding:16px;border-radius:18px;background:#fff7ed;border:1px solid #fed7aa;\"><div style=\"font-size:12px;color:#9a3412;text-transform:uppercase;letter-spacing:0.8px;\">Mã task</div><div style=\"margin-top:8px;font-size:18px;font-weight:700;color:#7c2d12;\">{{ $json.taskId || 'Đang cập nhật' }}</div></div><div style=\"padding:16px;border-radius:18px;background:#f8fafc;border:1px solid #e2e8f0;\"><div style=\"font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:0.8px;\">Ưu tiên</div><div style=\"margin-top:8px;font-size:18px;font-weight:700;color:#0f172a;\">{{ $json.priority || 'MEDIUM' }}</div></div><div style=\"padding:16px;border-radius:18px;background:#eff6ff;border:1px solid #bfdbfe;\"><div style=\"font-size:12px;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.8px;\">Deadline</div><div style=\"margin-top:8px;font-size:18px;font-weight:700;color:#1e3a8a;\">{{ $json.deadlineDisplay || 'Chưa có deadline' }}</div></div></div><div style=\"padding:20px;border-radius:20px;background:#fffaf0;border:1px dashed #fdba74;margin-bottom:22px;\"><div style=\"font-size:13px;color:#9a3412;font-weight:700;margin-bottom:8px;\">Gợi ý xử lý</div><div style=\"font-size:15px;line-height:1.8;color:#7c2d12;\">1. Kiểm tra phần việc còn lại của task.<br/>2. Ưu tiên hoàn tất các mục quan trọng trước deadline.<br/>3. Báo lại cho quản lý nếu có rủi ro trễ hạn.</div></div><div style=\"padding:18px 20px;border-radius:18px;background:#f8fafc;border:1px solid #e5e7eb;\"><div style=\"font-size:13px;color:#64748b;font-weight:700;margin-bottom:8px;\">Mô tả công việc</div><div style=\"font-size:15px;line-height:1.8;color:#334155;white-space:pre-line;\">{{ $json.taskDescription || 'Không có mô tả chi tiết.' }}</div></div><div style=\"margin-top:24px;font-size:12px;color:#94a3b8;text-align:center;\">Deadline Automation • Theo dõi tiến độ, nhắc việc và đồng bộ báo cáo tự động</div></div></div></div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        5552,
+        3296
+      ],
+      "id": "d512ae86-b73c-4ac1-a811-42819087388c",
+      "name": "Send Reminder Gmail1",
+      "webhookId": "1ee17254-5cf4-4407-83a3-f6b9933c88f3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Cjhnaex87bH9nxbe",
+          "name": "Gmail account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.daysLeft }}",
+              "operation": "smallerEqual",
+              "value2": 3
+            },
+            {
+              "value1": "={{ $json.daysLeft }}",
+              "operation": "largerEqual"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        5328,
+        3584
+      ],
+      "id": "ae853d60-78de-45ba-8a5d-c7fb98af90d6",
+      "name": "If Due Soon1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const parseDate = (value) => {\n  if (!value) return null;\n\n  if (Array.isArray(value)) {\n    const [year, month = 1, day = 1, hour = 0, minute = 0, second = 0, nano = 0] = value;\n    const millis = Math.floor(Number(nano) / 1000000);\n    const date = new Date(year, month - 1, day, hour, minute, second, millis);\n    return Number.isNaN(date.getTime()) ? null : date;\n  }\n\n  const date = new Date(value);\n  return Number.isNaN(date.getTime()) ? null : date;\n};\n\nconst formatDate = (value) => {\n  const date = parseDate(value);\n  if (!date) return null;\n\n  const pad = (input) => String(input).padStart(2, '0');\n  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;\n};\n\nconst now = new Date();\n\nreturn $input.all().map((entry) => {\n  const item = entry.json ?? {};\n  const deadline = parseDate(item.deadline);\n  const daysLeft = deadline ? Math.floor((deadline.getTime() - now.getTime()) / 86400000) : null;\n\n  return {\n    json: {\n      ...item,\n      deadline: deadline?.toISOString() ?? item.deadline ?? null,\n      deadlineDisplay: item.deadlineDisplay ?? formatDate(item.deadline) ?? 'Chua co deadline',\n      daysLeft\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5104,
+        3584
+      ],
+      "id": "dd4b9779-3f12-4460-b37e-2965a72c8ae7",
+      "name": "Compute Days Left1"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.huuhai.me/api/webhooks/pending-reminders",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Webhook-Secret",
+              "value": "=local-n8n-sync-secret"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        4656,
+        3584
+      ],
+      "id": "75d1d3e6-d3b8-4524-a68b-01ec2da71a9f",
+      "name": "Fetch Pending Reminders1"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        4432,
+        3584
+      ],
+      "id": "eff6e75e-d3bb-4484-94f8-cfa197798bce",
+      "name": "Schedule 8AM1"
+    },
+    {
+      "parameters": {
+        "content": "## Flow 3 - Reminder 8AM",
+        "height": 764,
+        "width": 2384,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4320,
+        3280
+      ],
+      "id": "e7eb9b22-163c-45e1-8fd4-89da9d513120",
+      "name": "Note - Reminders1"
     },
     {
       "parameters": {
@@ -664,11 +1000,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4896,
+        4880,
         3584
       ],
-      "id": "a701ec42-892a-4e00-b66a-ccb308dd5b4b",
-      "name": "Normalize Reminder Payload"
+      "id": "82a83694-427e-4234-b7d2-ac979063be80",
+      "name": "Normalize Reminder Payload1"
     },
     {
       "parameters": {
@@ -772,11 +1108,11 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        5568,
+        5552,
         3872
       ],
-      "id": "086d7035-943c-4c3f-a739-8137b5464c57",
-      "name": "Append Reminder Audit Log",
+      "id": "f8dc370c-f8cc-489d-a5aa-7e5c74556429",
+      "name": "Append Reminder Audit Log1",
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "gAxM423I89XeYwaH",
@@ -792,26 +1128,26 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5568,
+        5552,
         3488
       ],
-      "id": "b3cf7e3a-0742-48a1-b46a-b3b9ef076dbd",
-      "name": "Build Reminder Ops Message"
+      "id": "c1c26c24-3d1d-446c-8720-2135654eeb98",
+      "name": "Build Reminder Ops Message1"
     },
     {
       "parameters": {
-        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "chatId": "=7065866911",
         "text": "={{ $json.opsMessage }}",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        5792,
+        5776,
         3488
       ],
-      "id": "061a4da4-1295-43e0-861a-d49bfa30d7cd",
-      "name": "Notify Reminder Ops Telegram",
+      "id": "7c5c2bc0-1958-43de-b369-3d2290046a25",
+      "name": "Notify Reminder Ops Telegram1",
       "webhookId": "d2c7d160-1fcd-4457-838f-82d52d600799",
       "credentials": {
         "telegramApi": {
@@ -827,11 +1163,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4896,
+        4880,
         4288
       ],
-      "id": "1e4cc828-2b67-4a4f-bf62-564074c7ddd8",
-      "name": "Normalize Overdue Payload"
+      "id": "17e3879a-a2ef-4e67-bd91-1167bc7e9a84",
+      "name": "Normalize Overdue Payload1"
     },
     {
       "parameters": {
@@ -935,11 +1271,11 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        5344,
+        5328,
         4288
       ],
-      "id": "a122251f-1073-44d2-b68a-4b8d56b68629",
-      "name": "Append Overdue Report Log",
+      "id": "42859aa2-48cd-48a9-977a-c39d72f25db2",
+      "name": "Append Overdue Report Log1",
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "gAxM423I89XeYwaH",
@@ -957,11 +1293,11 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        5568,
+        5552,
         4576
       ],
-      "id": "871be461-7393-424c-ad1e-a0cfaa3aa230",
-      "name": "Send Escalation Gmail",
+      "id": "1e43eae4-ba27-44f1-9616-21756f5a426b",
+      "name": "Send Escalation Gmail1",
       "webhookId": "83f86ce6-acc5-459a-bbc3-a5b5de172cf6",
       "credentials": {
         "gmailOAuth2": {
@@ -972,18 +1308,18 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "chatId": "=7065866911",
         "text": "={{ $json.opsMessage }}",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        5568,
+        5552,
         4800
       ],
-      "id": "473dde99-84b0-4efc-be09-fc58baf1e2d5",
-      "name": "Notify Health Ops Telegram",
+      "id": "5a70146a-0c52-458c-abe8-bb21c2584a10",
+      "name": "Notify Health Ops Telegram1",
       "webhookId": "786bc7d0-2432-446d-ba5d-c2fa3499bc17",
       "credentials": {
         "telegramApi": {
@@ -999,11 +1335,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5344,
+        5328,
         4800
       ],
-      "id": "7a58a61f-fb85-46c9-8bf1-afb279ea3145",
-      "name": "Build Health Ops Message"
+      "id": "1c793cf2-543a-4ade-98e8-7cda956d3f82",
+      "name": "Build Health Ops Message1"
     },
     {
       "parameters": {
@@ -1107,11 +1443,11 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        5792,
+        5776,
         4992
       ],
-      "id": "b57eebee-2fb8-4ba4-94b5-d4544c136676",
-      "name": "Append Health Snapshot Log",
+      "id": "4bc7bcf2-309f-4c46-91c8-56e262c67def",
+      "name": "Append Health Snapshot Log1",
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "gAxM423I89XeYwaH",
@@ -1126,11 +1462,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5120,
+        5104,
         4896
       ],
-      "id": "2826cd6e-1522-4e3c-9dd3-dd62c3e801bb",
-      "name": "Calculate Workload Signals"
+      "id": "33543f7a-37ad-4101-a581-484193ae7848",
+      "name": "Calculate Workload Signals1"
     },
     {
       "parameters": {
@@ -1139,11 +1475,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4896,
+        4880,
         4896
       ],
-      "id": "f195e96f-e54e-44ac-9afd-3d56371134f6",
-      "name": "Normalize Open Snapshot"
+      "id": "4ae473f1-8092-4670-a500-37935b0cdc3f",
+      "name": "Normalize Open Snapshot1"
     },
     {
       "parameters": {
@@ -1159,21 +1495,21 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1,
       "position": [
-        4448,
+        4432,
         4896
       ],
-      "id": "0b158d8a-66a0-48f4-9676-cb5ff1b8406d",
-      "name": "Schedule 11:59PM"
+      "id": "506b0920-3450-4d77-85b6-26e36943a01c",
+      "name": "Schedule 11:59PM1"
     },
     {
       "parameters": {
-        "url": "={{ $env.BACKEND_API_BASE_URL + \"/api/webhooks/pending-reminders\" }}",
+        "url": "=https://api.huuhai.me/api/webhooks/pending-reminders",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "X-Webhook-Secret",
-              "value": "={{ $env.APP_WEBHOOK_SECRET }}"
+              "value": "=local-n8n-sync-secret"
             }
           ]
         },
@@ -1184,11 +1520,11 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        4672,
+        4656,
         4896
       ],
-      "id": "07451793-7cf8-4d7f-a133-881ce14ef845",
-      "name": "Fetch Open Task Snapshot"
+      "id": "66c04688-d625-4fb4-8f78-4aeb9633d1d4",
+      "name": "Fetch Open Task Snapshot1"
     },
     {
       "parameters": {
@@ -1197,53 +1533,31 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5344,
+        5328,
         4992
       ],
-      "id": "cf3db3e6-ffe4-4dd2-be30-e29b8046f098",
-      "name": "Build Health Summary"
+      "id": "baaea54e-127d-4462-a94a-611cffbad122",
+      "name": "Build Health Summary1"
     },
     {
       "parameters": {
-        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "chatId": "=7065866911",
         "text": "=BOT he thong: {{ $json.fileContent }}",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        5568,
+        5552,
         4992
       ],
-      "id": "115c94dd-e8a1-4d78-a85a-5c94c5fc19b3",
-      "name": "Send Health Telegram",
+      "id": "2df07802-44a4-48ae-a224-85e58dd30636",
+      "name": "Send Health Telegram1",
       "webhookId": "bf0ef731-2eba-44f2-9d1d-dad15d263c94",
       "credentials": {
         "telegramApi": {
           "id": "y5tyBVQfSqBBBS4g",
           "name": "Statistics"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
-        "text": "={{ [\n  '✅ HOAN THANH SOM',\n  `👤 Nhan vien: ${$node[\"Evaluate Completion\"].json.assigneeEmail || '-'}`,\n  `📝 Task: ${$node[\"Evaluate Completion\"].json.taskName || '-'}`,\n  `📅 Deadline: ${$node[\"Evaluate Completion\"].json.deadlineDisplay || '-'}`,\n  `🕒 Hoan thanh luc: ${$node[\"Evaluate Completion\"].json.completedAtDisplay || '-'}`\n].join('\\n') }}\n",
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1,
-      "position": [
-        6016,
-        2848
-      ],
-      "id": "7f39d90c-7ed2-4f70-9d83-b9061f541413",
-      "name": "Report task complete early",
-      "webhookId": "223d1cfb-5e93-4b40-a905-8cbb098fa07e",
-      "credentials": {
-        "telegramApi": {
-          "id": "8FoWjXdJDyBiISIA",
-          "name": "New task"
         }
       }
     },
@@ -1257,11 +1571,11 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        4336,
+        4320,
         5328
       ],
-      "id": "82007c09-4758-4bb9-a7d2-f1302b9d4660",
-      "name": "Note - Employee Statistics"
+      "id": "4769fb45-5429-4d5b-b133-2ec154776e06",
+      "name": "Note - Employee Statistics1"
     },
     {
       "parameters": {
@@ -1277,36 +1591,11 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1,
       "position": [
-        4432,
+        4416,
         5616
       ],
-      "id": "ef1c2100-a291-4ad2-a2ca-0640101ec8e3",
-      "name": "Schedule Employee Stats 8:30AM"
-    },
-    {
-      "parameters": {
-        "url": "={{ $env.BACKEND_API_BASE_URL + \"/api/webhooks/employee-statistics\" }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-Webhook-Secret",
-              "value": "={{ $env.APP_WEBHOOK_SECRET }}"
-            }
-          ]
-        },
-        "options": {
-          "timeout": 10000
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        4656,
-        5616
-      ],
-      "id": "7156b664-33a2-489e-a07d-8acf945f5f86",
-      "name": "Fetch Employee Task Snapshot"
+      "id": "43472d95-d480-4808-bec1-b6ecbc7f7976",
+      "name": "Schedule Employee Stats 8:30AM1"
     },
     {
       "parameters": {
@@ -1315,11 +1604,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4880,
+        4864,
         5616
       ],
-      "id": "d8afb108-cfcf-4a5e-bd21-78d2f1392576",
-      "name": "Normalize Employee Snapshot"
+      "id": "8866efaf-ce8c-4000-afc9-96ae066f5721",
+      "name": "Normalize Employee Snapshot1"
     },
     {
       "parameters": {
@@ -1328,11 +1617,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5104,
+        5088,
         5616
       ],
-      "id": "134b9652-20a7-4716-a4d6-acc1adcef5c6",
-      "name": "Aggregate Employee Statistics"
+      "id": "2bbb4564-f0af-4699-8aa2-75bb25c3e618",
+      "name": "Aggregate Employee Statistics1"
     },
     {
       "parameters": {
@@ -1341,26 +1630,26 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5328,
+        5312,
         5488
       ],
-      "id": "3b69b3ce-0909-482b-8d71-8388dbbc2a91",
-      "name": "Build Employee Summary"
+      "id": "83f75f10-7735-49d5-9246-bc63b51fe717",
+      "name": "Build Employee Summary1"
     },
     {
       "parameters": {
-        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "chatId": "=7065866911",
         "text": "=BOT quan ly: {{ $json.employeeReport }}",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        5552,
+        5536,
         5488
       ],
-      "id": "88cebd07-747d-463e-8548-dad2d45872dc",
-      "name": "Send Employee Stats Telegram",
+      "id": "2a0209c4-e71a-4fe8-8d21-1a6200eefe40",
+      "name": "Send Employee Stats Telegram1",
       "webhookId": "1fcbb83b-34b0-4d96-9220-49ff6d84fdcf",
       "credentials": {
         "telegramApi": {
@@ -1377,11 +1666,11 @@
       "type": "n8n-nodes-base.itemLists",
       "typeVersion": 3,
       "position": [
-        5328,
+        5312,
         5776
       ],
-      "id": "0be75b3e-72ba-47ba-9922-c896039ca071",
-      "name": "Split Employee Ranking"
+      "id": "5d08a989-9c8d-4b0b-8b13-a6f21630e867",
+      "name": "Split Employee Ranking1"
     },
     {
       "parameters": {
@@ -1390,11 +1679,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5552,
+        5536,
         5776
       ],
-      "id": "18bd30b5-98e8-424d-a48b-a4770eeb5706",
-      "name": "Prepare Employee Log Row"
+      "id": "d1561a28-c04c-4014-94a6-1e7301289711",
+      "name": "Prepare Employee Log Row1"
     },
     {
       "parameters": {
@@ -1498,11 +1787,11 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        5776,
+        5760,
         5680
       ],
-      "id": "9a4e99f3-39b7-41e4-986a-830974a17bb1",
-      "name": "Append Employee Stats Log",
+      "id": "948d6835-fa36-4b2d-9459-733c973657ec",
+      "name": "Append Employee Stats Log1",
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "gAxM423I89XeYwaH",
@@ -1524,26 +1813,26 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        5776,
+        5760,
         5904
       ],
-      "id": "a0bead89-f78c-4295-8adc-6ee7dc7203c7",
-      "name": "If Employee Overloaded"
+      "id": "b59ac567-c2b1-43b2-9a83-a86cd8e00717",
+      "name": "If Employee Overloaded1"
     },
     {
       "parameters": {
-        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "chatId": "=7065866911",
         "text": "={{ [\n  '⚠️ NHAN VIEN CAN CHU Y',\n  `👤 ${$json.assigneeLabel || $json.assigneeEmail || '-'}`,\n  `📂 Task dang mo: ${$json.totalOpenTasks ?? 0}`,\n  `🚨 Qua han hien tai: ${$json.overdueCount ?? 0}`,\n  `⏳ Gan deadline: ${$json.nearDeadlineCount ?? 0}`,\n  `🔴 Hoan thanh tre tuan nay: ${$json.lateDoneCount ?? 0}`,\n  `🎯 Ty le dung han: ${$json.onTimeRate ?? 0}%`\n].join('\\n') }}",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        6000,
+        5984,
         5888
       ],
-      "id": "dac71790-2322-407c-a837-c5b8e873d064",
-      "name": "Send Employee Overload Alert",
+      "id": "6545d2ab-6622-4593-9134-db9b1a6a0ead",
+      "name": "Send Employee Overload Alert1",
       "webhookId": "61c5608b-9d3d-4f0e-9f0f-d09d7d979e42",
       "credentials": {
         "telegramApi": {
@@ -1551,729 +1840,9 @@
           "name": "Statistics"
         }
       }
-    },
-    {
-      "parameters": {
-        "jsCode": "const parseDate = (value) => {\n  if (!value) return null;\n\n  if (Array.isArray(value)) {\n    const [year, month = 1, day = 1, hour = 0, minute = 0, second = 0, nano = 0] = value;\n    const millis = Math.floor(Number(nano) / 1000000);\n    const date = new Date(year, month - 1, day, hour, minute, second, millis);\n    return Number.isNaN(date.getTime()) ? null : date;\n  }\n\n  const date = new Date(value);\n  return Number.isNaN(date.getTime()) ? null : date;\n};\n\nconst formatDate = (value) => {\n  const date = parseDate(value);\n  if (!date) return null;\n\n  const pad = (input) => String(input).padStart(2, '0');\n  return pad(date.getDate()) + '/' + pad(date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes());\n};\n\nconst task = $json;\nconst status = String(task.status || '').toUpperCase();\nconst itemType = String(task.itemType || (task.subtaskId ? 'SUBTASK' : 'TASK')).toUpperCase();\nconst lineBreak = String.fromCharCode(10);\n\nif (itemType === 'SUBTASK' || task.subtaskId) {\n  return [];\n}\n\nif (task.eventType && task.eventType !== 'TASK_CREATED') {\n  return [];\n}\n\nif (status && !['PENDING', 'TODO'].includes(status)) {\n  return [];\n}\n\nconst subtasks = Array.isArray(task.subtasks) ? task.subtasks : [];\nconst assignmentMap = {};\n\nif (task.assigneeEmail) {\n  assignmentMap[task.assigneeEmail] = {\n    email: task.assigneeEmail,\n    isMainAssignee: true,\n    subtasks: []\n  };\n}\n\nfor (const subtask of subtasks) {\n  const email =\n    subtask.assignedTo ??\n    subtask.assigned_to ??\n    subtask.assigneeEmail ??\n    subtask.assignee_email;\n\n  if (!email) continue;\n\n  if (!assignmentMap[email]) {\n    assignmentMap[email] = {\n      email,\n      isMainAssignee: false,\n      subtasks: []\n    };\n  }\n\n  const subDeadlineRaw = subtask.deadline ?? subtask.dueDate ?? subtask.endDate;\n\n  assignmentMap[email].subtasks.push({\n    id: subtask.id ?? null,\n    title: subtask.title ?? subtask.name ?? 'Subtask chưa có tên',\n    deadline: parseDate(subDeadlineRaw)?.toISOString() ?? subDeadlineRaw ?? null,\n    deadlineDisplay:\n      subtask.deadlineDisplay ??\n      formatDate(subDeadlineRaw) ??\n      subDeadlineRaw ??\n      'Chưa có deadline',\n    priority: subtask.priority ?? 'MEDIUM',\n    status: subtask.status ?? 'TODO'\n  });\n}\n\nconst assignments = Object.values(assignmentMap);\n\nreturn assignments.map((assignment) => {\n  const subtaskLines = assignment.subtasks.length\n    ? assignment.subtasks\n        .map((s, index) => {\n          return (index + 1) + '. ' + s.title\n            + lineBreak + '   Deadline: ' + s.deadlineDisplay\n            + lineBreak + '   Priority: ' + s.priority\n            + lineBreak + '   Status: ' + s.status;\n        })\n        .join(lineBreak + lineBreak)\n    : 'Bạn không có task con riêng trong task này.';\n\n  return {\n    json: {\n      taskId: task.taskId,\n      taskName: task.taskName,\n      taskDescription: task.taskDescription,\n      adminNote: task.adminNote,\n      sourceInput: task.sourceInput,\n\n      managerEmail: task.managerEmail,\n      ownerName: task.ownerName,\n\n      priority: task.priority,\n      status: task.status,\n\n      deadline: task.deadline,\n      deadlineDisplay: task.deadlineDisplay,\n\n      eventType: task.eventType,\n      eventMessage: task.eventMessage,\n\n      recipientEmail: assignment.email,\n      isMainAssignee: assignment.isMainAssignee,\n      assignedSubtasks: assignment.subtasks,\n      subtaskCount: assignment.subtasks.length,\n      subtaskLines,\n\n      roleText: assignment.isMainAssignee\n        ? 'Bạn là người phụ trách chính của task cha.'\n        : 'Bạn là thành viên được giao task con.',\n\n      receivedAt: task.receivedAt\n    }\n  };\n});"
-      },
-      "id": "98734de9-19dd-4ad2-b820-9cce06b35cd5",
-      "name": "Group Assignments By Email",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        5360,
-        2624
-      ]
-    },
-    {
-      "parameters": {
-        "sendTo": "={{ $json.recipientEmail }}",
-        "subject": "={{ $json.priority === 'HIGH' ? '🔥 [KHẨN CẤP] Bạn được phân công: ' + $json.taskName : 'Bạn được phân công: ' + $json.taskName }}",
-        "message": "=<div style=\"margin:0;padding:24px;background:#f4f6fb;font-family:Arial,sans-serif;color:#1f2937;\">\n  <div style=\"max-width:680px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #e5e7eb;box-shadow:0 12px 32px rgba(15,23,42,0.08);\">\n\n    <div style=\"padding:24px 28px;background:linear-gradient(135deg,#2563eb,#60a5fa);color:#ffffff;\">\n      <div style=\"font-size:12px;letter-spacing:1.2px;text-transform:uppercase;opacity:0.9;\">Deadline Automation</div>\n      <h1 style=\"margin:12px 0 0;font-size:26px;line-height:1.3;\">Bạn được phân công trong task</h1>\n    </div>\n\n    <div style=\"padding:28px;\">\n      <p style=\"margin:0 0 16px;font-size:16px;\">Xin chào,</p>\n\n      <p style=\"margin:0 0 20px;font-size:16px;line-height:1.7;\">\n        Bạn được phân công trong task sau. Vui lòng xem thông tin và các phần việc được giao.\n      </p>\n\n      <div style=\"padding:20px;border-radius:16px;background:#eff6ff;border:1px solid #bfdbfe;margin-bottom:20px;\">\n        <div style=\"font-size:24px;font-weight:700;color:#1d4ed8;margin-bottom:6px;\">\n          {{ $json.taskName }}\n        </div>\n        <div style=\"font-size:14px;color:#1e40af;\">\n          Mã task: {{ $json.taskId || 'Đang cập nhật' }}\n        </div>\n      </div>\n\n      <div style=\"padding:16px;border-radius:14px;background:#f9fafb;border:1px solid #e5e7eb;margin-bottom:16px;\">\n        <div style=\"font-size:13px;color:#6b7280;font-weight:700;margin-bottom:8px;\">Vai trò của bạn</div>\n        <div style=\"font-size:15px;line-height:1.7;color:#374151;\">\n          {{ $json.roleText }}\n        </div>\n      </div>\n\n      <div style=\"padding:16px;border-radius:14px;background:#fff7ed;border:1px solid #fed7aa;margin-bottom:16px;\">\n        <div style=\"font-size:13px;color:#9a3412;font-weight:700;margin-bottom:8px;\">Thông tin task cha</div>\n        <div style=\"font-size:15px;line-height:1.8;color:#7c2d12;\">\n          Độ ưu tiên: {{ $json.priority || 'Chưa xác định' }}<br/>\n          Deadline: {{ $json.deadlineDisplay || $json.deadline || 'Chưa có deadline' }}\n        </div>\n      </div>\n\n      <div style=\"padding:16px;border-radius:14px;background:#f8fafc;border:1px solid #e5e7eb;margin-bottom:20px;\">\n        <div style=\"font-size:13px;color:#334155;font-weight:700;margin-bottom:10px;\">\n          Task con được giao cho bạn: {{ $json.subtaskCount || 0 }}\n        </div>\n\n        <div style=\"font-size:15px;line-height:1.8;color:#334155;white-space:pre-line;\">\n          {{ $json.subtaskLines }}\n        </div>\n      </div>\n\n      <div style=\"padding:16px;border-radius:14px;background:#f0fdf4;border:1px solid #bbf7d0;\">\n        <div style=\"font-size:13px;color:#15803d;font-weight:700;margin-bottom:6px;\">Ghi chú</div>\n        <div style=\"font-size:15px;line-height:1.7;color:#166534;\">\n          {{ $json.adminNote || $json.sourceInput || $json.taskDescription || 'Không có ghi chú.' }}\n        </div>\n      </div>\n\n      <div style=\"margin-top:22px;font-size:12px;color:#94a3b8;text-align:center;\">\n        Deadline Automation • Theo dõi tiến độ, nhắc việc và báo cáo tự động\n      </div>\n    </div>\n  </div>\n</div>",
-        "options": {}
-      },
-      "id": "17ddbdcc-86bc-498f-bb93-c47b6deec106",
-      "name": "Send Grouped Assignment Gmail",
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2,
-      "position": [
-        5792,
-        2656
-      ],
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "Cjhnaex87bH9nxbe",
-          "name": "Gmail account 4"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
-        "text": "={{ [\n  '📌 THÔNG BÁO GIAO TASK',\n  `🆔 Mã task: ${$json.taskId || '-'}`,\n  `📝 Tên task: ${$json.taskName || '-'}`,\n  `👤 Người nhận: ${$json.recipientEmail || '-'}`,\n  `⭐ Vai trò: ${$json.isMainAssignee ? 'Phụ trách chính task cha' : 'Thành viên task con'}`,\n  `📋 Số task con được giao: ${$json.subtaskCount ?? 0}`,\n  `🔥 Ưu tiên: ${$json.priority || '-'}`,\n  `📅 Deadline task cha: ${$json.deadlineDisplay || 'Chưa có deadline'}`\n].join(String.fromCharCode(10)) }}",
-        "additionalFields": {}
-      },
-      "id": "417dd059-74ce-4eaf-856e-273519dfe775",
-      "name": "Send Grouped Assignment Telegram",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1,
-      "position": [
-        6016,
-        2560
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "8FoWjXdJDyBiISIA",
-          "name": "New task"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "content": "## Flow 1 - AI Generate Subtask Advanced\nValidate input -> AI generate -> parse JSON -> fallback -> response",
-        "height": 620,
-        "width": 2384,
-        "color": 4
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        4336,
-        1872
-      ],
-      "id": "864b44dc-3582-4e28-8acb-6d530fe1a419",
-      "name": "Note - AI Generate Advanced"
-    },
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "ai-generate-subtask",
-        "responseMode": "responseNode",
-        "options": {
-          "allowedOrigins": "https://quangchung.me,https://www.quangchung.me,http://localhost:5173"
-        }
-      },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
-      "position": [
-        4448,
-        2112
-      ],
-      "id": "00353451-bd36-4e26-b5e6-56eeae6bdd1b",
-      "name": "Webhook AI Generate Subtask",
-      "webhookId": "66bcd857-5088-4ce5-a0ca-e9e8fbca5709"
-    },
-    {
-      "parameters": {
-        "jsCode": "const body = $json.body ?? $json;\n\nconst clampCount = (value) => {\n  const number = Number(value);\n  if (!Number.isFinite(number)) return 3;\n  return Math.min(Math.max(Math.round(number), 1), 8);\n};\n\nconst normalizePriority = (value) => {\n  const priority = String(value || 'MEDIUM').trim().toUpperCase();\n  return ['HIGH', 'MEDIUM', 'LOW'].includes(priority) ? priority : 'MEDIUM';\n};\n\nconst taskName = String(body.taskName || body.title || '').trim();\nconst taskDescription = String(body.taskDescription || body.description || '').trim();\nconst adminNote = String(body.adminNote || body.note || '').trim();\nconst sourceInput = String(body.sourceInput || '').trim();\nconst desiredCount = clampCount(body.desiredCount || body.count || 3);\nconst priority = normalizePriority(body.priority);\nconst assigneeEmail = body.assigneeEmail || body.assignedTo || null;\nconst deadline = body.deadline || body.dueDate || body.endDate || null;\n\nif (!taskName) {\n  return [{\n    json: {\n      ok: false,\n      error: 'taskName is required',\n      subtasks: []\n    }\n  }];\n}\n\nconst contextLines = [\n  'Ban la tro ly quan ly du an. Hay chia task cha thanh cac subtask ro rang, co the giao viec truc tiep.',\n  '',\n  'THONG TIN TASK CHA:',\n  'Ten task: ' + taskName,\n  'Mo ta: ' + (taskDescription || 'Khong co'),\n  'Ghi chu quan ly: ' + (adminNote || sourceInput || 'Khong co'),\n  'Do uu tien task cha: ' + priority,\n  'Deadline task cha: ' + (deadline || 'Chua co'),\n  'Nguoi duoc giao mac dinh: ' + (assigneeEmail || 'Chua co'),\n  '',\n  'YEU CAU:',\n  '- Tao dung ' + desiredCount + ' subtask.',\n  '- Moi title phai la hanh dong cu the, ngan gon, tieng Viet, khong trung nhau.',\n  '- Khong tao subtask mo ho nhu \"Lam task\" hoac \"Xu ly cong viec\".',\n  '- Priority chi duoc la HIGH, MEDIUM, LOW. Khong cao hon priority task cha neu khong that su can thiet.',\n  '- Status luon la TODO.',\n  '- positionIndex bat dau tu 0.',\n  '',\n  'TRA VE DUY NHAT JSON object dung format nay, khong markdown, khong giai thich:',\n  '{\"subtasks\":[{\"title\":\"...\",\"priority\":\"MEDIUM\",\"status\":\"TODO\",\"positionIndex\":0}]}'\n];\n\nreturn [{\n  json: {\n    ok: true,\n    taskName,\n    taskDescription,\n    adminNote,\n    sourceInput,\n    desiredCount,\n    priority,\n    assigneeEmail,\n    deadline,\n    prompt: contextLines.join('\\n')\n  }\n}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        4672,
-        2112
-      ],
-      "id": "98cba4fb-4f79-45ee-8eb4-000000000101",
-      "name": "Normalize AI Request"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "boolean": [
-            {
-              "value1": "={{ $json.ok }}",
-              "value2": true
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
-      "position": [
-        4896,
-        2112
-      ],
-      "id": "608f4d81-1b09-4049-97b5-000000000102",
-      "name": "If Valid AI Request"
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ { ok: false, error: $json.error || 'Invalid request', subtasks: [] } }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.5,
-      "position": [
-        5120,
-        2272
-      ],
-      "id": "77ea9884-1b44-4814-a504-000000000103",
-      "name": "Respond Invalid AI Request"
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "={{ $json.prompt }}",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
-      "position": [
-        5120,
-        2032
-      ],
-      "id": "3c227b68-d327-417e-b94d-1863e6d3303f",
-      "name": "AI Agent Generate Subtasks",
-      "alwaysOutputData": false,
-      "executeOnce": false,
-      "retryOnFail": false
-    },
-    {
-      "parameters": {
-        "model": "google/gemma-3-4b-it:free",
-        "options": {
-          "maxTokens": 420,
-          "temperature": 0.15
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
-      "typeVersion": 1,
-      "position": [
-        5120,
-        2240
-      ],
-      "id": "f457c6e1-3ff6-4067-8400-859163336763",
-      "name": "OpenRouter Chat Model",
-      "credentials": {
-        "openRouterApi": {
-          "id": "HgXZW4MAiNfUBw0N",
-          "name": "OpenRouter account 2"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const original = $items('Normalize AI Request')[0]?.json ?? {};\nconst rawOutput = $json.output ?? $json.text ?? $json.response ?? '';\nconst fence = String.fromCharCode(96).repeat(3);\n\nconst stripFence = (value) => {\n  let text = String(value || '').trim();\n  const lower = text.toLowerCase();\n\n  if (lower.startsWith(fence + 'json')) {\n    text = text.slice((fence + 'json').length).trim();\n  } else if (text.startsWith(fence)) {\n    text = text.slice(fence.length).trim();\n  }\n\n  if (text.endsWith(fence)) {\n    text = text.slice(0, -fence.length).trim();\n  }\n\n  return text;\n};\n\nconst normalizePriority = (value) => {\n  const priority = String(value || original.priority || 'MEDIUM').trim().toUpperCase();\n  if (!['HIGH', 'MEDIUM', 'LOW'].includes(priority)) return original.priority || 'MEDIUM';\n\n  const rank = { LOW: 1, MEDIUM: 2, HIGH: 3 };\n  const parentPriority = original.priority || 'MEDIUM';\n  return rank[priority] > rank[parentPriority] ? parentPriority : priority;\n};\n\nlet parsed = null;\ntry {\n  parsed = JSON.parse(stripFence(rawOutput));\n} catch (error) {\n  parsed = null;\n}\n\nconst rows = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.subtasks) ? parsed.subtasks : []);\nconst seen = new Set();\nconst subtasks = [];\n\nfor (const row of rows) {\n  const title = String(row?.title || row?.name || '').trim();\n  const key = title.toLowerCase();\n\n  if (!title || seen.has(key)) continue;\n  seen.add(key);\n\n  subtasks.push({\n    title,\n    assignedTo: row?.assignedTo || row?.assigneeEmail || original.assigneeEmail || null,\n    deadline: row?.deadline || original.deadline || null,\n    priority: normalizePriority(row?.priority),\n    status: 'TODO',\n    positionIndex: subtasks.length\n  });\n\n  if (subtasks.length >= original.desiredCount) break;\n}\n\nreturn [{\n  json: {\n    ...original,\n    ok: subtasks.length > 0,\n    needsFallback: subtasks.length === 0,\n    subtasks,\n    count: subtasks.length,\n    rawOutput: String(rawOutput || '')\n  }\n}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        5472,
-        2032
-      ],
-      "id": "e78d1467-6ea2-4525-aa19-000000000104",
-      "name": "Parse And Validate AI Output"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "boolean": [
-            {
-              "value1": "={{ $json.needsFallback }}",
-              "value2": true
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
-      "position": [
-        5696,
-        2032
-      ],
-      "id": "5acaa9d8-d2e6-46b3-88cc-000000000105",
-      "name": "If Needs Fallback"
-    },
-    {
-      "parameters": {
-        "jsCode": "const original = $items('Normalize AI Request')[0]?.json ?? $json;\nconst desiredCount = Math.min(Math.max(Number(original.desiredCount || 3), 1), 8);\nconst titles = [\n  'Phan tich yeu cau va pham vi cong viec',\n  'Thiet ke phuong an xu ly chi tiet',\n  'Trien khai phan viec chinh',\n  'Kiem thu va ra soat ket qua',\n  'Ban giao va cap nhat tai lieu lien quan',\n  'Theo doi phan hoi sau ban giao',\n  'Toi uu va xu ly cac diem phat sinh',\n  'Tong hop bao cao hoan thanh'\n];\n\nconst subtasks = titles.slice(0, desiredCount).map((title, index) => ({\n  title,\n  assignedTo: original.assigneeEmail || null,\n  deadline: original.deadline || null,\n  priority: original.priority || 'MEDIUM',\n  status: 'TODO',\n  positionIndex: index\n}));\n\nreturn [{\n  json: {\n    ...original,\n    ok: true,\n    needsFallback: false,\n    fallbackUsed: true,\n    subtasks,\n    count: subtasks.length\n  }\n}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        5920,
-        1904
-      ],
-      "id": "86b786d4-8fb3-4727-bc30-000000000106",
-      "name": "Build Fallback Subtasks"
-    },
-    {
-      "parameters": {
-        "jsCode": "return [{\n  json: {\n    ok: $json.ok !== false,\n    taskName: $json.taskName,\n    priority: $json.priority,\n    desiredCount: $json.desiredCount,\n    count: Array.isArray($json.subtasks) ? $json.subtasks.length : 0,\n    fallbackUsed: Boolean($json.fallbackUsed),\n    subtasks: Array.isArray($json.subtasks) ? $json.subtasks : []\n  }\n}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        6144,
-        2032
-      ],
-      "id": "50951665-190d-4dfc-9c99-000000000107",
-      "name": "Format AI Response"
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ $json }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.5,
-      "position": [
-        6368,
-        2032
-      ],
-      "id": "6efaf2b6-fab9-410e-8ef0-ffad7f1af9b7",
-      "name": "Respond AI Subtasks"
     }
   ],
   "connections": {
-    "Sync Escalation To Backend": {
-      "main": [
-        []
-      ]
-    },
-    "Split Overdue Tasks": {
-      "main": [
-        [
-          {
-            "node": "Sync Escalation To Backend",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Send Escalation Gmail",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Render Overdue Report": {
-      "main": [
-        [
-          {
-            "node": "Split Overdue Tasks",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Send Overdue Report Telegram",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Append Overdue Report Log",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fetch Overdue Tasks": {
-      "main": [
-        [
-          {
-            "node": "Normalize Overdue Payload",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Schedule Friday 5PM": {
-      "main": [
-        [
-          {
-            "node": "Fetch Overdue Tasks",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If Due Soon": {
-      "main": [
-        [
-          {
-            "node": "Send Reminder Gmail",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Sync Reminder To Backend",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Append Reminder Audit Log",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Build Reminder Ops Message",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Compute Days Left": {
-      "main": [
-        [
-          {
-            "node": "If Due Soon",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fetch Pending Reminders": {
-      "main": [
-        [
-          {
-            "node": "Normalize Reminder Payload",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Schedule 8AM": {
-      "main": [
-        [
-          {
-            "node": "Fetch Pending Reminders",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Send Early Completion Gmail": {
-      "main": [
-        [
-          {
-            "node": "Report task complete early",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If Early Completion": {
-      "main": [
-        [
-          {
-            "node": "Send Early Completion Gmail",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Send Completion Gmail",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Evaluate Completion": {
-      "main": [
-        [
-          {
-            "node": "If Early Completion",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Switch Status": {
-      "main": [
-        [
-          {
-            "node": "Group Assignments By Email",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Append Audit Log",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Evaluate Completion",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Switch Event Type": {
-      "main": [
-        [
-          {
-            "node": "Switch Status",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Send Task Updated Gmail",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Send Task Cancelled Gmail",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Normalize Task Payload": {
-      "main": [
-        [
-          {
-            "node": "Switch Event Type",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Webhook Task Events": {
-      "main": [
-        [
-          {
-            "node": "Normalize Task Payload",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Normalize Reminder Payload": {
-      "main": [
-        [
-          {
-            "node": "Compute Days Left",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Build Reminder Ops Message": {
-      "main": [
-        [
-          {
-            "node": "Notify Reminder Ops Telegram",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Normalize Overdue Payload": {
-      "main": [
-        [
-          {
-            "node": "Render Overdue Report",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Build Health Ops Message": {
-      "main": [
-        [
-          {
-            "node": "Notify Health Ops Telegram",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Calculate Workload Signals": {
-      "main": [
-        [
-          {
-            "node": "Build Health Ops Message",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Build Health Summary",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Normalize Open Snapshot": {
-      "main": [
-        [
-          {
-            "node": "Calculate Workload Signals",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Schedule 11:59PM": {
-      "main": [
-        [
-          {
-            "node": "Fetch Open Task Snapshot",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fetch Open Task Snapshot": {
-      "main": [
-        [
-          {
-            "node": "Normalize Open Snapshot",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Build Health Summary": {
-      "main": [
-        [
-          {
-            "node": "Send Health Telegram",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Append Health Snapshot Log",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Send Health Telegram": {
-      "main": [
-        []
-      ]
-    },
-    "Schedule Employee Stats 8:30AM": {
-      "main": [
-        [
-          {
-            "node": "Fetch Employee Task Snapshot",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fetch Employee Task Snapshot": {
-      "main": [
-        [
-          {
-            "node": "Normalize Employee Snapshot",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Normalize Employee Snapshot": {
-      "main": [
-        [
-          {
-            "node": "Aggregate Employee Statistics",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Aggregate Employee Statistics": {
-      "main": [
-        [
-          {
-            "node": "Build Employee Summary",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Split Employee Ranking",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Build Employee Summary": {
-      "main": [
-        [
-          {
-            "node": "Send Employee Stats Telegram",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Split Employee Ranking": {
-      "main": [
-        [
-          {
-            "node": "Prepare Employee Log Row",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Employee Log Row": {
-      "main": [
-        [
-          {
-            "node": "Append Employee Stats Log",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "If Employee Overloaded",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If Employee Overloaded": {
-      "main": [
-        [
-          {
-            "node": "Send Employee Overload Alert",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Group Assignments By Email": {
-      "main": [
-        [
-          {
-            "node": "Send Grouped Assignment Gmail",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Send Grouped Assignment Telegram",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Send Grouped Assignment Gmail": {
-      "main": [
-        []
-      ]
-    },
     "Webhook AI Generate Subtask": {
       "main": [
         [
@@ -2325,17 +1894,6 @@
         ]
       ]
     },
-    "OpenRouter Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Agent Generate Subtasks",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Parse And Validate AI Output": {
       "main": [
         [
@@ -2381,6 +1939,481 @@
         [
           {
             "node": "Respond AI Subtasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent Generate Subtasks",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Task Events": {
+      "main": [
+        [
+          {
+            "node": "Normalize Task Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Task Payload": {
+      "main": [
+        [
+          {
+            "node": "Switch Event Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Event Type": {
+      "main": [
+        [
+          {
+            "node": "Switch Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Task Updated Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Task Cancelled Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Subtask Change Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Status": {
+      "main": [
+        [
+          {
+            "node": "Group Assignments By Email1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append Audit Log",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Evaluate Completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Completion": {
+      "main": [
+        [
+          {
+            "node": "If Early Completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Early Completion": {
+      "main": [
+        [
+          {
+            "node": "Send Early Completion Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Completion Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Early Completion Gmail": {
+      "main": [
+        [
+          {
+            "node": "Report task complete early",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Group Assignments By Email1": {
+      "main": [
+        [
+          {
+            "node": "Send Grouped Assignment Gmail1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Grouped Assignment Gmail1": {
+      "main": [
+        [
+          {
+            "node": "Send Grouped Assignment Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Employee Task Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Normalize Employee Snapshot1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Overdue Tasks1": {
+      "main": [
+        [
+          {
+            "node": "Sync Escalation To Backend1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Escalation Gmail1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render Overdue Report1": {
+      "main": [
+        [
+          {
+            "node": "Split Overdue Tasks1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Overdue Report Telegram1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append Overdue Report Log1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Overdue Tasks1": {
+      "main": [
+        [
+          {
+            "node": "Normalize Overdue Payload1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Friday 5PM1": {
+      "main": [
+        [
+          {
+            "node": "Fetch Overdue Tasks1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Due Soon1": {
+      "main": [
+        [
+          {
+            "node": "Send Reminder Gmail1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sync Reminder To Backend1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append Reminder Audit Log1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Build Reminder Ops Message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Days Left1": {
+      "main": [
+        [
+          {
+            "node": "If Due Soon1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Pending Reminders1": {
+      "main": [
+        [
+          {
+            "node": "Normalize Reminder Payload1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule 8AM1": {
+      "main": [
+        [
+          {
+            "node": "Fetch Pending Reminders1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Reminder Payload1": {
+      "main": [
+        [
+          {
+            "node": "Compute Days Left1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Reminder Ops Message1": {
+      "main": [
+        [
+          {
+            "node": "Notify Reminder Ops Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Overdue Payload1": {
+      "main": [
+        [
+          {
+            "node": "Render Overdue Report1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Health Ops Message1": {
+      "main": [
+        [
+          {
+            "node": "Notify Health Ops Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Workload Signals1": {
+      "main": [
+        [
+          {
+            "node": "Build Health Ops Message1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Build Health Summary1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Open Snapshot1": {
+      "main": [
+        [
+          {
+            "node": "Calculate Workload Signals1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule 11:59PM1": {
+      "main": [
+        [
+          {
+            "node": "Fetch Open Task Snapshot1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Open Task Snapshot1": {
+      "main": [
+        [
+          {
+            "node": "Normalize Open Snapshot1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Health Summary1": {
+      "main": [
+        [
+          {
+            "node": "Send Health Telegram1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append Health Snapshot Log1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Employee Stats 8:30AM1": {
+      "main": [
+        [
+          {
+            "node": "Fetch Employee Task Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Employee Snapshot1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Employee Statistics1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Employee Statistics1": {
+      "main": [
+        [
+          {
+            "node": "Build Employee Summary1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Employee Ranking1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Employee Summary1": {
+      "main": [
+        [
+          {
+            "node": "Send Employee Stats Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Employee Ranking1": {
+      "main": [
+        [
+          {
+            "node": "Prepare Employee Log Row1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Employee Log Row1": {
+      "main": [
+        [
+          {
+            "node": "Append Employee Stats Log1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If Employee Overloaded1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Employee Overloaded1": {
+      "main": [
+        [
+          {
+            "node": "Send Employee Overload Alert1",
             "type": "main",
             "index": 0
           }

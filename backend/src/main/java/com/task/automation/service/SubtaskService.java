@@ -94,6 +94,8 @@ public class SubtaskService {
         logTaskAction(task.getId(), ActionType.UPDATED,
                 "Subtask '" + saved.getTitle() + "' assigned to " + assignedTo + " by " + managerEmail);
         syncParentTaskStatus(task, managerEmail);
+        taskService.triggerN8nSubtaskWebhook(saved, "SUBTASK_CREATED",
+                "Subtask '" + saved.getTitle() + "' assigned to " + assignedTo + " by " + managerEmail);
 
         return saved;
     }
@@ -141,7 +143,10 @@ public class SubtaskService {
             subtask.setCreatedBy(task.getManagerEmail());
             subtask.setTask(task);
             subtask.setPositionIndex(position++);
-            subtaskRepository.save(subtask);
+            Subtask saved = subtaskRepository.save(subtask);
+            taskService.triggerN8nSubtaskWebhook(saved, "SUBTASK_CREATED",
+                    "Subtask '" + saved.getTitle() + "' assigned to " + saved.getAssignedTo()
+                            + " by " + task.getManagerEmail());
             created++;
         }
 
@@ -177,6 +182,8 @@ public class SubtaskService {
         logTaskAction(subtask.getTask().getId(), ActionType.UPDATED,
                 "Subtask '" + saved.getTitle() + "' updated by " + managerEmail);
         syncParentTaskStatus(subtask.getTask(), managerEmail);
+        taskService.triggerN8nSubtaskWebhook(saved, "SUBTASK_UPDATED",
+                "Subtask '" + saved.getTitle() + "' updated by " + managerEmail);
         return saved;
     }
 
@@ -238,6 +245,8 @@ public class SubtaskService {
         logTaskAction(task.getId(), ActionType.UPDATED,
                 "Subtask '" + title + "' deleted by " + managerEmail);
         syncParentTaskStatus(task, managerEmail);
+        taskService.triggerN8nSubtaskWebhook(subtask, "SUBTASK_DELETED",
+                "Subtask '" + title + "' deleted by " + managerEmail);
     }
 
     /**
