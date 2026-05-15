@@ -893,6 +893,39 @@ public class TaskService {
         triggerWebhook(task, eventType, eventMessage, n8nWebhookUrl);
     }
 
+    public void triggerN8nSubtaskWebhook(Subtask subtask, String eventType, String eventMessage) {
+        if (subtask == null || subtask.getTask() == null) {
+            return;
+        }
+        if (n8nWebhookUrl == null || n8nWebhookUrl.isBlank()) {
+            log.info("Skip n8n webhook for subtask {} because webhook URL is empty", subtask.getId());
+            return;
+        }
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
+            Map<String, Object> payload = buildWebhookSubtaskEventPayload(subtask, eventType, eventMessage);
+            String json = mapper.writeValueAsString(payload);
+            java.util.concurrent.CompletableFuture.runAsync(() -> {
+                try {
+                    String responseBody = REST_CLIENT.post()
+                            .uri(n8nWebhookUrl)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .body(json)
+                            .retrieve()
+                            .body(String.class);
+                    log.info("Triggered n8n webhook for subtask {} -> {} body={}", subtask.getId(), n8nWebhookUrl,
+                            responseBody);
+                } catch (Exception ex) {
+                    log.error("Failed to trigger n8n webhook for subtask {} -> {}", subtask.getId(), n8nWebhookUrl,
+                            ex);
+                }
+            });
+        } catch (Exception e) {
+            log.error("Failed to trigger n8n webhook for subtask {} -> {}", subtask.getId(), n8nWebhookUrl, e);
+        }
+    }
+
     private void triggerWebhook(Task task, String eventType, String eventMessage, String webhookUrl) {
         if (webhookUrl == null || webhookUrl.isBlank()) {
             log.info("Skip n8n webhook for task {} because webhook URL is empty", task.getTaskId());
@@ -941,6 +974,37 @@ public class TaskService {
         payload.put("completedAt", task.getCompletedAt());
         payload.put("reminderCount", task.getReminderCount());
         payload.put("subtasks", buildWebhookSubtaskPayload(task));
+        if (eventMessage != null && !eventMessage.isBlank()) {
+            payload.put("eventMessage", eventMessage);
+        }
+        return payload;
+    }
+
+    private Map<String, Object> buildWebhookSubtaskEventPayload(Subtask subtask, String eventType, String eventMessage) {
+        Task parent = subtask.getTask();
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("eventType", eventType != null ? eventType : "");
+        payload.put("itemType", "SUBTASK");
+        payload.put("id", subtask.getId());
+        payload.put("subtaskId", subtask.getId());
+        payload.put("subtaskTitle", subtask.getTitle());
+        payload.put("taskName", subtask.getTitle());
+        payload.put("taskDescription", parent.getTaskDescription());
+        payload.put("assignedTo", subtask.getAssignedTo());
+        payload.put("assigneeEmail", subtask.getAssignedTo());
+        payload.put("managerEmail", parent.getManagerEmail());
+        payload.put("ownerName", parent.getOwnerName());
+        payload.put("deadline", subtask.getDeadline());
+        payload.put("priority", subtask.getPriority());
+        payload.put("status", subtask.getStatus());
+        payload.put("createdAt", subtask.getCreatedAt());
+        payload.put("positionIndex", subtask.getPositionIndex());
+        payload.put("parentTaskCode", parent.getTaskId());
+        payload.put("parentTaskName", parent.getTaskName());
+        payload.put("parentDeadline", parent.getDeadline());
+        payload.put("taskId", parent.getTaskId());
+        payload.put("adminNote", parent.getAdminNote());
+        payload.put("sourceInput", parent.getSourceInput());
         if (eventMessage != null && !eventMessage.isBlank()) {
             payload.put("eventMessage", eventMessage);
         }
