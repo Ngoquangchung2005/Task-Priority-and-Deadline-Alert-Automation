@@ -19,7 +19,7 @@ import {
 
 const STATUS_OPTIONS = ['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE', 'OVERDUE'];
 const PRIORITY_OPTIONS = ['HIGH', 'MEDIUM', 'LOW'];
-const priorityRank = { LOW: 1, MEDIUM: 2, HIGH: 3 };
+const priorityRank = { HIGH: 1, MEDIUM: 2, LOW: 3 };
 
 const isPriorityAllowed = (priority, parentPriority) => (
     !priority || !parentPriority || priorityRank[priority] <= priorityRank[parentPriority]
