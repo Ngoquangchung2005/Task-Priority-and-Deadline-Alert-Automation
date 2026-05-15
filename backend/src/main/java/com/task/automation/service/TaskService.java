@@ -174,11 +174,12 @@ public class TaskService {
                 Subtask subtask = new Subtask();
                 subtask.setTitle(requireText(subtaskRequest.getTitle(), "subtasks[" + i + "].title"));
                 subtask.setStatus(status);
-                subtask.setPriority(normalizeSubtaskPriority(
+                TaskPriority subtaskPriority = normalizeSubtaskPriority(
                         subtaskRequest.getPriority(),
                         task.getPriority(),
-                        "subtasks[" + i + "].priority"));
-                subtask.setDeadline(subtaskRequest.getDeadline());
+                        "subtasks[" + i + "].priority");
+                subtask.setPriority(subtaskPriority);
+                subtask.setDeadline(resolveSubtaskDeadline(subtaskRequest.getDeadline(), subtaskPriority));
                 subtask.setAssignedTo(assignedTo);
                 subtask.setCreatedBy(managerEmail);
                 subtask.setPositionIndex(
@@ -212,6 +213,19 @@ public class TaskService {
             subtasks.add(subtask);
         }
         return subtasks;
+    }
+
+    private LocalDateTime resolveSubtaskDeadline(LocalDateTime requestedDeadline, TaskPriority priority) {
+        if (requestedDeadline != null) {
+            return requestedDeadline;
+        }
+        TaskPriority normalizedPriority = priority != null ? priority : TaskPriority.MEDIUM;
+        int days = switch (normalizedPriority) {
+            case HIGH -> 7;
+            case MEDIUM -> 14;
+            case LOW -> 30;
+        };
+        return LocalDateTime.now().plusDays(days);
     }
 
     @Transactional

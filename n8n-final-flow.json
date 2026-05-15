@@ -2,7 +2,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Flow 1 - AI Generate Subtask Advanced\nValidate input -> AI generate -> parse JSON -> fallback -> response",
+        "content": "## Flow 1 - AI Generate Subtask Advanced\n",
         "height": 620,
         "width": 2384,
         "color": 4
@@ -10,10 +10,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        4320,
-        1664
+        7792,
+        3552
       ],
-      "id": "48f9ddd1-7335-491e-8c3e-8de7b3b9dba8",
+      "id": "2ff70181-e7f3-4ff9-be37-4ffe76fd4c81",
       "name": "Note - AI Generate Advanced"
     },
     {
@@ -28,10 +28,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        4368,
-        1904
+        7840,
+        3792
       ],
-      "id": "562404b6-b064-46c9-84e5-a321d05983a8",
+      "id": "e22f849f-e0cd-4a65-9304-90a89daae7a5",
       "name": "Webhook AI Generate Subtask",
       "webhookId": "66bcd857-5088-4ce5-a0ca-e9e8fbca5709"
     },
@@ -42,10 +42,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4592,
-        1904
+        8064,
+        3792
       ],
-      "id": "f23cae04-d17b-4d98-84ba-f9a2ead372f6",
+      "id": "9150dd4d-207b-4597-831c-130c43e56feb",
       "name": "Normalize AI Request"
     },
     {
@@ -62,10 +62,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        4816,
-        1904
+        8288,
+        3792
       ],
-      "id": "3fe27d63-07bd-446e-bc9c-d8afc6cc5f18",
+      "id": "121725ea-da57-4d25-8c33-d8286ec770c8",
       "name": "If Valid AI Request"
     },
     {
@@ -77,10 +77,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        5152,
-        2144
+        8624,
+        4032
       ],
-      "id": "e25edb78-37d2-443e-91f1-46234550c585",
+      "id": "e665c468-1ad8-4123-b43b-ee3dd101e0f9",
       "name": "Respond Invalid AI Request"
     },
     {
@@ -92,10 +92,10 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        5040,
-        1824
+        8512,
+        3712
       ],
-      "id": "a1ad1b8a-70bc-4efc-b3de-57dbe384aaea",
+      "id": "ed2550ef-7da8-431a-870a-feb6ce9d4d4a",
       "name": "AI Agent Generate Subtasks",
       "alwaysOutputData": false,
       "executeOnce": false,
@@ -108,10 +108,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5392,
-        1824
+        8864,
+        3712
       ],
-      "id": "e4582c26-0087-4fb6-9409-7b2e585fe5eb",
+      "id": "5adafcde-3e74-44a4-a560-9e872c48c552",
       "name": "Parse And Validate AI Output"
     },
     {
@@ -128,10 +128,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        5616,
-        1824
+        9088,
+        3712
       ],
-      "id": "8537fe78-21ad-4a50-9a31-808cee060552",
+      "id": "6940689e-c42a-4841-9e52-8d1adca7450d",
       "name": "If Needs Fallback"
     },
     {
@@ -141,10 +141,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5840,
-        1696
+        9312,
+        3584
       ],
-      "id": "9946c1b5-f392-4622-a90b-0c81d1a5df53",
+      "id": "e42502d2-9a7e-45ce-8f89-dcb7fcd9bd90",
       "name": "Build Fallback Subtasks"
     },
     {
@@ -154,10 +154,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        6064,
-        1824
+        9536,
+        3712
       ],
-      "id": "bc15bae2-b490-4e9a-bb54-205ac25d8bc8",
+      "id": "4ecdf212-76cf-42b7-9b42-159c49b1eb52",
       "name": "Format AI Response"
     },
     {
@@ -169,10 +169,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        6288,
-        1824
+        9760,
+        3712
       ],
-      "id": "1ec3a794-3df2-437c-9600-03dd219c5187",
+      "id": "8c5aeb20-afd2-414f-acc2-0266a47de5e0",
       "name": "Respond AI Subtasks"
     },
     {
@@ -186,10 +186,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
       "typeVersion": 1,
       "position": [
-        5040,
-        2032
+        8512,
+        3920
       ],
-      "id": "e3285f9e-914c-4471-917e-e36beb634c48",
+      "id": "02d935ba-5c60-44d1-9d1a-edc156e250e9",
       "name": "OpenRouter Chat Model1",
       "credentials": {
         "openRouterApi": {
@@ -208,10 +208,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        4320,
-        2304
+        7792,
+        4192
       ],
-      "id": "32d001da-fafb-441b-999a-caf61150d9ae",
+      "id": "62ead64e-87d5-409e-906f-a64f7562e3cf",
       "name": "Note - Main Flow"
     },
     {
@@ -223,10 +223,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        4432,
-        2880
+        7904,
+        4768
       ],
-      "id": "54683817-07c5-49d0-9b30-64d9e578b338",
+      "id": "cb226c8e-5177-43ec-9b1d-29db3cf60aa0",
       "name": "Webhook Task Events",
       "webhookId": "375eeee0-ce3e-47a8-9102-83ef442120f6"
     },
@@ -237,10 +237,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4656,
-        2880
+        8128,
+        4768
       ],
-      "id": "dc81b0d0-c5b3-4255-968d-68e016ef93cd",
+      "id": "4a8ee4b3-b41a-432e-90e5-ce22eede6dcc",
       "name": "Normalize Task Payload"
     },
     {
@@ -284,10 +284,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 1,
       "position": [
-        4880,
-        2848
+        8352,
+        4736
       ],
-      "id": "a7734a2e-19ea-48ef-a3d9-aa48868f135a",
+      "id": "accdb98e-1142-41e0-81ae-3a7b4e8e104a",
       "name": "Switch Event Type"
     },
     {
@@ -312,10 +312,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 1,
       "position": [
-        5056,
-        2624
+        8528,
+        4512
       ],
-      "id": "78031841-1c92-4151-a7f9-6add722d74de",
+      "id": "8f70a992-7020-4ad8-b1d1-154e1ec17187",
       "name": "Switch Status"
     },
     {
@@ -420,10 +420,10 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        5552,
-        2368
+        9024,
+        4256
       ],
-      "id": "c2b13abf-2837-495c-bbd5-bc27b034537e",
+      "id": "f871b361-d2c4-4eb9-82af-a0b4638051e0",
       "name": "Append Audit Log",
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -442,10 +442,10 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        5104,
-        2880
+        8576,
+        4768
       ],
-      "id": "2b49c12d-8ac4-448d-a5c7-50aa49365a98",
+      "id": "ef107b26-df27-434b-ab59-aa04a8d1c2c8",
       "name": "Send Task Updated Gmail",
       "webhookId": "b20eeb21-5741-4616-9f2a-d6fb9af50112",
       "credentials": {
@@ -465,10 +465,10 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        5104,
-        3072
+        8576,
+        4960
       ],
-      "id": "2192411a-6076-4ad8-9191-dadb93d42704",
+      "id": "99de5ea2-0c03-4de4-9ccd-bce899619d53",
       "name": "Send Task Cancelled Gmail",
       "webhookId": "7ce5b9c2-9e63-494d-a9b7-c19a757f1ef7",
       "credentials": {
@@ -488,10 +488,10 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        5104,
-        3264
+        8336,
+        4992
       ],
-      "id": "37d11431-d7aa-4ed8-b598-759167e4771c",
+      "id": "07c1b2ea-b16d-4fd3-9ca7-c5b4722b9d81",
       "name": "Send Subtask Change Gmail",
       "webhookId": "ed184c28-3da1-4d2d-ad5f-d58a5d4fb889",
       "credentials": {
@@ -508,10 +508,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5328,
-        2944
+        8800,
+        4832
       ],
-      "id": "bb6104f8-c3bc-44e7-b64c-8e58a31a452f",
+      "id": "b12424af-55e5-49c0-a6e5-2c09cce79db7",
       "name": "Evaluate Completion"
     },
     {
@@ -528,10 +528,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        5552,
-        2944
+        9024,
+        4832
       ],
-      "id": "d1cefbc0-1188-407e-a5e8-7505d492047b",
+      "id": "e37e3f56-cbd9-4a5a-a76f-0f95fba6c2b9",
       "name": "If Early Completion"
     },
     {
@@ -544,10 +544,10 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        5776,
-        2848
+        9248,
+        4736
       ],
-      "id": "097dd9ca-e064-4b57-88c9-f66535e374fe",
+      "id": "85ae7aff-3bf3-4f87-b1e5-cc10be3015df",
       "name": "Send Early Completion Gmail",
       "webhookId": "1e3d3cfd-aed5-4d22-ba20-fbdc40c89d97",
       "credentials": {
@@ -567,10 +567,10 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        5776,
-        3040
+        9248,
+        4928
       ],
-      "id": "927180a7-13e5-4207-89f4-ef1bc99150ff",
+      "id": "e3f31206-d7e2-4b93-85d0-2c2b742293c9",
       "name": "Send Completion Gmail",
       "webhookId": "574e196e-94ed-4458-89ba-c9959c21daa3",
       "credentials": {
@@ -589,10 +589,10 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        6000,
-        2848
+        9472,
+        4736
       ],
-      "id": "a723a9a7-5212-48ec-8e04-dd3b4de7071c",
+      "id": "bd2bac44-028d-44f4-b65f-e74516072704",
       "name": "Report task complete early",
       "webhookId": "223d1cfb-5e93-4b40-a905-8cbb098fa07e",
       "credentials": {
@@ -606,13 +606,13 @@
       "parameters": {
         "jsCode": "const parseDate = (value) => {\n  if (!value) return null;\n\n  if (Array.isArray(value)) {\n    const [year, month = 1, day = 1, hour = 0, minute = 0, second = 0, nano = 0] = value;\n    const millis = Math.floor(Number(nano) / 1000000);\n    const date = new Date(year, month - 1, day, hour, minute, second, millis);\n    return Number.isNaN(date.getTime()) ? null : date;\n  }\n\n  const date = new Date(value);\n  return Number.isNaN(date.getTime()) ? null : date;\n};\n\nconst formatDate = (value) => {\n  const date = parseDate(value);\n  if (!date) return null;\n\n  const pad = (input) => String(input).padStart(2, '0');\n  return pad(date.getDate()) + '/' + pad(date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes());\n};\n\nconst task = $json;\nconst status = String(task.status || '').toUpperCase();\nconst itemType = String(task.itemType || (task.subtaskId ? 'SUBTASK' : 'TASK')).toUpperCase();\nconst lineBreak = String.fromCharCode(10);\n\nif (itemType === 'SUBTASK' || task.subtaskId) {\n  return [];\n}\n\nif (task.eventType && task.eventType !== 'TASK_CREATED') {\n  return [];\n}\n\nif (status && !['PENDING', 'TODO'].includes(status)) {\n  return [];\n}\n\nconst subtasks = Array.isArray(task.subtasks) ? task.subtasks : [];\nconst assignmentMap = {};\n\nif (task.assigneeEmail) {\n  assignmentMap[task.assigneeEmail] = {\n    email: task.assigneeEmail,\n    isMainAssignee: true,\n    subtasks: []\n  };\n}\n\nfor (const subtask of subtasks) {\n  const email =\n    subtask.assignedTo ??\n    subtask.assigned_to ??\n    subtask.assigneeEmail ??\n    subtask.assignee_email;\n\n  if (!email) continue;\n\n  if (!assignmentMap[email]) {\n    assignmentMap[email] = {\n      email,\n      isMainAssignee: false,\n      subtasks: []\n    };\n  }\n\n  const subDeadlineRaw = subtask.deadline ?? subtask.dueDate ?? subtask.endDate;\n\n  assignmentMap[email].subtasks.push({\n    id: subtask.id ?? null,\n    title: subtask.title ?? subtask.name ?? 'Subtask chưa có tên',\n    deadline: parseDate(subDeadlineRaw)?.toISOString() ?? subDeadlineRaw ?? null,\n    deadlineDisplay:\n      subtask.deadlineDisplay ??\n      formatDate(subDeadlineRaw) ??\n      subDeadlineRaw ??\n      'Chưa có deadline',\n    priority: subtask.priority ?? 'MEDIUM',\n    status: subtask.status ?? 'TODO'\n  });\n}\n\nconst assignments = Object.values(assignmentMap);\n\nreturn assignments.map((assignment) => {\n  const subtaskLines = assignment.subtasks.length\n    ? assignment.subtasks\n        .map((s, index) => {\n          return (index + 1) + '. ' + s.title\n            + lineBreak + '   Deadline: ' + s.deadlineDisplay\n            + lineBreak + '   Priority: ' + s.priority\n            + lineBreak + '   Status: ' + s.status;\n        })\n        .join(lineBreak + lineBreak)\n    : 'Bạn không có task con riêng trong task này.';\n\n  return {\n    json: {\n      taskId: task.taskId,\n      taskName: task.taskName,\n      taskDescription: task.taskDescription,\n      adminNote: task.adminNote,\n      sourceInput: task.sourceInput,\n\n      managerEmail: task.managerEmail,\n      ownerName: task.ownerName,\n\n      priority: task.priority,\n      status: task.status,\n\n      deadline: task.deadline,\n      deadlineDisplay: task.deadlineDisplay,\n\n      eventType: task.eventType,\n      eventMessage: task.eventMessage,\n\n      recipientEmail: assignment.email,\n      isMainAssignee: assignment.isMainAssignee,\n      assignedSubtasks: assignment.subtasks,\n      subtaskCount: assignment.subtasks.length,\n      subtaskLines,\n\n      roleText: assignment.isMainAssignee\n        ? 'Bạn là người phụ trách chính của task cha.'\n        : 'Bạn là thành viên được giao task con.',\n\n      receivedAt: task.receivedAt\n    }\n  };\n});"
       },
-      "id": "8fc84d57-4a22-4763-9783-618ee03a5cdc",
+      "id": "936d1363-7d74-4e80-ab0a-0cce3b55bcc1",
       "name": "Group Assignments By Email1",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5344,
-        2624
+        8816,
+        4512
       ]
     },
     {
@@ -622,13 +622,13 @@
         "message": "=<div style=\"margin:0;padding:24px;background:#f4f6fb;font-family:Arial,sans-serif;color:#1f2937;\">\n  <div style=\"max-width:680px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #e5e7eb;box-shadow:0 12px 32px rgba(15,23,42,0.08);\">\n\n    <div style=\"padding:24px 28px;background:linear-gradient(135deg,#2563eb,#60a5fa);color:#ffffff;\">\n      <div style=\"font-size:12px;letter-spacing:1.2px;text-transform:uppercase;opacity:0.9;\">Deadline Automation</div>\n      <h1 style=\"margin:12px 0 0;font-size:26px;line-height:1.3;\">Bạn được phân công trong task</h1>\n    </div>\n\n    <div style=\"padding:28px;\">\n      <p style=\"margin:0 0 16px;font-size:16px;\">Xin chào,</p>\n\n      <p style=\"margin:0 0 20px;font-size:16px;line-height:1.7;\">\n        Bạn được phân công trong task sau. Vui lòng xem thông tin và các phần việc được giao.\n      </p>\n\n      <div style=\"padding:20px;border-radius:16px;background:#eff6ff;border:1px solid #bfdbfe;margin-bottom:20px;\">\n        <div style=\"font-size:24px;font-weight:700;color:#1d4ed8;margin-bottom:6px;\">\n          {{ $json.taskName }}\n        </div>\n        <div style=\"font-size:14px;color:#1e40af;\">\n          Mã task: {{ $json.taskId || 'Đang cập nhật' }}\n        </div>\n      </div>\n\n      <div style=\"padding:16px;border-radius:14px;background:#f9fafb;border:1px solid #e5e7eb;margin-bottom:16px;\">\n        <div style=\"font-size:13px;color:#6b7280;font-weight:700;margin-bottom:8px;\">Vai trò của bạn</div>\n        <div style=\"font-size:15px;line-height:1.7;color:#374151;\">\n          {{ $json.roleText }}\n        </div>\n      </div>\n\n      <div style=\"padding:16px;border-radius:14px;background:#fff7ed;border:1px solid #fed7aa;margin-bottom:16px;\">\n        <div style=\"font-size:13px;color:#9a3412;font-weight:700;margin-bottom:8px;\">Thông tin task cha</div>\n        <div style=\"font-size:15px;line-height:1.8;color:#7c2d12;\">\n          Độ ưu tiên: {{ $json.priority || 'Chưa xác định' }}<br/>\n          Deadline: {{ $json.deadlineDisplay || $json.deadline || 'Chưa có deadline' }}\n        </div>\n      </div>\n\n      <div style=\"padding:16px;border-radius:14px;background:#f8fafc;border:1px solid #e5e7eb;margin-bottom:20px;\">\n        <div style=\"font-size:13px;color:#334155;font-weight:700;margin-bottom:10px;\">\n          Task con được giao cho bạn: {{ $json.subtaskCount || 0 }}\n        </div>\n\n        <div style=\"font-size:15px;line-height:1.8;color:#334155;white-space:pre-line;\">\n          {{ $json.subtaskLines }}\n        </div>\n      </div>\n\n      <div style=\"padding:16px;border-radius:14px;background:#f0fdf4;border:1px solid #bbf7d0;\">\n        <div style=\"font-size:13px;color:#15803d;font-weight:700;margin-bottom:6px;\">Ghi chú</div>\n        <div style=\"font-size:15px;line-height:1.7;color:#166534;\">\n          {{ $json.adminNote || $json.sourceInput || $json.taskDescription || 'Không có ghi chú.' }}\n        </div>\n      </div>\n\n      <div style=\"margin-top:22px;font-size:12px;color:#94a3b8;text-align:center;\">\n        Deadline Automation • Theo dõi tiến độ, nhắc việc và báo cáo tự động\n      </div>\n    </div>\n  </div>\n</div>",
         "options": {}
       },
-      "id": "00def124-bdb9-43d7-9e6d-9ff62a548d03",
+      "id": "bb2ab30e-8d86-454d-84cc-595c334440a2",
       "name": "Send Grouped Assignment Gmail1",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        5776,
-        2656
+        9248,
+        4544
       ],
       "webhookId": "b67cbd22-397d-46f6-bece-8d6ebeea2b21",
       "credentials": {
@@ -644,13 +644,13 @@
         "text": "={{ [\n  '📌 THÔNG BÁO GIAO TASK',\n  `🆔 Mã task: ${$node[\"Group Assignments By Email1\"].json.taskId || '-'}`,\n  `📝 Tên task: ${$node[\"Group Assignments By Email1\"].json.taskName || '-'}`,\n  `👤 Người nhận: ${$node[\"Group Assignments By Email1\"].json.recipientEmail || '-'}`,\n  `⭐ Vai trò: ${$node[\"Group Assignments By Email1\"].json.isMainAssignee ? 'Phụ trách chính task cha' : 'Thành viên task con'}`,\n  `📋 Số task con được giao: ${$node[\"Group Assignments By Email1\"].json.subtaskCount ?? 0}`,\n  `🔥 Ưu tiên: ${$node[\"Group Assignments By Email1\"].json.priority || '-'}`,\n  `📅 Deadline task cha: ${$node[\"Group Assignments By Email1\"].json.deadlineDisplay || 'Chưa có deadline'}`\n].join(String.fromCharCode(10)) }}",
         "additionalFields": {}
       },
-      "id": "0bf50775-1a90-497d-a430-b35e46211306",
+      "id": "3e5f0b7a-6d16-4641-9a2c-df222d383182",
       "name": "Send Grouped Assignment Telegram1",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        6000,
-        2560
+        9472,
+        4448
       ],
       "webhookId": "7366faf6-7503-4332-a779-2934a34d3225",
       "credentials": {
@@ -670,10 +670,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        4320,
-        4064
+        7792,
+        5952
       ],
-      "id": "b3a123ba-a5e6-4d1b-9d33-d2f501c43d09",
+      "id": "e7745041-cb4b-4ba4-824d-02647df74ed3",
       "name": "Note - Overdue Escalation"
     },
     {
@@ -686,10 +686,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        4320,
-        4752
+        7792,
+        6640
       ],
-      "id": "c5401352-a61f-4015-bab9-0ad0efc4cf46",
+      "id": "e1011bae-6f7d-4d3f-b0c8-c709a8d03a2b",
       "name": "Note - Health Check"
     },
     {
@@ -711,10 +711,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        4640,
-        5616
+        8112,
+        7504
       ],
-      "id": "d484bf27-9239-4f42-94aa-9e46e0458573",
+      "id": "aab6ab88-c4ea-4ad2-8416-fa9a9c592f97",
       "name": "Fetch Employee Task Snapshot"
     },
     {
@@ -740,10 +740,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        5552,
-        4384
+        9024,
+        6272
       ],
-      "id": "2f307d38-bea3-4cc6-aba5-3f660761f7b5",
+      "id": "0bfa2ac6-cf0d-4ffa-b8b1-74273cc3411d",
       "name": "Sync Escalation To Backend1"
     },
     {
@@ -754,10 +754,10 @@
       "type": "n8n-nodes-base.itemLists",
       "typeVersion": 3,
       "position": [
-        5328,
-        4480
+        8800,
+        6368
       ],
-      "id": "66593f57-f636-4fdf-855a-ee19b2faca38",
+      "id": "9a0c5aab-68bf-48f1-b159-95dc40e14c26",
       "name": "Split Overdue Tasks1"
     },
     {
@@ -769,10 +769,10 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        5328,
-        4096
+        8800,
+        5984
       ],
-      "id": "ecd36f8f-41d5-413d-baec-f89d975b5d26",
+      "id": "3e2a67a9-b243-4ead-9960-9262c81d82a6",
       "name": "Send Overdue Report Telegram1",
       "webhookId": "68a80d74-52b2-499b-ade0-2f7877c1f298",
       "credentials": {
@@ -789,10 +789,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5104,
-        4288
+        8576,
+        6176
       ],
-      "id": "f9043ec8-51a5-4e9c-9ffd-85bd793f4d4d",
+      "id": "c1b49be1-6912-47da-9a6b-6e2e99bc3a85",
       "name": "Render Overdue Report1"
     },
     {
@@ -814,10 +814,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        4656,
-        4288
+        8128,
+        6176
       ],
-      "id": "f57a7214-3a51-4bc1-8e7a-fda3cf769ea4",
+      "id": "2d939b0d-5cfc-4d58-a63a-6ec047fd5a73",
       "name": "Fetch Overdue Tasks1"
     },
     {
@@ -837,10 +837,10 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1,
       "position": [
-        4432,
-        4288
+        7904,
+        6176
       ],
-      "id": "7f92a35f-36cb-4b3d-aa7a-9305650d5ce7",
+      "id": "12bc6fae-e12c-45b4-9e26-547c0a91ad6d",
       "name": "Schedule Friday 5PM1"
     },
     {
@@ -866,10 +866,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        5552,
-        3680
+        9024,
+        5568
       ],
-      "id": "911aaad3-b9a9-4b56-8efe-d6c5210aded7",
+      "id": "902e2f37-2afa-4ac3-b071-89adf1b81f5f",
       "name": "Sync Reminder To Backend1"
     },
     {
@@ -882,10 +882,10 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        5552,
-        3296
+        9024,
+        5184
       ],
-      "id": "d512ae86-b73c-4ac1-a811-42819087388c",
+      "id": "c40015f3-2500-49e3-a3c6-ac527143013c",
       "name": "Send Reminder Gmail1",
       "webhookId": "1ee17254-5cf4-4407-83a3-f6b9933c88f3",
       "credentials": {
@@ -914,10 +914,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        5328,
-        3584
+        8800,
+        5472
       ],
-      "id": "ae853d60-78de-45ba-8a5d-c7fb98af90d6",
+      "id": "51c08a5f-3e3d-4bec-ab92-78152dee0c4c",
       "name": "If Due Soon1"
     },
     {
@@ -927,10 +927,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5104,
-        3584
+        8576,
+        5472
       ],
-      "id": "dd4b9779-3f12-4460-b37e-2965a72c8ae7",
+      "id": "71948572-784f-45a6-8b3b-c4b51e49f810",
       "name": "Compute Days Left1"
     },
     {
@@ -952,10 +952,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        4656,
-        3584
+        8128,
+        5472
       ],
-      "id": "75d1d3e6-d3b8-4524-a68b-01ec2da71a9f",
+      "id": "9d7f964b-8743-444e-9a43-7b549ca2d019",
       "name": "Fetch Pending Reminders1"
     },
     {
@@ -971,10 +971,10 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1,
       "position": [
-        4432,
-        3584
+        7904,
+        5472
       ],
-      "id": "eff6e75e-d3bb-4484-94f8-cfa197798bce",
+      "id": "03ad6a88-e8f0-4344-92a5-6ff2bef45fbc",
       "name": "Schedule 8AM1"
     },
     {
@@ -987,10 +987,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        4320,
-        3280
+        7792,
+        5168
       ],
-      "id": "e7eb9b22-163c-45e1-8fd4-89da9d513120",
+      "id": "899c7ef0-9683-455b-aedd-f1ef97ba04d0",
       "name": "Note - Reminders1"
     },
     {
@@ -1000,10 +1000,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4880,
-        3584
+        8352,
+        5472
       ],
-      "id": "82a83694-427e-4234-b7d2-ac979063be80",
+      "id": "b69fc9fc-148e-4207-b0d2-42016217a1f9",
       "name": "Normalize Reminder Payload1"
     },
     {
@@ -1108,10 +1108,10 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        5552,
-        3872
+        9024,
+        5760
       ],
-      "id": "f8dc370c-f8cc-489d-a5aa-7e5c74556429",
+      "id": "d3818e1d-fbee-48da-93d0-ae4e864cc856",
       "name": "Append Reminder Audit Log1",
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -1128,10 +1128,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5552,
-        3488
+        9024,
+        5376
       ],
-      "id": "c1c26c24-3d1d-446c-8720-2135654eeb98",
+      "id": "27427c3d-5112-4198-81cc-39bc4f1df49c",
       "name": "Build Reminder Ops Message1"
     },
     {
@@ -1143,10 +1143,10 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        5776,
-        3488
+        9248,
+        5376
       ],
-      "id": "7c5c2bc0-1958-43de-b369-3d2290046a25",
+      "id": "d7ab832d-5ca4-4c4a-80c2-c33c2ea79ad9",
       "name": "Notify Reminder Ops Telegram1",
       "webhookId": "d2c7d160-1fcd-4457-838f-82d52d600799",
       "credentials": {
@@ -1163,10 +1163,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4880,
-        4288
+        8352,
+        6176
       ],
-      "id": "17e3879a-a2ef-4e67-bd91-1167bc7e9a84",
+      "id": "329959a1-b1d2-4708-8192-692a85ae1742",
       "name": "Normalize Overdue Payload1"
     },
     {
@@ -1271,10 +1271,10 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        5328,
-        4288
+        8800,
+        6176
       ],
-      "id": "42859aa2-48cd-48a9-977a-c39d72f25db2",
+      "id": "8101cf74-eacb-4284-a9e5-286ba8413423",
       "name": "Append Overdue Report Log1",
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -1293,10 +1293,10 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        5552,
-        4576
+        9024,
+        6464
       ],
-      "id": "1e43eae4-ba27-44f1-9616-21756f5a426b",
+      "id": "690cbc30-e0cf-461a-be76-789eceebad39",
       "name": "Send Escalation Gmail1",
       "webhookId": "83f86ce6-acc5-459a-bbc3-a5b5de172cf6",
       "credentials": {
@@ -1315,10 +1315,10 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        5552,
-        4800
+        9024,
+        6688
       ],
-      "id": "5a70146a-0c52-458c-abe8-bb21c2584a10",
+      "id": "58d4546f-17f2-4474-a044-15d51c3e44f2",
       "name": "Notify Health Ops Telegram1",
       "webhookId": "786bc7d0-2432-446d-ba5d-c2fa3499bc17",
       "credentials": {
@@ -1335,10 +1335,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5328,
-        4800
+        8800,
+        6688
       ],
-      "id": "1c793cf2-543a-4ade-98e8-7cda956d3f82",
+      "id": "ebcb5adc-30e6-407e-9345-f8dd17c91d1b",
       "name": "Build Health Ops Message1"
     },
     {
@@ -1443,10 +1443,10 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        5776,
-        4992
+        9248,
+        6880
       ],
-      "id": "4bc7bcf2-309f-4c46-91c8-56e262c67def",
+      "id": "eac8714b-1a1d-4a7e-a226-67c3728e3b8e",
       "name": "Append Health Snapshot Log1",
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -1462,10 +1462,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5104,
-        4896
+        8576,
+        6784
       ],
-      "id": "33543f7a-37ad-4101-a581-484193ae7848",
+      "id": "89517630-6cfd-47a9-98cf-670b9a5b9f75",
       "name": "Calculate Workload Signals1"
     },
     {
@@ -1475,10 +1475,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4880,
-        4896
+        8352,
+        6784
       ],
-      "id": "4ae473f1-8092-4670-a500-37935b0cdc3f",
+      "id": "df6e599e-3e45-482a-bb59-06615d702a90",
       "name": "Normalize Open Snapshot1"
     },
     {
@@ -1495,10 +1495,10 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1,
       "position": [
-        4432,
-        4896
+        7904,
+        6784
       ],
-      "id": "506b0920-3450-4d77-85b6-26e36943a01c",
+      "id": "6fd30846-58be-45c7-97ad-8e4dcee0218c",
       "name": "Schedule 11:59PM1"
     },
     {
@@ -1520,10 +1520,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        4656,
-        4896
+        8128,
+        6784
       ],
-      "id": "66c04688-d625-4fb4-8f78-4aeb9633d1d4",
+      "id": "800cf697-18c2-4dbf-bcdf-17b13be60e74",
       "name": "Fetch Open Task Snapshot1"
     },
     {
@@ -1533,10 +1533,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5328,
-        4992
+        8800,
+        6880
       ],
-      "id": "baaea54e-127d-4462-a94a-611cffbad122",
+      "id": "b1dec471-2722-4648-8420-d8f2f32c120c",
       "name": "Build Health Summary1"
     },
     {
@@ -1548,10 +1548,10 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        5552,
-        4992
+        9024,
+        6880
       ],
-      "id": "2df07802-44a4-48ae-a224-85e58dd30636",
+      "id": "04b6633b-4c84-4ac8-bd98-3ae3c92b0de8",
       "name": "Send Health Telegram1",
       "webhookId": "bf0ef731-2eba-44f2-9d1d-dad15d263c94",
       "credentials": {
@@ -1571,10 +1571,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        4320,
-        5328
+        7792,
+        7216
       ],
-      "id": "4769fb45-5429-4d5b-b133-2ec154776e06",
+      "id": "13a417ff-b99c-4059-b371-6ff7f8133153",
       "name": "Note - Employee Statistics1"
     },
     {
@@ -1591,10 +1591,10 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1,
       "position": [
-        4416,
-        5616
+        7888,
+        7504
       ],
-      "id": "43472d95-d480-4808-bec1-b6ecbc7f7976",
+      "id": "8f1122c5-ded5-4f84-bfea-4302bfa249f4",
       "name": "Schedule Employee Stats 8:30AM1"
     },
     {
@@ -1604,10 +1604,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4864,
-        5616
+        8336,
+        7504
       ],
-      "id": "8866efaf-ce8c-4000-afc9-96ae066f5721",
+      "id": "d3fd2620-a3e7-48e6-84b2-e30ba1757c5f",
       "name": "Normalize Employee Snapshot1"
     },
     {
@@ -1617,10 +1617,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5088,
-        5616
+        8560,
+        7504
       ],
-      "id": "2bbb4564-f0af-4699-8aa2-75bb25c3e618",
+      "id": "f48289cd-f403-4cb5-b17d-e86c085ef532",
       "name": "Aggregate Employee Statistics1"
     },
     {
@@ -1630,10 +1630,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5312,
-        5488
+        8784,
+        7376
       ],
-      "id": "83f75f10-7735-49d5-9246-bc63b51fe717",
+      "id": "28f2f734-49b8-434c-8e28-b33c1e3e8268",
       "name": "Build Employee Summary1"
     },
     {
@@ -1645,10 +1645,10 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        5536,
-        5488
+        9008,
+        7376
       ],
-      "id": "2a0209c4-e71a-4fe8-8d21-1a6200eefe40",
+      "id": "f4964257-8cd4-42e4-b3b6-91b041652fd9",
       "name": "Send Employee Stats Telegram1",
       "webhookId": "1fcbb83b-34b0-4d96-9220-49ff6d84fdcf",
       "credentials": {
@@ -1666,10 +1666,10 @@
       "type": "n8n-nodes-base.itemLists",
       "typeVersion": 3,
       "position": [
-        5312,
-        5776
+        8784,
+        7664
       ],
-      "id": "5d08a989-9c8d-4b0b-8b13-a6f21630e867",
+      "id": "00d54dbb-88ac-45e5-9fc0-82affe05f44e",
       "name": "Split Employee Ranking1"
     },
     {
@@ -1679,10 +1679,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5536,
-        5776
+        9008,
+        7664
       ],
-      "id": "d1561a28-c04c-4014-94a6-1e7301289711",
+      "id": "3bc7ddeb-075e-42fa-876d-fec25fb1fe16",
       "name": "Prepare Employee Log Row1"
     },
     {
@@ -1787,10 +1787,10 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        5760,
-        5680
+        9232,
+        7568
       ],
-      "id": "948d6835-fa36-4b2d-9459-733c973657ec",
+      "id": "adb9adf1-db9e-4bf6-a5c8-ccb64a18b112",
       "name": "Append Employee Stats Log1",
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -1813,10 +1813,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        5760,
-        5904
+        9232,
+        7792
       ],
-      "id": "b59ac567-c2b1-43b2-9a83-a86cd8e00717",
+      "id": "42582e01-145b-42ad-bb6c-434cf2fc523e",
       "name": "If Employee Overloaded1"
     },
     {
@@ -1828,10 +1828,10 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
-        5984,
-        5888
+        9456,
+        7776
       ],
-      "id": "6545d2ab-6622-4593-9134-db9b1a6a0ead",
+      "id": "792ad8c9-0139-4683-b716-c71b4229a024",
       "name": "Send Employee Overload Alert1",
       "webhookId": "61c5608b-9d3d-4f0e-9f0f-d09d7d979e42",
       "credentials": {
