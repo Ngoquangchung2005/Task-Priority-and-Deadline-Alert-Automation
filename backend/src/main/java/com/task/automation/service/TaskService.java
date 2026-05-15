@@ -3,15 +3,18 @@ package com.task.automation.service;
 import com.task.automation.dto.request.TaskRequest;
 import com.task.automation.dto.request.AiSubtaskSuggestionRequest;
 import com.task.automation.dto.request.WebhookSyncRequest;
+import com.task.automation.dto.response.WebhookWorkItemResponse;
 import com.task.automation.entity.Subtask;
 import com.task.automation.entity.Task;
 import com.task.automation.entity.TaskLog;
 import com.task.automation.entity.User;
 import com.task.automation.enums.ActionType;
 import com.task.automation.enums.Role;
+import com.task.automation.enums.TaskPriority;
 import com.task.automation.enums.TaskStatus;
 import com.task.automation.repository.TaskLogRepository;
 import com.task.automation.repository.TaskRepository;
+import com.task.automation.repository.SubtaskRepository;
 import com.task.automation.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,10 +27,10 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.time.Duration;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
+import java.time.DayOfWeek;
+import java.time.Duration;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -36,6 +39,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.LinkedHashSet;
 import org.springframework.beans.factory.annotation.Value;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -49,6 +53,7 @@ public class TaskService {
     private static final RestClient REST_CLIENT = buildRestClient();
 
     private final TaskRepository taskRepository;
+    private final SubtaskRepository subtaskRepository;
     private final UserRepository userRepository;
     private final TaskLogRepository taskLogRepository;
     private final PasswordEncoder passwordEncoder;
@@ -81,7 +86,17 @@ public class TaskService {
     }
 
     public java.util.Optional<Task> getTaskForUser(Long id, String userEmail) {
-        return taskRepository.findByIdAndAssigneeEmail(id, userEmail);
+        java.util.Optional<Task> parentTask = taskRepository.findByIdAndAssigneeIdentity(
+                id, userEmail, identityLocalPart(userEmail));
+        if (parentTask.isPresent()) {
+            return parentTask;
+        }
+
+        boolean ownsSubtask = !subtaskRepository
+                .findByTaskIdAndAssignedIdentityOrderByPositionIndexAsc(
+                        id, userEmail, identityLocalPart(userEmail))
+                .isEmpty();
+        return ownsSubtask ? taskRepository.findById(id) : java.util.Optional.empty();
     }
 
     public java.util.Optional<Task> getTaskForManager(Long id, String managerEmail) {
@@ -90,27 +105,25 @@ public class TaskService {
 
     @Transactional
     public Task createTask(TaskRequest request, String managerEmail, String managerName) {
-        if (!userRepository.existsByEmail(request.getAssigneeEmail())) {
-            User newUser = new User();
-            newUser.setEmail(request.getAssigneeEmail());
-            newUser.setFullName(request.getAssigneeEmail().split("@")[0]);
-            newUser.setPasswordHash(passwordEncoder.encode("123456"));
-            newUser.setRole(Role.USER);
-            newUser.setMustChangePassword(true);
-            userRepository.save(newUser);
+        if (request.getPriority() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "priority is required");
         }
+
+        String assigneeEmail = requireEmail(request.getAssigneeEmail(), "assigneeEmail");
+        ensureUserExists(assigneeEmail);
 
         Task task = new Task();
         task.setTaskId("TSK-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
-        task.setTaskName(request.getTaskName());
+        task.setTaskName(requireText(request.getTaskName(), "taskName"));
         task.setTaskDescription(request.getTaskDescription());
-        task.setAssigneeEmail(request.getAssigneeEmail());
+        task.setAssigneeEmail(assigneeEmail);
         task.setManagerEmail(managerEmail);
         task.setOwnerName(managerName);
         task.setPriority(request.getPriority());
         task.setStatus(TaskStatus.PENDING);
         task.setArchived(false);
         task.setArchivedAt(null);
+        task.setReminderCount(0);
 
         // Auto-calculate deadline based on priority if not provided
         if (request.getDeadline() != null) {
@@ -126,30 +139,77 @@ public class TaskService {
 
         task.setCreatedBy(managerEmail);
         task.setAdminNote(request.getAdminNote());
+        task.setSourceInput(request.getSourceInput());
 
-        // Create subtasks if provided
-        if (request.getSubtaskTitles() != null && !request.getSubtaskTitles().isEmpty()) {
-            List<Subtask> subtasks = new ArrayList<>();
-            for (int i = 0; i < request.getSubtaskTitles().size(); i++) {
-                String title = request.getSubtaskTitles().get(i);
-                if (title != null && !title.trim().isEmpty()) {
-                    Subtask subtask = new Subtask();
-                    subtask.setTitle(title.trim());
-                    subtask.setStatus(TaskStatus.TODO);
-                    subtask.setPositionIndex(i);
-                    subtask.setTask(task);
-                    subtasks.add(subtask);
-                }
-            }
-            task.setSubtasks(subtasks);
-            task.setTotalSubTask(subtasks.size());
-        }
+        List<Subtask> subtasks = buildSubtasksForTask(request, task, managerEmail);
+        task.getSubtasks().clear();
+        task.getSubtasks().addAll(subtasks);
+        task.setTotalSubTask(subtasks.size());
 
         Task savedTask = taskRepository.save(task);
         logTaskAction(savedTask.getId(), ActionType.CREATED, "Task created by " + managerEmail);
         triggerN8nWebhook(savedTask, "TASK_CREATED", "New task created by " + managerEmail);
 
         return savedTask;
+    }
+
+    private List<Subtask> buildSubtasksForTask(TaskRequest request, Task task, String managerEmail) {
+        if (request.getSubtasks() != null && !request.getSubtasks().isEmpty()) {
+            List<Subtask> subtasks = new ArrayList<>();
+            for (int i = 0; i < request.getSubtasks().size(); i++) {
+                var subtaskRequest = request.getSubtasks().get(i);
+                if (subtaskRequest == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "subtasks[" + i + "] is required");
+                }
+
+                TaskStatus status = subtaskRequest.getStatus() != null ? subtaskRequest.getStatus() : TaskStatus.TODO;
+                if (status == TaskStatus.CANCELLED) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "subtasks[" + i + "].status cannot be CANCELLED");
+                }
+
+                String assignedTo = requireEmail(subtaskRequest.getAssignedTo(), "subtasks[" + i + "].assignedTo");
+                ensureUserExists(assignedTo);
+
+                Subtask subtask = new Subtask();
+                subtask.setTitle(requireText(subtaskRequest.getTitle(), "subtasks[" + i + "].title"));
+                subtask.setStatus(status);
+                subtask.setPriority(normalizeSubtaskPriority(
+                        subtaskRequest.getPriority(),
+                        task.getPriority(),
+                        "subtasks[" + i + "].priority"));
+                subtask.setDeadline(subtaskRequest.getDeadline());
+                subtask.setAssignedTo(assignedTo);
+                subtask.setCreatedBy(managerEmail);
+                subtask.setPositionIndex(subtaskRequest.getPositionIndex() != null ? subtaskRequest.getPositionIndex() : i);
+                subtask.setTask(task);
+                subtasks.add(subtask);
+            }
+            return subtasks;
+        }
+
+        if (request.getSubtaskTitles() == null || request.getSubtaskTitles().isEmpty()) {
+            return List.of();
+        }
+
+        List<Subtask> subtasks = new ArrayList<>();
+        for (int i = 0; i < request.getSubtaskTitles().size(); i++) {
+            String title = request.getSubtaskTitles().get(i);
+            if (title == null || title.trim().isEmpty()) {
+                continue;
+            }
+
+            Subtask subtask = new Subtask();
+            subtask.setTitle(title.trim());
+            subtask.setStatus(TaskStatus.TODO);
+            subtask.setPriority(task.getPriority());
+            subtask.setDeadline(task.getDeadline());
+            subtask.setAssignedTo(task.getAssigneeEmail());
+            subtask.setCreatedBy(managerEmail);
+            subtask.setPositionIndex(subtasks.size());
+            subtask.setTask(task);
+            subtasks.add(subtask);
+        }
+        return subtasks;
     }
 
     @Transactional
@@ -166,12 +226,12 @@ public class TaskService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Archived tasks cannot be edited");
         }
 
-        if (task.getStatus() == TaskStatus.IN_PROGRESS) {
+        if (task.getStatus() == TaskStatus.IN_PROGRESS && hasStartedSubtaskWork(task.getId())) {
             boolean assigneeChanged = !Objects.equals(task.getAssigneeEmail(), request.getAssigneeEmail());
             boolean nameChanged = !Objects.equals(task.getTaskName(), request.getTaskName());
             boolean descriptionChanged = !Objects.equals(task.getTaskDescription(), request.getTaskDescription());
             if (assigneeChanged || nameChanged || descriptionChanged) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "In-progress tasks only allow updating deadline, priority, and admin note");
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Tasks with started subtasks only allow updating deadline, priority, and admin note");
             }
         }
 
@@ -181,6 +241,8 @@ public class TaskService {
         String beforeNote = task.getAdminNote();
         String beforeDescription = task.getTaskDescription();
         String beforeName = task.getTaskName();
+
+        ensureExistingSubtasksFitParentPriority(task.getId(), request.getPriority());
 
         task.setTaskName(request.getTaskName());
         task.setTaskDescription(request.getTaskDescription());
@@ -302,18 +364,20 @@ public class TaskService {
     }
 
     public List<Task> getAllTasksForManager(String managerEmail) {
-        return syncOverdueStatuses(taskRepository.findByManagerEmail(managerEmail));
+        return syncOverdueStatuses(taskRepository.findByManagerEmailOrderByCreatedAtDesc(managerEmail));
     }
 
     public List<Task> getTasksForUser(String userEmail) {
-        return syncOverdueStatuses(taskRepository.findByAssigneeEmail(userEmail));
+        return syncOverdueStatuses(taskRepository.findByAssigneeIdentityOrderByCreatedAtDesc(
+                userEmail, identityLocalPart(userEmail)));
     }
 
     @Transactional
     public Task updateTaskStatusForUser(Long id, TaskStatus newStatus, String userEmail) {
-        Task task = taskRepository.findByIdAndAssigneeEmail(id, userEmail)
+        Task task = taskRepository.findByIdAndAssigneeIdentity(id, userEmail, identityLocalPart(userEmail))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
-        return updateTaskStatus(task, newStatus, userEmail);
+        TaskStatus allowedStatus = normalizeUserParentStatus(task, newStatus);
+        return updateTaskStatus(task, allowedStatus, userEmail);
     }
 
     @Transactional
@@ -324,19 +388,49 @@ public class TaskService {
     }
 
     private Task updateTaskStatus(Task task, TaskStatus newStatus, String actorEmail) {
+        if (newStatus == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "status is required");
+        }
         if (task.getStatus() == TaskStatus.CANCELLED) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Cancelled tasks cannot change status");
         }
         if (Boolean.TRUE.equals(task.getArchived())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Archived tasks cannot change status");
         }
+
+        TaskStatus previousStatus = task.getStatus();
+        if (previousStatus == newStatus) {
+            return task;
+        }
+
+        if (newStatus == TaskStatus.IN_REVIEW && hasIncompleteSubtasks(task.getId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Parent task can only enter IN_REVIEW when all subtasks are DONE");
+        }
+        if (newStatus == TaskStatus.DONE) {
+            if (previousStatus != TaskStatus.IN_REVIEW) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Parent task must be IN_REVIEW before it can be approved as DONE");
+            }
+            if (hasIncompleteSubtasks(task.getId())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Parent task can only be DONE when all subtasks are DONE");
+            }
+        }
+
         task.setStatus(newStatus);
         if (newStatus == TaskStatus.DONE) {
             task.setCompletedAt(LocalDateTime.now());
+        } else {
+            task.setCompletedAt(null);
         }
         Task savedTask = taskRepository.save(task);
         logTaskAction(savedTask.getId(), ActionType.STATUS_CHANGED,
                 "Status changed to " + newStatus + " by " + actorEmail);
+        if (newStatus == TaskStatus.DONE && previousStatus != TaskStatus.DONE) {
+            logTaskAction(savedTask.getId(), ActionType.COMPLETED,
+                    "Task completed by " + actorEmail);
+        }
 
         triggerN8nWebhook(savedTask, "TASK_STATUS_CHANGED",
                 "Status changed to " + newStatus + " by " + actorEmail);
@@ -344,20 +438,106 @@ public class TaskService {
         return savedTask;
     }
 
+    private boolean hasIncompleteSubtasks(Long taskId) {
+        List<Subtask> subtasks = subtaskRepository.findByTaskIdOrderByPositionIndexAsc(taskId);
+        return !subtasks.isEmpty()
+                && subtasks.stream().anyMatch(subtask -> subtask.getStatus() != TaskStatus.DONE);
+    }
+
+    private boolean hasStartedSubtaskWork(Long taskId) {
+        List<Subtask> subtasks = subtaskRepository.findByTaskIdOrderByPositionIndexAsc(taskId);
+        if (subtasks.isEmpty()) {
+            return true;
+        }
+        return subtasks.stream()
+                .anyMatch(subtask -> subtask.getStatus() != TaskStatus.TODO && subtask.getStatus() != TaskStatus.PENDING);
+    }
+
+    private boolean hasSubtasks(Long taskId) {
+        return !subtaskRepository.findByTaskIdOrderByPositionIndexAsc(taskId).isEmpty();
+    }
+
+    private TaskStatus normalizeUserParentStatus(Task task, TaskStatus newStatus) {
+        if (newStatus == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "status is required");
+        }
+        if (newStatus == TaskStatus.DONE) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the manager can approve a parent task as DONE");
+        }
+        if (hasSubtasks(task.getId()) && newStatus != TaskStatus.IN_PROGRESS) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Use the subtask board to update assigned subtasks");
+        }
+        if (newStatus != TaskStatus.IN_PROGRESS && newStatus != TaskStatus.IN_REVIEW) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Users can only start a task or submit it for review");
+        }
+        return newStatus;
+    }
+
     @Transactional
     public void handleWebhookSync(WebhookSyncRequest request) {
-        Task task = taskRepository.findByTaskId(request.getTaskId())
-                .orElseThrow(() -> new RuntimeException("Task not found: " + request.getTaskId()));
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Webhook sync payload is required");
+        }
+        if (request.getTaskId() == null || request.getTaskId().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "taskId is required");
+        }
+        if (request.getActionType() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "actionType is required");
+        }
+
+        String itemType = request.getItemType() == null || request.getItemType().isBlank()
+                ? "TASK"
+                : request.getItemType().trim().toUpperCase();
+        boolean subtaskSync = "SUBTASK".equals(itemType) || request.getSubtaskId() != null;
+        Subtask subtask = null;
+        Task task;
+
+        if (subtaskSync && request.getSubtaskId() != null) {
+            subtask = subtaskRepository.findById(request.getSubtaskId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Subtask not found: " + request.getSubtaskId()));
+            task = subtask.getTask();
+            if (task == null) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Subtask has no parent task: " + request.getSubtaskId());
+            }
+            if (!request.getTaskId().equals(task.getTaskId())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "subtaskId does not belong to taskId " + request.getTaskId());
+            }
+        } else {
+            task = taskRepository.findByTaskId(request.getTaskId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Task not found: " + request.getTaskId()));
+        }
 
         if (request.getActionType() == ActionType.REMINDER_SENT) {
             task.setLastRemindedAt(LocalDateTime.now());
-            task.setReminderCount(task.getReminderCount() + 1);
+            task.setReminderCount((task.getReminderCount() == null ? 0 : task.getReminderCount()) + 1);
         } else if (request.getActionType() == ActionType.ESCALATED) {
             task.setEscalatedAt(LocalDateTime.now());
         }
 
         taskRepository.save(task);
-        logTaskAction(task.getId(), request.getActionType(), request.getActionMessage());
+        logTaskAction(task.getId(), request.getActionType(), buildWebhookSyncLogMessage(request, subtask));
+    }
+
+    private String buildWebhookSyncLogMessage(WebhookSyncRequest request, Subtask subtask) {
+        if (request.getActionMessage() != null && !request.getActionMessage().isBlank()) {
+            return request.getActionMessage().trim();
+        }
+
+        String actionLabel = request.getActionType() == ActionType.ESCALATED ? "Escalation" : "Reminder";
+        if (subtask == null) {
+            return actionLabel + " sent by n8n for task " + request.getTaskId();
+        }
+
+        String assignee = subtask.getAssignedTo() != null && !subtask.getAssignedTo().isBlank()
+                ? " assigned to " + subtask.getAssignedTo()
+                : "";
+        return actionLabel + " sent by n8n for subtask #" + subtask.getId()
+                + " '" + subtask.getTitle() + "'" + assignee
+                + " under task " + request.getTaskId();
     }
 
     public List<Task> getOverdueTasks() {
@@ -365,21 +545,63 @@ public class TaskService {
                 taskRepository.findOverdueTasks(List.of(TaskStatus.PENDING, TaskStatus.IN_PROGRESS, TaskStatus.IN_REVIEW, TaskStatus.OVERDUE)));
     }
 
-    public List<Task> getPendingReminders() {
-        return syncOverdueStatuses(
-                taskRepository.findTasksByStatuses(List.of(TaskStatus.PENDING, TaskStatus.IN_PROGRESS, TaskStatus.IN_REVIEW, TaskStatus.OVERDUE)));
+    public List<WebhookWorkItemResponse> getPendingReminderItems() {
+        List<TaskStatus> openTaskStatuses = List.of(
+                TaskStatus.PENDING,
+                TaskStatus.TODO,
+                TaskStatus.IN_PROGRESS,
+                TaskStatus.IN_REVIEW,
+                TaskStatus.OVERDUE);
+        List<TaskStatus> openSubtaskStatuses = List.of(
+                TaskStatus.PENDING,
+                TaskStatus.TODO,
+                TaskStatus.IN_PROGRESS,
+                TaskStatus.IN_REVIEW,
+                TaskStatus.OVERDUE);
+
+        List<Task> tasks = syncOverdueStatuses(taskRepository.findTasksByStatuses(openTaskStatuses));
+        List<Subtask> subtasks = syncOverdueSubtaskStatuses(
+                subtaskRepository.findWebhookSubtasksByStatuses(openSubtaskStatuses, TaskStatus.CANCELLED));
+
+        return buildWebhookWorkItems(tasks, subtasks, true);
     }
 
-    public List<Task> getEmployeeStatisticsTasks() {
+    public List<WebhookWorkItemResponse> getOverdueEscalationItems() {
+        List<TaskStatus> openSubtaskStatuses = List.of(
+                TaskStatus.PENDING,
+                TaskStatus.TODO,
+                TaskStatus.IN_PROGRESS,
+                TaskStatus.IN_REVIEW,
+                TaskStatus.OVERDUE);
+
+        List<Task> tasks = getOverdueTasks();
+        List<Subtask> subtasks = syncOverdueSubtaskStatuses(
+                subtaskRepository.findOverdueWebhookSubtasks(openSubtaskStatuses, TaskStatus.CANCELLED));
+
+        return buildWebhookWorkItems(tasks, subtasks, true);
+    }
+
+    public List<WebhookWorkItemResponse> getEmployeeStatisticItems() {
         LocalDateTime startOfWeek = LocalDate.now()
                 .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
                 .atStartOfDay();
 
-        return syncOverdueStatuses(
+        List<Task> parentTasksWithoutSubtasks = syncOverdueStatuses(
                 taskRepository.findTasksForEmployeeStatistics(
                         List.of(TaskStatus.PENDING, TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.IN_REVIEW, TaskStatus.OVERDUE),
                         TaskStatus.DONE,
+                        startOfWeek)).stream()
+                .filter(task -> task.getTotalSubTask() == null || task.getTotalSubTask() == 0)
+                .toList();
+
+        List<Subtask> subtasks = syncOverdueSubtaskStatuses(
+                subtaskRepository.findWebhookSubtasksForEmployeeStatistics(
+                        List.of(TaskStatus.PENDING, TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.IN_REVIEW, TaskStatus.OVERDUE),
+                        TaskStatus.DONE,
+                        TaskStatus.CANCELLED,
                         startOfWeek));
+
+        return buildWebhookWorkItems(parentTasksWithoutSubtasks, subtasks, false);
     }
 
     @Transactional
@@ -420,6 +642,113 @@ public class TaskService {
         }
 
         return tasks;
+    }
+
+    @Transactional
+    protected List<Subtask> syncOverdueSubtaskStatuses(List<Subtask> subtasks) {
+        if (subtasks == null || subtasks.isEmpty()) {
+            return subtasks;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        List<Subtask> changedSubtasks = new ArrayList<>();
+        Map<Long, Task> changedParents = new LinkedHashMap<>();
+
+        for (Subtask subtask : subtasks) {
+            if (subtask == null || subtask.getDeadline() == null) {
+                continue;
+            }
+            if (subtask.getStatus() == TaskStatus.DONE || subtask.getStatus() == TaskStatus.OVERDUE) {
+                continue;
+            }
+            if (subtask.getDeadline().isAfter(now)) {
+                continue;
+            }
+
+            subtask.setStatus(TaskStatus.OVERDUE);
+            changedSubtasks.add(subtask);
+
+            Task parent = subtask.getTask();
+            if (parent == null || parent.getId() == null) {
+                continue;
+            }
+            if (parent.getStatus() == TaskStatus.DONE || parent.getStatus() == TaskStatus.CANCELLED
+                    || parent.getStatus() == TaskStatus.OVERDUE || Boolean.TRUE.equals(parent.getArchived())) {
+                continue;
+            }
+            parent.setStatus(TaskStatus.OVERDUE);
+            parent.setCompletedAt(null);
+            changedParents.put(parent.getId(), parent);
+        }
+
+        if (!changedSubtasks.isEmpty()) {
+            subtaskRepository.saveAll(changedSubtasks);
+        }
+        if (!changedParents.isEmpty()) {
+            taskRepository.saveAll(changedParents.values());
+        }
+
+        return subtasks;
+    }
+
+    private List<WebhookWorkItemResponse> buildWebhookWorkItems(
+            List<Task> tasks,
+            List<Subtask> subtasks,
+            boolean includeParentTasksWithSubtasks) {
+        List<WebhookWorkItemResponse> items = new ArrayList<>();
+        Set<Long> parentIdsWithSubtasks = new LinkedHashSet<>();
+
+        if (subtasks != null) {
+            for (Subtask subtask : subtasks) {
+                if (subtask == null || subtask.getTask() == null || subtask.getAssignedTo() == null
+                        || subtask.getAssignedTo().isBlank()) {
+                    continue;
+                }
+                Task parent = subtask.getTask();
+                if (!isWebhookTaskVisible(parent)) {
+                    continue;
+                }
+                parentIdsWithSubtasks.add(parent.getId());
+                items.add(WebhookWorkItemResponse.fromSubtask(subtask));
+            }
+        }
+
+        if (tasks != null) {
+            for (Task task : tasks) {
+                if (!isWebhookTaskVisible(task)) {
+                    continue;
+                }
+                boolean hasSubtasks = parentIdsWithSubtasks.contains(task.getId())
+                        || (task.getTotalSubTask() != null && task.getTotalSubTask() > 0);
+                if (hasSubtasks && !includeParentTasksWithSubtasks) {
+                    continue;
+                }
+                items.add(WebhookWorkItemResponse.fromTask(task));
+            }
+        }
+
+        items.sort((left, right) -> {
+            LocalDateTime leftDeadline = left.getDeadline();
+            LocalDateTime rightDeadline = right.getDeadline();
+            if (leftDeadline == null && rightDeadline == null) {
+                return safe(left.getTaskName()).compareToIgnoreCase(safe(right.getTaskName()));
+            }
+            if (leftDeadline == null) {
+                return 1;
+            }
+            if (rightDeadline == null) {
+                return -1;
+            }
+            return leftDeadline.compareTo(rightDeadline);
+        });
+
+        return items;
+    }
+
+    private boolean isWebhookTaskVisible(Task task) {
+        return task != null
+                && task.getStatus() != TaskStatus.CANCELLED
+                && !Boolean.TRUE.equals(task.getArchived());
     }
 
     public List<String> suggestSubtasksWithAI(AiSubtaskSuggestionRequest request) {
@@ -557,11 +886,7 @@ public class TaskService {
         try {
             ObjectMapper mapper = new ObjectMapper();
             mapper.registerModule(new JavaTimeModule());
-            Map<String, Object> payload = new LinkedHashMap<>(mapper.convertValue(task, Map.class));
-            payload.put("eventType", eventType != null ? eventType : "");
-            if (eventMessage != null && !eventMessage.isBlank()) {
-                payload.put("eventMessage", eventMessage);
-            }
+            Map<String, Object> payload = buildWebhookTaskPayload(task, eventType, eventMessage);
             String json = mapper.writeValueAsString(payload);
             java.util.concurrent.CompletableFuture.runAsync(() -> {
                 try {
@@ -581,6 +906,122 @@ public class TaskService {
         } catch (Exception e) {
             log.error("Failed to trigger n8n webhook for task {} -> {}", task.getTaskId(), webhookUrl, e);
         }
+    }
+
+    private Map<String, Object> buildWebhookTaskPayload(Task task, String eventType, String eventMessage) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("eventType", eventType != null ? eventType : "");
+        payload.put("taskId", task.getTaskId());
+        payload.put("taskName", task.getTaskName());
+        payload.put("taskDescription", task.getTaskDescription());
+        payload.put("assigneeEmail", task.getAssigneeEmail());
+        payload.put("managerEmail", task.getManagerEmail());
+        payload.put("ownerName", task.getOwnerName());
+        payload.put("deadline", task.getDeadline());
+        payload.put("priority", task.getPriority());
+        payload.put("status", task.getStatus());
+        payload.put("adminNote", task.getAdminNote());
+        payload.put("sourceInput", task.getSourceInput());
+        payload.put("createdAt", task.getCreatedAt());
+        payload.put("completedAt", task.getCompletedAt());
+        payload.put("reminderCount", task.getReminderCount());
+        payload.put("subtasks", buildWebhookSubtaskPayload(task));
+        if (eventMessage != null && !eventMessage.isBlank()) {
+            payload.put("eventMessage", eventMessage);
+        }
+        return payload;
+    }
+
+    private List<Map<String, Object>> buildWebhookSubtaskPayload(Task task) {
+        if (task.getSubtasks() == null || task.getSubtasks().isEmpty()) {
+            return List.of();
+        }
+
+        return task.getSubtasks().stream()
+                .sorted((left, right) -> Integer.compare(
+                        left.getPositionIndex() == null ? Integer.MAX_VALUE : left.getPositionIndex(),
+                        right.getPositionIndex() == null ? Integer.MAX_VALUE : right.getPositionIndex()))
+                .map(subtask -> {
+                    Map<String, Object> entry = new LinkedHashMap<>();
+                    entry.put("id", subtask.getId());
+                    entry.put("title", subtask.getTitle());
+                    entry.put("assignedTo", subtask.getAssignedTo());
+                    entry.put("deadline", subtask.getDeadline());
+                    entry.put("priority", subtask.getPriority());
+                    entry.put("status", subtask.getStatus());
+                    entry.put("positionIndex", subtask.getPositionIndex());
+                    return entry;
+                })
+                .toList();
+    }
+
+    public TaskPriority normalizeSubtaskPriority(TaskPriority requestedPriority, TaskPriority parentPriority, String fieldName) {
+        TaskPriority normalized = requestedPriority != null ? requestedPriority : parentPriority;
+        if (normalized != null && parentPriority != null && priorityRank(normalized) > priorityRank(parentPriority)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    fieldName + " cannot be higher than parent task priority " + parentPriority);
+        }
+        return normalized;
+    }
+
+    private void ensureExistingSubtasksFitParentPriority(Long taskId, TaskPriority parentPriority) {
+        if (parentPriority == null) {
+            return;
+        }
+
+        List<Subtask> subtasks = subtaskRepository.findByTaskIdOrderByPositionIndexAsc(taskId);
+        for (Subtask subtask : subtasks) {
+            TaskPriority subtaskPriority = subtask.getPriority();
+            if (subtaskPriority != null && priorityRank(subtaskPriority) > priorityRank(parentPriority)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Cannot lower parent priority below existing subtask priority " + subtaskPriority);
+            }
+        }
+    }
+
+    private int priorityRank(TaskPriority priority) {
+        if (priority == null) {
+            return 0;
+        }
+        return switch (priority) {
+            case LOW -> 1;
+            case MEDIUM -> 2;
+            case HIGH -> 3;
+        };
+    }
+
+    public void ensureUserExists(String email) {
+        if (userRepository.existsByEmail(email)) {
+            return;
+        }
+
+        User newUser = new User();
+        newUser.setEmail(email);
+        newUser.setFullName(email.split("@")[0]);
+        newUser.setPasswordHash(passwordEncoder.encode("123456"));
+        newUser.setRole(Role.USER);
+        newUser.setMustChangePassword(true);
+        userRepository.save(newUser);
+    }
+
+    private String requireText(String value, String fieldName) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " is required");
+        }
+        return value.trim();
+    }
+
+    private String requireEmail(String value, String fieldName) {
+        return requireText(value, fieldName);
+    }
+
+    private String identityLocalPart(String email) {
+        if (email == null) {
+            return "";
+        }
+        String trimmed = email.trim();
+        int atIndex = trimmed.indexOf('@');
+        return atIndex > 0 ? trimmed.substring(0, atIndex) : trimmed;
     }
 
     private String formatDateTime(LocalDateTime value) {
