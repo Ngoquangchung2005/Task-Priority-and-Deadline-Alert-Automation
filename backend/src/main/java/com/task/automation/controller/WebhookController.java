@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import jakarta.validation.Valid;
 import java.util.Objects;
 
 @RestController
@@ -22,13 +23,13 @@ public class WebhookController {
     private final TaskService taskService;
     private final SubtaskService subtaskService;
 
-    @Value("${app.webhookSecret:local-n8n-sync-secret}")
+    @Value("${app.webhookSecret}")
     private String webhookSecret;
 
     @PostMapping("/sync")
     public ResponseEntity<?> handleSync(
             @RequestHeader(value = "X-Webhook-Secret", required = false) String providedSecret,
-            @RequestBody WebhookSyncRequest request) {
+            @Valid @RequestBody WebhookSyncRequest request) {
         validateWebhookSecret(providedSecret);
         taskService.handleWebhookSync(request);
         return ResponseEntity.ok(new MessageResponse("Sync successful"));
@@ -38,23 +39,21 @@ public class WebhookController {
     public ResponseEntity<?> getPendingReminders(
             @RequestHeader(value = "X-Webhook-Secret", required = false) String providedSecret) {
         validateWebhookSecret(providedSecret);
-        return ResponseEntity.ok(taskService.getPendingReminders());
+        return ResponseEntity.ok(taskService.getPendingReminderItems());
     }
     
     @GetMapping("/overdue-escalations")
     public ResponseEntity<?> getOverdueEscalations(
             @RequestHeader(value = "X-Webhook-Secret", required = false) String providedSecret) {
         validateWebhookSecret(providedSecret);
-        return ResponseEntity.ok(taskService.getOverdueTasks());
+        return ResponseEntity.ok(taskService.getOverdueEscalationItems());
     }
-
-    @GetMapping("/employee-statistics")
+   @GetMapping("/employee-statistics")
     public ResponseEntity<?> getEmployeeStatistics(
             @RequestHeader(value = "X-Webhook-Secret", required = false) String providedSecret) {
         validateWebhookSecret(providedSecret);
-        return ResponseEntity.ok(taskService.getEmployeeStatisticsTasks());
+        return ResponseEntity.ok(taskService.getEmployeeStatisticItems());
     }
-
     @PostMapping("/subtasks/generate")
     public ResponseEntity<?> generateSubtasks(
             @RequestHeader(value = "X-Webhook-Secret", required = false) String providedSecret,
