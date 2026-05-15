@@ -18,6 +18,20 @@ import {
 } from 'lucide-react';
 
 const STATUS_OPTIONS = ['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE', 'OVERDUE'];
+const PRIORITY_OPTIONS = ['HIGH', 'MEDIUM', 'LOW'];
+const priorityRank = { HIGH: 1, MEDIUM: 2, LOW: 3 };
+
+const isPriorityAllowed = (priority, parentPriority) => (
+    !priority || !parentPriority || priorityRank[priority] <= priorityRank[parentPriority]
+);
+
+const getAllowedPriorityOptions = (parentPriority) => (
+    PRIORITY_OPTIONS.filter((priority) => isPriorityAllowed(priority, parentPriority))
+);
+
+const clampPriorityToParent = (priority, parentPriority) => (
+    isPriorityAllowed(priority, parentPriority) ? priority : parentPriority
+);
 
 const formatDateTime = (value) => {
     if (!value) return '—';
