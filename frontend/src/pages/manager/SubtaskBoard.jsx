@@ -16,7 +16,7 @@ const PRIORITY_OPTIONS = ['HIGH', 'MEDIUM', 'LOW'];
 const priorityRank = { LOW: 1, MEDIUM: 2, HIGH: 3 };
 const emailPattern = /\S+@\S+\.\S+/;
 const isPriorityAllowed = (priority, parentPriority) => (
-    !priority || !parentPriority || priorityRank[priority] <= priorityRank[parentPriority]
+    !priority || !parentPriority || priorityRank[priority] >= priorityRank[parentPriority]
 );
 const getAllowedPriorityOptions = (parentPriority) => (
     PRIORITY_OPTIONS.filter((priority) => isPriorityAllowed(priority, parentPriority))
@@ -119,7 +119,7 @@ const ManagerSubtaskBoard = () => {
         if (!formData.assignedTo.trim()) nextErrors.assignedTo = 'Email người nhận là bắt buộc';
         else if (!emailPattern.test(formData.assignedTo.trim())) nextErrors.assignedTo = 'Email không hợp lệ';
         if (!isPriorityAllowed(formData.priority || task?.priority, task?.priority)) {
-            nextErrors.priority = 'Priority subtask không được cao hơn task cha';
+            nextErrors.priority = 'Priority subtask không được thấp hơn task cha';
         }
         if (isDeadlineAfter(formData.deadline, task?.deadline)) {
             nextErrors.deadline = 'Deadline subtask không được sau deadline task cha';
@@ -365,7 +365,7 @@ const ManagerSubtaskBoard = () => {
                                         </option>
                                     ))}
                                 </select>
-                                <span className="form-help-text">Không được cao hơn priority task cha: {task.priority}</span>
+                                <span className="form-help-text">Không được thấp hơn priority task cha: {task.priority}</span>
                                 {formErrors.priority && <span className="field-error">{formErrors.priority}</span>}
                             </div>
                         </div>

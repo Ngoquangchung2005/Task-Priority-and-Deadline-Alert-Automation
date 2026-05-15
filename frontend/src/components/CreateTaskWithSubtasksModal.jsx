@@ -38,7 +38,7 @@ const isDeadlineAfter = (childDeadline, parentDeadline) => {
     return childDate > parentDate;
 };
 const isPriorityAllowed = (priority, parentPriority) => (
-    !priority || !parentPriority || priorityRank[priority] <= priorityRank[parentPriority]
+    !priority || !parentPriority || priorityRank[priority] >= priorityRank[parentPriority]
 );
 const clampPriorityToParent = (priority, parentPriority) => (
     isPriorityAllowed(priority, parentPriority) ? priority : parentPriority
@@ -238,7 +238,7 @@ const CreateTaskWithSubtasksModal = ({ isOpen, onClose, onTaskCreated, editTask,
                 if (!subtask.assignedTo.trim()) rowErrors.assignedTo = 'Assignee is required';
                 else if (!emailPattern.test(subtask.assignedTo)) rowErrors.assignedTo = 'Invalid email';
                 if (!isPriorityAllowed(subtask.priority || formData.priority, formData.priority)) {
-                    rowErrors.priority = 'Subtask priority cannot be higher than parent priority';
+                    rowErrors.priority = 'Subtask priority cannot be lower than parent priority';
                 }
                 if (isDeadlineAfter(subtask.deadline, formData.deadline)) {
                     rowErrors.deadline = 'Subtask deadline cannot be after parent deadline';
