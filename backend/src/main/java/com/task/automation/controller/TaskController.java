@@ -2,6 +2,7 @@ package com.task.automation.controller;
 
 import com.task.automation.dto.request.TaskRequest;
 import com.task.automation.dto.request.AiSubtaskSuggestionRequest;
+import com.task.automation.dto.response.TaskResponse;
 import com.task.automation.entity.Task;
 import com.task.automation.enums.TaskStatus;
 import com.task.automation.security.UserDetailsImpl;
@@ -26,10 +27,10 @@ public class TaskController {
 
     @PostMapping
     @PreAuthorize("hasRole('MANAGER')")
-    public ResponseEntity<Task> createTask(@Valid @RequestBody TaskRequest request) {
+    public ResponseEntity<TaskResponse> createTask(@Valid @RequestBody TaskRequest request) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Task created = taskService.createTask(request, userDetails.getEmail(), userDetails.getFullName());
-        return ResponseEntity.ok(created);
+        return ResponseEntity.ok(TaskResponse.from(created));
     }
 
     @GetMapping("/{id}")
