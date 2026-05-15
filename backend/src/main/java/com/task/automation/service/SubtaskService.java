@@ -5,6 +5,7 @@ import com.task.automation.entity.Subtask;
 import com.task.automation.entity.Task;
 import com.task.automation.entity.TaskLog;
 import com.task.automation.enums.ActionType;
+import com.task.automation.enums.TaskPriority;
 import com.task.automation.enums.TaskStatus;
 import com.task.automation.repository.SubtaskRepository;
 import com.task.automation.repository.TaskLogRepository;
@@ -76,8 +77,9 @@ public class SubtaskService {
         Subtask subtask = new Subtask();
         subtask.setTitle(requireText(request.getTitle(), "title"));
         subtask.setStatus(normalizeSubtaskStatus(request.getStatus()));
-        subtask.setPriority(taskService.normalizeSubtaskPriority(request.getPriority(), task.getPriority(), "priority"));
-        subtask.setDeadline(request.getDeadline());
+        TaskPriority priority = taskService.normalizeSubtaskPriority(request.getPriority(), task.getPriority(), "priority");
+        subtask.setPriority(priority);
+        subtask.setDeadline(resolveSubtaskDeadline(request.getDeadline(), priority));
         subtask.setAssignedTo(assignedTo);
         subtask.setCreatedBy(managerEmail);
         subtask.setTask(task);
@@ -94,6 +96,8 @@ public class SubtaskService {
         logTaskAction(task.getId(), ActionType.UPDATED,
                 "Subtask '" + saved.getTitle() + "' assigned to " + assignedTo + " by " + managerEmail);
         syncParentTaskStatus(task, managerEmail);
+        taskService.triggerN8nSubtaskWebhook(saved, "SUBTASK_CREATED",
+                "Subtask '" + saved.getTitle() + "' assigned to " + assignedTo + " by " + managerEmail);
 
         return saved;
     }
@@ -136,12 +140,15 @@ public class SubtaskService {
             subtask.setTitle(title);
             subtask.setStatus(TaskStatus.TODO);
             subtask.setPriority(task.getPriority());
-            subtask.setDeadline(task.getDeadline());
+            subtask.setDeadline(resolveSubtaskDeadline(null, task.getPriority()));
             subtask.setAssignedTo(task.getAssigneeEmail());
             subtask.setCreatedBy(task.getManagerEmail());
             subtask.setTask(task);
             subtask.setPositionIndex(position++);
-            subtaskRepository.save(subtask);
+            Subtask saved = subtaskRepository.save(subtask);
+            taskService.triggerN8nSubtaskWebhook(saved, "SUBTASK_CREATED",
+                    "Subtask '" + saved.getTitle() + "' assigned to " + saved.getAssignedTo()
+                            + " by " + task.getManagerEmail());
             created++;
         }
 
@@ -163,8 +170,10 @@ public class SubtaskService {
         taskService.ensureUserExists(assignedTo);
 
         subtask.setTitle(requireText(request.getTitle(), "title"));
-        subtask.setPriority(taskService.normalizeSubtaskPriority(request.getPriority(), subtask.getTask().getPriority(), "priority"));
-        subtask.setDeadline(request.getDeadline());
+        TaskPriority priority = taskService.normalizeSubtaskPriority(
+                request.getPriority(), subtask.getTask().getPriority(), "priority");
+        subtask.setPriority(priority);
+        subtask.setDeadline(resolveSubtaskDeadline(request.getDeadline(), priority));
         subtask.setAssignedTo(assignedTo);
         if (request.getPositionIndex() != null) {
             subtask.setPositionIndex(request.getPositionIndex());
@@ -177,6 +186,8 @@ public class SubtaskService {
         logTaskAction(subtask.getTask().getId(), ActionType.UPDATED,
                 "Subtask '" + saved.getTitle() + "' updated by " + managerEmail);
         syncParentTaskStatus(subtask.getTask(), managerEmail);
+        taskService.triggerN8nSubtaskWebhook(saved, "SUBTASK_UPDATED",
+                "Subtask '" + saved.getTitle() + "' updated by " + managerEmail);
         return saved;
     }
 
@@ -238,6 +249,8 @@ public class SubtaskService {
         logTaskAction(task.getId(), ActionType.UPDATED,
                 "Subtask '" + title + "' deleted by " + managerEmail);
         syncParentTaskStatus(task, managerEmail);
+        taskService.triggerN8nSubtaskWebhook(subtask, "SUBTASK_DELETED",
+                "Subtask '" + title + "' deleted by " + managerEmail);
     }
 
     /**
@@ -333,6 +346,19 @@ public class SubtaskService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Subtask status cannot be CANCELLED");
         }
         return normalized;
+    }
+
+    private LocalDateTime resolveSubtaskDeadline(LocalDateTime requestedDeadline, TaskPriority priority) {
+        if (requestedDeadline != null) {
+            return requestedDeadline;
+        }
+        TaskPriority normalizedPriority = priority != null ? priority : TaskPriority.MEDIUM;
+        int days = switch (normalizedPriority) {
+            case HIGH -> 7;
+            case MEDIUM -> 14;
+            case LOW -> 30;
+        };
+        return LocalDateTime.now().plusDays(days);
     }
 
     private TaskStatus normalizeUserSubtaskStatus(TaskStatus status) {

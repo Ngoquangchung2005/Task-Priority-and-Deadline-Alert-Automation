@@ -18,6 +18,20 @@ import {
 } from 'lucide-react';
 
 const STATUS_OPTIONS = ['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE', 'OVERDUE'];
+const PRIORITY_OPTIONS = ['HIGH', 'MEDIUM', 'LOW'];
+const priorityRank = { LOW: 1, MEDIUM: 2, HIGH: 3 };
+
+const isPriorityAllowed = (priority, parentPriority) => (
+    !priority || !parentPriority || priorityRank[priority] >= priorityRank[parentPriority]
+);
+
+const getAllowedPriorityOptions = (parentPriority) => (
+    PRIORITY_OPTIONS.filter((priority) => isPriorityAllowed(priority, parentPriority))
+);
+
+const clampPriorityToParent = (priority, parentPriority) => (
+    isPriorityAllowed(priority, parentPriority) ? priority : parentPriority
+);
 
 const formatDateTime = (value) => {
     if (!value) return '—';
@@ -166,7 +180,7 @@ const DetailedTaskDrawer = ({ task, onClose, onStatusChange, isUser = false, onT
             title: subtask.title || '',
             assignedTo: subtask.assignedTo || '',
             deadline: toDatetimeLocalValue(subtask.deadline),
-            priority: subtask.priority || 'MEDIUM',
+            priority: clampPriorityToParent(subtask.priority || currentTask.priority, currentTask.priority) || 'LOW',
             status: subtask.status || 'TODO',
             positionIndex: subtask.positionIndex ?? 0
         });
@@ -220,6 +234,7 @@ const DetailedTaskDrawer = ({ task, onClose, onStatusChange, isUser = false, onT
         && (isManagerView
             ? (canStartParent || canSubmitParentReview || canApproveParentDone)
             : (!hasSubtasks && parentNextStatus !== 'DONE'));
+    const allowedSubtaskPriorityOptions = getAllowedPriorityOptions(currentTask.priority);
 
     return (
         <div className="modal-overlay" onClick={onClose}>
@@ -312,12 +327,14 @@ const DetailedTaskDrawer = ({ task, onClose, onStatusChange, isUser = false, onT
                                                     />
                                                     <select
                                                         className="input-field"
-                                                        value={subtaskDraft.priority || 'MEDIUM'}
+                                                        value={subtaskDraft.priority || allowedSubtaskPriorityOptions[0] || 'LOW'}
                                                         onChange={(event) => setSubtaskDraft((draft) => ({ ...draft, priority: event.target.value }))}
                                                     >
-                                                        <option value="HIGH">High</option>
-                                                        <option value="MEDIUM">Medium</option>
-                                                        <option value="LOW">Low</option>
+                                                        {allowedSubtaskPriorityOptions.map((priority) => (
+                                                            <option key={priority} value={priority}>
+                                                                {priority.charAt(0) + priority.slice(1).toLowerCase()}
+                                                            </option>
+                                                        ))}
                                                     </select>
                                                     <div className="detail-subtask-edit-actions">
                                                         <button className="btn-primary btn-sm" onClick={() => saveSubtask(subtask)}><Save size={13} /> Save</button>
