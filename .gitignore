@@ -1,0 +1,8 @@
+test-env/
+db-script/node_modules/
+node_modules/
+*.log
+backend/build.log
+.env
+frontend/.env
+backend/data/

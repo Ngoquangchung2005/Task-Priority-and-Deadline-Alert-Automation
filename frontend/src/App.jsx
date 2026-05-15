@@ -20,10 +20,11 @@ import MgrReports from './pages/manager/Reports';
 import MgrUsers from './pages/manager/Users';
 import MgrNotifications from './pages/manager/Notifications';
 import MgrSubtaskBoard from './pages/manager/SubtaskBoard';
+import MgrCalendar from './pages/manager/Calendar';
 
 // User Pages
 import UsrDashboard from './pages/user/Dashboard';
-import UsrTasks from './pages/user/Tasks';
+import UsrTasks from './pages/user/TasksWithSubtasks';
 import UsrCalendar from './pages/user/Calendar';
 import UsrNotifications from './pages/user/Notifications';
 import SubtaskBoard from './pages/user/SubtaskBoard';
@@ -48,6 +49,7 @@ function App() {
             <Route path="tasks/cancelled" element={<MgrCancelledTasks />} />
             <Route path="tasks/archived" element={<MgrArchivedTasks />} />
             <Route path="tasks/:taskId/board" element={<MgrSubtaskBoard />} />
+            <Route path="calendar" element={<MgrCalendar />} />
             <Route path="reports" element={<MgrReports />} />
             <Route path="users" element={<MgrUsers />} />
             <Route path="notifications" element={<MgrNotifications />} />

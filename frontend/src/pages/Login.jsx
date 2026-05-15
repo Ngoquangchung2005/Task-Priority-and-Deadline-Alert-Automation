@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, BadgeCheck, Fingerprint, KeyRound, Mail, Mic, ShieldCheck } from 'lucide-react';
+import { ArrowRight, BadgeCheck, KeyRound, Mail, ShieldCheck } from 'lucide-react';
 import heroImage from '../assets/hero.png';
 import deadlineMark from '../assets/deadline-mark.svg';
 
@@ -10,14 +10,16 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSubmitting(true);
     try {
-      const userData = await login(email, password);
+      const userData = await login(email.trim().toLowerCase(), password, rememberMe);
       
       if (userData.mustChangePassword) {
         navigate('/change-password');
@@ -26,8 +28,10 @@ const Login = () => {
       } else {
         navigate('/user');
       }
-    } catch {
-      setError('Invalid email or password');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Invalid email or password');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -84,27 +88,15 @@ const Login = () => {
                 />
                 <span>Remember me</span>
               </label>
-              <button type="button" className="auth-text-btn">Forgot password?</button>
             </div>
 
-            <button type="submit" className="btn-primary auth-submit-btn">
-              Continue <ArrowRight size={16} />
+            <button type="submit" className="btn-primary auth-submit-btn" disabled={submitting}>
+              {submitting ? 'Signing in...' : 'Continue'} <ArrowRight size={16} />
             </button>
           </form>
 
-          <div className="auth-divider"><span>OR</span></div>
-
-          <div className="auth-secondary-actions">
-            <button type="button" className="btn-outline auth-alt-btn">
-              <Fingerprint size={16} /> Employee ID
-            </button>
-            <button type="button" className="btn-outline auth-alt-btn">
-              <Mic size={16} /> Login with voice
-            </button>
-          </div>
-
           <p className="auth-register-text">
-            Not registered yet? <button type="button" className="auth-text-btn auth-inline-btn">Contact manager</button>
+            Not registered yet? Contact your manager.
           </p>
         </div>
 

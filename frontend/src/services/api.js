@@ -11,13 +11,37 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    const isAuthRoute = typeof config.url === 'string' && config.url.startsWith('/auth/');
-    if (token && !isAuthRoute) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+    const sessionToken = sessionStorage.getItem('token');
+    const skipAuthHeader =
+      typeof config.url === 'string' &&
+      (config.url === '/auth/login' || config.url.startsWith('/auth/login?'));
+    if ((token || sessionToken) && !skipAuthHeader) {
+      config.headers['Authorization'] = `Bearer ${token || sessionToken}`;
     }
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error.response?.status;
+    const requestUrl = error.config?.url || '';
+    const isLoginRequest = typeof requestUrl === 'string' && requestUrl.startsWith('/auth/login');
+
+    if (status === 401 && !isLoginRequest) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
+      if (window.location.pathname !== '/login') {
+        window.location.assign('/login');
+      }
+    }
+
+    return Promise.reject(error);
+  }
 );
 
 export default api;

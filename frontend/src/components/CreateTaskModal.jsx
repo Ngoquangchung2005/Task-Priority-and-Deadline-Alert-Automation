@@ -7,7 +7,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, editTask }) => {
         import.meta.env.VITE_N8N_SUBTASK_WEBHOOK_URL ||
         (import.meta.env.PROD
             ? 'https://n8nserver.email/webhook/ai-generate-subtask'
-            : 'http://localhost:5678/webhook/ai-generate-subtask');
+            : '/n8n/webhook/ai-generate-subtask');
     const [formData, setFormData] = useState({
         taskName: '',
         taskDescription: '',

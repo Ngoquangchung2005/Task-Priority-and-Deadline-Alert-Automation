@@ -34,6 +34,9 @@ const Sidebar = () => {
                     <NavLink to="/manager/tasks/archived" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
                         <Archive size={20} /> Archived
                     </NavLink>
+                    <NavLink to="/manager/calendar" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+                        <Calendar size={20} /> Calendar
+                    </NavLink>
                     <NavLink to="/manager/reports" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
                         <FileText size={20} /> Reports
                     </NavLink>

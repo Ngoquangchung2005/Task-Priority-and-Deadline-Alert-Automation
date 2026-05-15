@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 const ChangePassword = () => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -27,13 +28,27 @@ const ChangePassword = () => {
     if (!user) return;
 
     setError('');
+    if (newPassword.length < 6) {
+      setError('New password must be at least 6 characters.');
+      return;
+    }
+    if (oldPassword === newPassword) {
+      setError('New password must be different from current password.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('Password confirmation does not match.');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
       await api.post('/auth/change-password', { oldPassword, newPassword });
       
       const updatedUser = { ...user, mustChangePassword: false };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      const storage = sessionStorage.getItem('token') ? sessionStorage : localStorage;
+      storage.setItem('user', JSON.stringify(updatedUser));
       setUser(updatedUser);
 
       if (updatedUser.role === 'MANAGER') navigate('/manager');
@@ -57,7 +72,7 @@ const ChangePassword = () => {
         <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
           For security reasons, please change your default password to continue.
         </p>
-        {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{error}</div>}
+        {error && <div className="form-error-banner">{error}</div>}
         <form onSubmit={handleSubmit}>
           <input 
             type="password" 
@@ -74,6 +89,15 @@ const ChangePassword = () => {
             value={newPassword}
             onChange={e => setNewPassword(e.target.value)}
             required 
+            minLength={6}
+          />
+          <input
+            type="password"
+            className="input-field"
+            placeholder="Confirm New Password"
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
+            required
             minLength={6}
           />
           <button

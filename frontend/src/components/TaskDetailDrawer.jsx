@@ -135,7 +135,7 @@ const TaskDetailDrawer = ({ task, onClose, onStatusChange, isUser = false }) => 
                                     <button className="btn-primary" onClick={() => onStatusChange(task.id, 'IN_PROGRESS')}>▶ Start</button>
                                 )}
                                 {task.status === 'IN_PROGRESS' && (
-                                    <button className="btn-primary" onClick={() => onStatusChange(task.id, 'DONE')}>✓ Complete</button>
+                                    <button className="btn-primary" onClick={() => onStatusChange(task.id, 'IN_REVIEW')}>Submit Review</button>
                                 )}
                             </>
                         )}

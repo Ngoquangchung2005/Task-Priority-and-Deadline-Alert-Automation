@@ -2,59 +2,80 @@ import React, { useState } from 'react';
 import api from '../../services/api';
 import LoadingCompass from '../../components/LoadingCompass';
 import useAutoRefresh from '../../hooks/useAutoRefresh';
-import { Bell, AlertTriangle, Clock, CheckCircle, Info } from 'lucide-react';
+import { Archive, Bell, CheckCircle, Clock, Edit3, Info, RefreshCw, Search, XCircle } from 'lucide-react';
+import { formatDateTime } from '../../utils/taskMetrics';
+
+const typeForAction = (actionType) => ({
+    CREATED: 'new',
+    UPDATED: 'updated',
+    REASSIGNED: 'updated',
+    DEADLINE_CHANGED: 'updated',
+    STATUS_CHANGED: 'status',
+    CANCELLED: 'cancelled',
+    ARCHIVED: 'archived',
+    UNARCHIVED: 'updated',
+    REMINDER_SENT: 'reminder',
+    ESCALATED: 'escalated',
+    COMPLETED: 'completed'
+}[actionType] || 'updated');
+
+const iconForAction = (actionType) => ({
+    CREATED: <Info size={16} />,
+    UPDATED: <Edit3 size={16} />,
+    REASSIGNED: <Edit3 size={16} />,
+    DEADLINE_CHANGED: <Clock size={16} />,
+    STATUS_CHANGED: <RefreshCw size={16} />,
+    CANCELLED: <XCircle size={16} />,
+    ARCHIVED: <Archive size={16} />,
+    UNARCHIVED: <Archive size={16} />,
+    REMINDER_SENT: <Bell size={16} />,
+    ESCALATED: <Bell size={16} />,
+    COMPLETED: <CheckCircle size={16} />
+}[actionType] || <Info size={16} />);
 
 const UserNotifications = () => {
-    const [tasks, setTasks] = useState([]);
+    const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [tab, setTab] = useState('all');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [fetchError, setFetchError] = useState('');
 
     const fetchNotifications = async () => {
         try {
-            const res = await api.get('/tasks/my-tasks');
-            setTasks(res.data.filter(task => !task.archived));
-        } catch (err) { console.error(err); }
-        finally { setLoading(false); }
+            const res = await api.get('/notifications');
+            setLogs(Array.isArray(res.data) ? res.data : []);
+            setFetchError('');
+        } catch (err) {
+            console.error(err);
+            setFetchError(err.response?.data?.message || 'Failed to load notifications');
+        } finally {
+            setLoading(false);
+        }
     };
 
     useAutoRefresh(fetchNotifications, []);
 
-    const notifications = [];
+    const notifications = logs.map((log) => ({
+        ...log,
+        type: typeForAction(log.actionType),
+        icon: iconForAction(log.actionType),
+        title: `${log.actionType} · ${log.taskName || log.taskCode || 'Task'}`,
+        desc: log.actionMessage || log.taskCode || ''
+    }));
 
-    // New tasks (PENDING)
-    tasks.filter(t => t.status === 'PENDING').forEach(t => {
-        notifications.push({
-            type: 'new', icon: <Info size={16} />,
-            title: `Bạn được giao task mới: "${t.taskName}"`,
-            desc: `Từ ${t.ownerName || t.managerEmail?.split('@')[0] || 'Manager'} · Deadline: ${t.deadline ? new Date(t.deadline).toLocaleDateString('vi-VN') : '—'}`,
-        });
+    const search = searchTerm.trim().toLowerCase();
+    const filtered = notifications.filter((notification) => {
+        if (tab !== 'all' && notification.type !== tab) return false;
+        if (!search) return true;
+        return [
+            notification.actionType,
+            notification.taskName,
+            notification.taskCode,
+            notification.actionMessage
+        ].some((value) => (value || '').toLowerCase().includes(search));
     });
 
-    // Due today
-    tasks.filter(t => t.daysLeft === 0 && t.status !== 'DONE').forEach(t => {
-        notifications.push({
-            type: 'today', icon: <Clock size={16} />,
-            title: `Task "${t.taskName}" đến hạn hôm nay!`,
-            desc: `Hãy hoàn thành trước cuối ngày`,
-        });
-    });
-
-    // Due soon (1-3 days)
-    tasks.filter(t => t.daysLeft !== null && t.daysLeft > 0 && t.daysLeft <= 3 && t.status !== 'DONE').forEach(t => {
-        notifications.push({
-            type: 'reminder', icon: <Bell size={16} />,
-            title: `Gần deadline: "${t.taskName}"`,
-            desc: `Còn ${t.daysLeft} ngày`,
-        });
-    });
-
-    // Overdue
-    tasks.filter(t => t.daysLeft !== null && t.daysLeft < 0 && t.status !== 'DONE').forEach(t => {
-        notifications.push({
-            type: 'overdue', icon: <AlertTriangle size={16} />,
-            title: `Task "${t.taskName}" đã quá hạn!`,
-            desc: `Trễ ${Math.abs(t.daysLeft)} ngày`,
-        });
-    });
+    const countByType = (type) => notifications.filter((notification) => notification.type === type).length;
 
     if (loading) return <div className="page-loading"><LoadingCompass size={40} /></div>;
 
@@ -63,22 +84,48 @@ const UserNotifications = () => {
             <div className="page-header">
                 <div>
                     <h1 className="page-title">Notifications</h1>
-                    <p className="page-subtitle">{notifications.length} thông báo</p>
+                    <p className="page-subtitle">{notifications.length} thông báo liên quan đến task của bạn</p>
+                </div>
+                <div className="page-header-actions">
+                    <div className="search-container">
+                        <Search className="search-icon" size={16} />
+                        <input
+                            type="text"
+                            className="input-glass"
+                            placeholder="Search logs..."
+                            value={searchTerm}
+                            onChange={(event) => setSearchTerm(event.target.value)}
+                            style={{ paddingLeft: '2.2rem', width: '240px' }}
+                        />
+                    </div>
+                    <button className="btn-glass" onClick={fetchNotifications}><RefreshCw size={16} /> Refresh</button>
                 </div>
             </div>
 
+            {fetchError && <div className="form-error-banner">{fetchError}</div>}
+
+            <div className="tab-bar">
+                <button className={`tab-btn ${tab === 'all' ? 'active' : ''}`} onClick={() => setTab('all')}>All ({notifications.length})</button>
+                <button className={`tab-btn ${tab === 'new' ? 'active' : ''}`} onClick={() => setTab('new')}>Created ({countByType('new')})</button>
+                <button className={`tab-btn ${tab === 'status' ? 'active' : ''}`} onClick={() => setTab('status')}>Status ({countByType('status')})</button>
+                <button className={`tab-btn ${tab === 'reminder' ? 'active' : ''}`} onClick={() => setTab('reminder')}>Reminder ({countByType('reminder')})</button>
+                <button className={`tab-btn ${tab === 'escalated' ? 'active' : ''}`} onClick={() => setTab('escalated')}>Escalated ({countByType('escalated')})</button>
+                <button className={`tab-btn ${tab === 'completed' ? 'active' : ''}`} onClick={() => setTab('completed')}>Completed ({countByType('completed')})</button>
+            </div>
+
             <div className="notifications-list">
-                {notifications.length === 0 ? (
+                {filtered.length === 0 ? (
                     <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center' }}>
                         <CheckCircle size={40} color="#10B981" style={{ marginBottom: '1rem' }} />
                         <p className="no-data-text">Không có thông báo mới!</p>
                     </div>
-                ) : notifications.map((n, i) => (
-                    <div key={i} className={`notification-item glass-panel ${n.type}`}>
+                ) : filtered.map((n, i) => (
+                    <div key={n.id || i} className={`notification-item glass-panel ${n.type}`}>
                         <div className={`notif-icon ${n.type}`}>{n.icon}</div>
                         <div className="notif-body">
                             <strong>{n.title}</strong>
                             <span className="notif-desc">{n.desc}</span>
+                            <span className="notif-desc">{n.taskCode || 'No task code'} · {formatDateTime(n.createdAt)}</span>
                         </div>
                     </div>
                 ))}

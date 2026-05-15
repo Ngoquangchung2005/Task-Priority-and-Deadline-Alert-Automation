@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
-import CreateTaskModal from '../../components/CreateTaskModal';
-import TaskDetailDrawer from '../../components/TaskDetailDrawer';
+import CreateTaskModal from '../../components/CreateTaskWithSubtasksModal';
+import DetailedTaskDrawer from '../../components/DetailedTaskDrawer';
 import useAutoRefresh from '../../hooks/useAutoRefresh';
 import { Search, Plus, Filter, ChevronDown, MoreHorizontal, Eye, Edit3, Trash2, Archive, ArchiveRestore, RefreshCw, AlertTriangle, Bell, ChevronLeft, ChevronRight, CheckCircle, Layout } from 'lucide-react';
 
@@ -20,19 +20,24 @@ const ManagerTasks = () => {
     const [priorityFilter, setPriorityFilter] = useState('ALL');
     const [assigneeFilter, setAssigneeFilter] = useState('ALL');
     const [deadlineFilter, setDeadlineFilter] = useState('ALL');
-    const [sortBy, setSortBy] = useState('deadline');
-    const [sortDir, setSortDir] = useState('asc');
+    const [sortBy, setSortBy] = useState('createdAt');
+    const [sortDir, setSortDir] = useState('desc');
     const [page, setPage] = useState(1);
     const [showFilter, setShowFilter] = useState(false);
     const [actionMenu, setActionMenu] = useState(null);
     const [toast, setToast] = useState(null);
+    const [fetchError, setFetchError] = useState('');
 
     const fetchTasks = async () => {
         try {
             const res = await api.get('/tasks');
-            setTasks(res.data);
-        } catch (err) { console.error(err); }
-        finally { setLoading(false); }
+            setTasks(Array.isArray(res.data) ? res.data : []);
+            setFetchError('');
+        } catch (err) {
+            setFetchError(err.response?.data?.message || 'Failed to load tasks');
+        } finally {
+            setLoading(false);
+        }
     };
 
     useAutoRefresh(fetchTasks, []);
@@ -58,7 +63,9 @@ const ManagerTasks = () => {
             await api.patch(`/tasks/${id}/status`, { status });
             showToast(`Status updated to ${status}`);
             fetchTasks();
-        } catch { showToast('Failed to update status', 'error'); }
+        } catch (err) {
+            showToast(err.response?.data?.message || 'Failed to update status', 'error');
+        }
     };
 
     const handleArchive = async (task, archived) => {
@@ -73,13 +80,26 @@ const ManagerTasks = () => {
         }
     };
 
-    const assignees = useMemo(() => [...new Set(tasks.map(t => t.assigneeEmail))], [tasks]);
+    const assignees = useMemo(() => [...new Set(tasks.map(t => t.assigneeEmail).filter(Boolean))], [tasks]);
+    const knownUserEmails = useMemo(() => {
+        const emails = new Set();
+        tasks.forEach((task) => {
+            [task.assigneeEmail, task.managerEmail, task.createdBy].forEach((email) => {
+                if (email) emails.add(email);
+            });
+        });
+        return [...emails];
+    }, [tasks]);
 
     const filtered = useMemo(() => {
         let result = tasks.filter(t => !t.archived && t.status !== 'CANCELLED');
         if (searchTerm) {
             const s = searchTerm.toLowerCase();
-            result = result.filter(t => t.taskName.toLowerCase().includes(s) || t.assigneeEmail.toLowerCase().includes(s) || t.taskId.toLowerCase().includes(s));
+            result = result.filter(t => (
+                (t.taskName || '').toLowerCase().includes(s)
+                || (t.assigneeEmail || '').toLowerCase().includes(s)
+                || (t.taskId || '').toLowerCase().includes(s)
+            ));
         }
         if (!['ALL', 'ARCHIVED'].includes(statusFilter)) result = result.filter(t => t.status === statusFilter);
         if (priorityFilter !== 'ALL') result = result.filter(t => t.priority === priorityFilter);
@@ -114,7 +134,11 @@ const ManagerTasks = () => {
         return <span className={`badge ${map[status] || 'pending'}`}>{label[status] || status}</span>;
     };
 
-    const getPriorityBadge = (p) => <span className={`badge-priority ${p.toLowerCase()}`}>{p.charAt(0) + p.slice(1).toLowerCase()}</span>;
+    const getPriorityBadge = (p) => {
+        if (!p) return <span className="badge-priority low">None</span>;
+        return <span className={`badge-priority ${p.toLowerCase()}`}>{p.charAt(0) + p.slice(1).toLowerCase()}</span>;
+    };
+    const getAssigneeName = (email) => email?.split('@')[0] || 'Unassigned';
     const canEditTask = (task) => !task.archived && !['DONE', 'CANCELLED'].includes(task.status);
 
     return (
@@ -201,12 +225,13 @@ const ManagerTasks = () => {
                 </div>
             )}
 
+            {fetchError && <div className="form-error-banner">{fetchError}</div>}
+
             {/* Table */}
             <div className="data-table-container">
                 <table className="data-table">
                     <thead>
                         <tr>
-                            <th style={{ width: '40px' }}><input type="checkbox" className="custom-checkbox" /></th>
                             <th>Task ID</th>
                             <th>Task Name</th>
                             <th>Assignee</th>
@@ -220,18 +245,19 @@ const ManagerTasks = () => {
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan="10" className="table-empty">Loading tasks...</td></tr>
+                            <tr><td colSpan="9" className="table-empty">Loading tasks...</td></tr>
+                        ) : fetchError ? (
+                            <tr><td colSpan="9" className="table-empty">Could not load tasks. Use Refresh to try again.</td></tr>
                         ) : paged.length === 0 ? (
-                            <tr><td colSpan="10" className="table-empty">No tasks found</td></tr>
+                            <tr><td colSpan="9" className="table-empty">No tasks found</td></tr>
                         ) : paged.map((task, index) => (
                             <tr key={task.id}>
-                                <td><input type="checkbox" className="custom-checkbox" /></td>
-                                <td style={{ color: '#64748B', fontSize: '0.8rem', fontFamily: 'monospace' }}>{task.taskId}</td>
+                                <td style={{ color: '#64748B', fontSize: '0.8rem', fontFamily: 'monospace' }}>{task.taskId || '—'}</td>
                                 <td><strong className="task-name-link" onClick={() => setSelectedTask(task)}>{task.taskName}</strong></td>
                                 <td>
                                     <div className="assignee-cell">
                                         <div className="avatar">{task.assigneeEmail ? task.assigneeEmail.charAt(0).toUpperCase() : 'U'}</div>
-                                        <span style={{ fontSize: '0.85rem' }}>{task.assigneeEmail.split('@')[0]}</span>
+                                        <span style={{ fontSize: '0.85rem' }}>{getAssigneeName(task.assigneeEmail)}</span>
                                     </div>
                                 </td>
                                 <td>{getPriorityBadge(task.priority)}</td>
@@ -302,15 +328,17 @@ const ManagerTasks = () => {
             <CreateTaskModal
                 isOpen={isModalOpen}
                 onClose={() => { setIsModalOpen(false); setEditTask(null); }}
-                onTaskCreated={() => { fetchTasks(); showToast('Task created successfully!'); }}
+                onTaskCreated={(mode) => { fetchTasks(); showToast(mode === 'updated' ? 'Task updated successfully!' : 'Task created successfully!'); }}
                 editTask={editTask}
+                knownUserEmails={knownUserEmails}
             />
 
             {selectedTask && (
-                <TaskDetailDrawer
+                <DetailedTaskDrawer
                     task={selectedTask}
                     onClose={() => setSelectedTask(null)}
-                    onStatusChange={(id, status) => { handleStatusChange(id, status); setSelectedTask(null); }}
+                    onStatusChange={(id, status) => handleStatusChange(id, status)}
+                    onTaskChanged={fetchTasks}
                 />
             )}
 

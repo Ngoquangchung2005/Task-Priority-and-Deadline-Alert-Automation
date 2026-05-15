@@ -4,13 +4,36 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import api from '../../services/api';
 import LoadingCompass from '../../components/LoadingCompass';
 import useAutoRefresh from '../../hooks/useAutoRefresh';
-import { ArrowLeft, GripVertical, CheckCircle, AlertTriangle, Clock, ListTodo, Flag, User, Calendar } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { ArrowLeft, GripVertical, CheckCircle, AlertTriangle, Clock, ListTodo, Flag, User, Calendar, Lock } from 'lucide-react';
 
 const COLUMNS = [
     { id: 'TODO', title: 'To Do', icon: <ListTodo size={16} />, color: '#64748B' },
     { id: 'IN_PROGRESS', title: 'In Progress', icon: <Clock size={16} />, color: '#3B82F6' },
     { id: 'DONE', title: 'Done', icon: <CheckCircle size={16} />, color: '#10B981' },
 ];
+
+const getColumnId = (status) => {
+    if (status === 'DONE') return 'DONE';
+    if (['IN_PROGRESS', 'IN_REVIEW', 'OVERDUE'].includes(status)) return 'IN_PROGRESS';
+    return 'TODO';
+};
+
+const identityLocalPart = (value) => {
+    if (!value) return '';
+    const normalized = value.trim().toLowerCase();
+    return normalized.includes('@') ? normalized.split('@')[0] : normalized;
+};
+
+const sameIdentity = (left, right) => {
+    if (!left || !right) return false;
+    const normalizedLeft = left.trim().toLowerCase();
+    const normalizedRight = right.trim().toLowerCase();
+    return normalizedLeft === normalizedRight
+        || normalizedLeft === identityLocalPart(normalizedRight)
+        || identityLocalPart(normalizedLeft) === normalizedRight
+        || identityLocalPart(normalizedLeft) === identityLocalPart(normalizedRight);
+};
 
 const reorderSubtasks = (items, source, destination, subtaskId) => {
     const movedSubtask = items.find((item) => item.id === subtaskId);
@@ -23,7 +46,7 @@ const reorderSubtasks = (items, source, destination, subtaskId) => {
         COLUMNS.map((column) => [
             column.id,
             items
-                .filter((item) => item.status === column.id && item.id !== subtaskId)
+                .filter((item) => getColumnId(item.status) === column.id && item.id !== subtaskId)
                 .sort((a, b) => (a.positionIndex ?? 0) - (b.positionIndex ?? 0)),
         ]),
     );
@@ -46,11 +69,13 @@ const reorderSubtasks = (items, source, destination, subtaskId) => {
 const SubtaskBoard = () => {
     const { taskId } = useParams();
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [task, setTask] = useState(null);
     const [subtasks, setSubtasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
+    const [fetchError, setFetchError] = useState('');
 
     const fetchData = async () => {
         try {
@@ -59,9 +84,11 @@ const SubtaskBoard = () => {
                 api.get(`/tasks/my-tasks/${taskId}/subtasks`)
             ]);
             setTask(taskRes.data);
-            setSubtasks(subtaskRes.data);
+            setSubtasks(Array.isArray(subtaskRes.data) ? subtaskRes.data : []);
+            setFetchError('');
         } catch (err) {
             console.error('Failed to load board data', err?.response?.status, err);
+            setFetchError(err.response?.data?.message || 'Không tải được dữ liệu board subtask');
         } finally {
             setLoading(false);
         }
@@ -74,7 +101,18 @@ const SubtaskBoard = () => {
         setTimeout(() => setToast(null), 3000);
     };
 
-    const getColumnSubtasks = (columnId) => subtasks.filter(s => s.status === columnId);
+    const currentUserEmail = user?.email?.toLowerCase();
+    const isParentAssignee = sameIdentity(task?.assigneeEmail, currentUserEmail);
+    const parentLocked = task?.archived || ['DONE', 'CANCELLED'].includes(task?.status);
+    const canMoveSubtask = (subtask) => (
+        !parentLocked
+        && currentUserEmail
+        && sameIdentity(subtask.assignedTo, currentUserEmail)
+    );
+
+    const getColumnSubtasks = (columnId) => subtasks
+        .filter((subtask) => getColumnId(subtask.status) === columnId)
+        .sort((a, b) => (a.positionIndex ?? 0) - (b.positionIndex ?? 0));
 
     const handleDragEnd = async (result) => {
         const { destination, source, draggableId } = result;
@@ -83,16 +121,26 @@ const SubtaskBoard = () => {
         if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
         const subtaskId = Number.parseInt(draggableId, 10);
+        const movedSubtask = subtasks.find((subtask) => subtask.id === subtaskId);
+        if (!movedSubtask || !canMoveSubtask(movedSubtask)) {
+            showToast('Bạn chỉ có thể cập nhật subtask được giao cho mình', 'error');
+            return;
+        }
+
         const newStatus = destination.droppableId;
         const reorderedSubtasks = reorderSubtasks(subtasks, source, destination, subtaskId);
 
         setSubtasks(reorderedSubtasks);
 
         try {
-            await Promise.all([
-                api.patch(`/tasks/my-tasks/subtasks/${subtaskId}/status`, { status: newStatus }),
-                api.patch(`/tasks/my-tasks/subtasks/${subtaskId}/position`, { position: destination.index }),
-            ]);
+            const statusRes = await api.patch(`/tasks/my-tasks/subtasks/${subtaskId}/status`, { status: newStatus });
+            await api.patch(`/tasks/my-tasks/subtasks/${subtaskId}/position`, { position: destination.index });
+            await fetchData();
+            if (statusRes.data?.parentStatus === 'IN_REVIEW') {
+                showToast('Tất cả subtask đã xong, task cha đang chờ manager duyệt');
+            } else if (reorderedSubtasks.length > 0 && reorderedSubtasks.every((subtask) => subtask.status === 'DONE')) {
+                showToast('Phần subtask của bạn đã xong');
+            }
         } catch {
             showToast('Lỗi cập nhật trạng thái', 'error');
             fetchData();
@@ -100,6 +148,8 @@ const SubtaskBoard = () => {
     };
 
     const doneCount = subtasks.filter(s => s.status === 'DONE').length;
+    const mySubtasks = subtasks.filter((subtask) => sameIdentity(subtask.assignedTo, currentUserEmail));
+    const myDoneCount = mySubtasks.filter((subtask) => subtask.status === 'DONE').length;
     const progress = subtasks.length > 0 ? Math.round((doneCount / subtasks.length) * 100) : 0;
 
     const getPriorityBadge = (p) => {
@@ -129,7 +179,16 @@ const SubtaskBoard = () => {
     };
 
     if (loading) return <div className="page-loading"><LoadingCompass size={40} /></div>;
-    if (!task) return <div className="page-loading">Task not found.</div>;
+    if (!task) {
+        return (
+            <div className="page-container fade-in">
+                <div className="form-error-banner">{fetchError || 'Task not found.'}</div>
+                <button className="btn-glass btn-sm" onClick={() => navigate('/user/tasks')}>
+                    <ArrowLeft size={16} /> Quay lại
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="page-container fade-in">
@@ -166,13 +225,29 @@ const SubtaskBoard = () => {
                     </div>
                 </div>
                 <div className="kanban-progress-area">
-                    <span className="kanban-progress-text">{doneCount}/{subtasks.length} completed</span>
+                    <span className="kanban-progress-text">
+                        {isParentAssignee
+                            ? `${doneCount}/${subtasks.length} subtasks completed`
+                            : `${doneCount}/${subtasks.length} my subtasks completed`}
+                    </span>
                     <div className="kanban-progress-bar">
                         <div className="kanban-progress-fill" style={{ width: `${progress}%` }}></div>
                     </div>
                     <span className="kanban-progress-pct">{progress}%</span>
+                    {isParentAssignee && subtasks.length !== mySubtasks.length && (
+                        <span className="form-help-text">
+                            Bạn phụ trách task cha nên thấy toàn bộ subtask. Phần của bạn: {myDoneCount}/{mySubtasks.length}.
+                        </span>
+                    )}
                 </div>
             </div>
+
+            {fetchError && <div className="form-error-banner">{fetchError}</div>}
+            {parentLocked && (
+                <div className="form-muted-banner">
+                    Task cha đã {task.archived ? 'archive' : `ở trạng thái ${task.status}`}; board chỉ cho phép xem lại.
+                </div>
+            )}
 
             {/* Kanban Board */}
             <DragDropContext onDragStart={() => setIsDragging(true)} onDragEnd={handleDragEnd}>
@@ -194,23 +269,29 @@ const SubtaskBoard = () => {
                                         {...provided.droppableProps}
                                         className={`kanban-column-body ${snapshot.isDraggingOver ? 'kanban-drop-active' : ''}`}
                                     >
-                                        {getColumnSubtasks(col.id).map((subtask, index) => (
+                                        {getColumnSubtasks(col.id).length === 0 && (
+                                            <div className="detail-empty">No subtasks in this column.</div>
+                                        )}
+                                        {getColumnSubtasks(col.id).map((subtask, index) => {
+                                            const movable = canMoveSubtask(subtask);
+                                            return (
                                             <Draggable
                                                 key={subtask.id}
                                                 draggableId={String(subtask.id)}
                                                 index={index}
+                                                isDragDisabled={!movable}
                                             >
                                                 {(provided, snapshot) => (
                                                     <div
                                                         ref={provided.innerRef}
                                                         {...provided.draggableProps}
-                                                        {...provided.dragHandleProps}
+                                                        {...(movable ? provided.dragHandleProps : {})}
                                                         style={provided.draggableProps.style}
-                                                        className={`kanban-card kanban-card-rich ${snapshot.isDragging ? 'kanban-card-dragging' : ''} ${subtask.isOverdue ? 'kanban-card-overdue' : ''}`}
+                                                        className={`kanban-card kanban-card-rich ${snapshot.isDragging ? 'kanban-card-dragging' : ''} ${subtask.isOverdue ? 'kanban-card-overdue' : ''} ${!movable ? 'kanban-card-locked' : ''}`}
                                                     >
                                                         <div className="kanban-card-top">
-                                                            <span className="kanban-drag-handle" style={{ cursor: 'grab' }}>
-                                                                <GripVertical size={14} />
+                                                            <span className="kanban-drag-handle" style={{ cursor: movable ? 'grab' : 'not-allowed' }}>
+                                                                {movable ? <GripVertical size={14} /> : <Lock size={14} />}
                                                             </span>
                                                             <span className="kanban-card-title">{subtask.title}</span>
                                                         </div>
@@ -232,11 +313,17 @@ const SubtaskBoard = () => {
                                                                 </span>
                                                             )}
                                                         </div>
+                                                        {!movable && (
+                                                            <span className="kanban-card-lock-note">
+                                                                <Lock size={11} /> {isParentAssignee ? 'Subtask của thành viên khác, chỉ xem' : 'Chỉ xem, không được kéo'}
+                                                            </span>
+                                                        )}
                                                         {getOverdueBadge(subtask)}
                                                     </div>
                                                 )}
                                             </Draggable>
-                                        ))}
+                                            );
+                                        })}
                                         {provided.placeholder}
                                     </div>
                                 )}
@@ -245,6 +332,12 @@ const SubtaskBoard = () => {
                     ))}
                 </div>
             </DragDropContext>
+            {subtasks.length === 0 && (
+                <div className="glass-panel user-empty-panel">
+                    <ListTodo size={24} />
+                    <span>{isParentAssignee ? 'Task cha này chưa có subtask.' : 'Bạn chưa được giao subtask nào trong task cha này.'}</span>
+                </div>
+            )}
 
             {/* Toast */}
             {toast && (
