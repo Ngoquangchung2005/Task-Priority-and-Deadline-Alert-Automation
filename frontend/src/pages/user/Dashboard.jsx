@@ -1,45 +1,70 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import LoadingCompass from '../../components/LoadingCompass';
 import useAutoRefresh from '../../hooks/useAutoRefresh';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { CheckCircle, Clock, AlertTriangle, ListTodo } from 'lucide-react';
+import { emailName, formatDateTime, isDueSoon, isOpen, isOverdue, isVisibleWorkItem, withDeadlineState } from '../../utils/taskMetrics';
 
 const UserDashboard = () => {
     const [tasks, setTasks] = useState([]);
+    const [subtasks, setSubtasks] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState('');
     const { user } = useAuth();
 
     const fetchDashboard = async () => {
         try {
-            const res = await api.get('/tasks/my-tasks');
-            setTasks(res.data.filter(task => !task.archived));
-        } catch (err) { console.error(err); }
-        finally { setLoading(false); }
+            const [taskRes, subtaskRes] = await Promise.all([
+                api.get('/tasks/my-tasks'),
+                api.get('/subtasks/my')
+            ]);
+            setTasks((Array.isArray(taskRes.data) ? taskRes.data : [])
+                .filter((task) => !task.archived)
+                .map(withDeadlineState));
+            setSubtasks((Array.isArray(subtaskRes.data) ? subtaskRes.data : [])
+                .map(withDeadlineState));
+            setFetchError('');
+        } catch (err) {
+            console.error(err);
+            setFetchError(err.response?.data?.message || 'Failed to load dashboard data');
+        } finally {
+            setLoading(false);
+        }
     };
 
     useAutoRefresh(fetchDashboard, []);
 
+    const visibleSubtasks = useMemo(() => subtasks.filter(isVisibleWorkItem), [subtasks]);
+    const activeSubtasks = useMemo(() => visibleSubtasks.filter((subtask) => isOpen(subtask)), [visibleSubtasks]);
+
     const stats = {
-        total: tasks.length,
-        inProgress: tasks.filter(t => t.status === 'IN_PROGRESS').length,
-        done: tasks.filter(t => t.status === 'DONE').length,
-        overdue: tasks.filter(t => t.daysLeft !== null && t.daysLeft < 0 && t.status !== 'DONE').length,
-        dueSoon: tasks.filter(t => t.daysLeft !== null && t.daysLeft >= 0 && t.daysLeft <= 3 && t.status !== 'DONE').length,
+        parentTasks: tasks.length,
+        assignedSubtasks: visibleSubtasks.length,
+        dueSoon: visibleSubtasks.filter((subtask) => isDueSoon(subtask, 3)).length,
+        overdue: visibleSubtasks.filter(isOverdue).length,
+        done: visibleSubtasks.filter((subtask) => subtask.status === 'DONE').length,
+        open: activeSubtasks.length
     };
 
     const pieData = [
-        { name: 'Pending', value: tasks.filter(t => t.status === 'PENDING').length, color: '#F59E0B' },
-        { name: 'In Progress', value: stats.inProgress, color: '#818CF8' },
-        { name: 'Done', value: stats.done, color: '#10B981' },
-        { name: 'Overdue', value: stats.overdue, color: '#EF4444' },
+        { name: 'TODO', value: visibleSubtasks.filter(t => t.status === 'TODO' || t.status === 'PENDING').length, color: '#F59E0B' },
+        { name: 'IN_PROGRESS', value: visibleSubtasks.filter(t => t.status === 'IN_PROGRESS').length, color: '#3B82F6' },
+        { name: 'IN_REVIEW', value: visibleSubtasks.filter(t => t.status === 'IN_REVIEW').length, color: '#8B5CF6' },
+        { name: 'DONE', value: stats.done, color: '#10B981' },
+        { name: 'OVERDUE', value: stats.overdue, color: '#EF4444' },
     ].filter(d => d.value > 0);
 
-    const todayTasks = tasks.filter(t => t.daysLeft !== null && t.daysLeft >= 0 && t.daysLeft <= 1 && t.status !== 'DONE');
-    const nearestDeadline = tasks
-        .filter(t => t.deadline && t.status !== 'DONE')
-        .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))[0];
+    const todayItems = [
+        ...tasks.filter((task) => isDueSoon(task, 1)).map((task) => ({ ...task, type: 'Task', title: task.taskName, assignee: task.assigneeEmail })),
+        ...visibleSubtasks.filter((subtask) => isDueSoon(subtask, 1)).map((subtask) => ({ ...subtask, type: 'Subtask', title: subtask.title, assignee: subtask.assignedTo }))
+    ].sort((a, b) => (a.daysLeft ?? 99) - (b.daysLeft ?? 99));
+
+    const nearestDeadline = [
+        ...tasks.filter((task) => task.deadline && task.status !== 'DONE').map((task) => ({ ...task, type: 'Task', title: task.taskName })),
+        ...visibleSubtasks.filter((subtask) => subtask.deadline && subtask.status !== 'DONE').map((subtask) => ({ ...subtask, type: 'Subtask', title: subtask.title }))
+    ].sort((a, b) => new Date(a.deadline) - new Date(b.deadline))[0];
 
     if (loading) return <div className="page-loading"><LoadingCompass size={40} /></div>;
 
@@ -48,9 +73,11 @@ const UserDashboard = () => {
             <div className="page-header">
                 <div>
                     <h1 className="page-title">My Dashboard</h1>
-                    <p className="page-subtitle">Welcome back, {user?.fullName} 👋</p>
+                    <p className="page-subtitle">Welcome back, {user?.fullName || user?.email}</p>
                 </div>
             </div>
+
+            {fetchError && <div className="form-error-banner">{fetchError}</div>}
 
             <div className="stats-grid-5">
                 <div className="stat-card-v2 glass-panel">
@@ -58,8 +85,8 @@ const UserDashboard = () => {
                         <ListTodo size={22} color="#6366F1" />
                     </div>
                     <div className="stat-card-body">
-                        <span className="stat-label">Total Tasks</span>
-                        <span className="stat-value">{stats.total}</span>
+                        <span className="stat-label">Parent Tasks</span>
+                        <span className="stat-value">{stats.parentTasks}</span>
                     </div>
                 </div>
                 <div className="stat-card-v2 glass-panel">
@@ -67,8 +94,8 @@ const UserDashboard = () => {
                         <Clock size={22} color="#3B82F6" />
                     </div>
                     <div className="stat-card-body">
-                        <span className="stat-label">In Progress</span>
-                        <span className="stat-value">{stats.inProgress}</span>
+                        <span className="stat-label">Assigned Subtasks</span>
+                        <span className="stat-value">{stats.assignedSubtasks}</span>
                     </div>
                 </div>
                 <div className="stat-card-v2 glass-panel">
@@ -85,7 +112,7 @@ const UserDashboard = () => {
                         <AlertTriangle size={22} color="#EF4444" />
                     </div>
                     <div className="stat-card-body">
-                        <span className="stat-label">Overdue</span>
+                        <span className="stat-label">Subtask Overdue</span>
                         <span className="stat-value" style={{ color: '#EF4444' }}>{stats.overdue}</span>
                     </div>
                 </div>
@@ -94,7 +121,7 @@ const UserDashboard = () => {
                         <CheckCircle size={22} color="#10B981" />
                     </div>
                     <div className="stat-card-body">
-                        <span className="stat-label">Completed</span>
+                        <span className="stat-label">Subtask Done</span>
                         <span className="stat-value" style={{ color: '#10B981' }}>{stats.done}</span>
                     </div>
                 </div>
@@ -103,7 +130,7 @@ const UserDashboard = () => {
             <div className="charts-row">
                 {/* Progress Chart */}
                 <div className="glass-panel chart-card">
-                    <h3 className="chart-title">My Progress</h3>
+                    <h3 className="chart-title">My Subtask Progress</h3>
                     {pieData.length > 0 ? (
                         <ResponsiveContainer width="100%" height={200}>
                             <PieChart>
@@ -113,7 +140,7 @@ const UserDashboard = () => {
                                 <Tooltip contentStyle={{ background: '#1E293B', border: 'none', borderRadius: '8px', color: '#fff' }} />
                             </PieChart>
                         </ResponsiveContainer>
-                    ) : <p className="no-data-text">No tasks yet</p>}
+                    ) : <p className="no-data-text">No subtasks yet</p>}
                     <div className="chart-legend">
                         {pieData.map((d, i) => (
                             <span key={i} className="legend-item">
@@ -126,19 +153,22 @@ const UserDashboard = () => {
 
                 {/* Today's Tasks */}
                 <div className="glass-panel chart-card" style={{ flex: 2 }}>
-                    <h3 className="chart-title">📋 Việc cần làm hôm nay</h3>
-                    {todayTasks.length === 0 ? (
+                    <h3 className="chart-title">Work Due Today</h3>
+                    {todayItems.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: '2rem' }}>
                             <CheckCircle size={40} color="#10B981" style={{ marginBottom: '0.5rem' }} />
-                            <p className="no-data-text">Không có task nào hôm nay. Tuyệt vời!</p>
+                            <p className="no-data-text">No tasks or subtasks due today.</p>
                         </div>
                     ) : (
                         <div className="mini-task-list">
-                            {todayTasks.map(t => (
-                                <div key={t.id} className="mini-task-item">
+                            {todayItems.map(t => (
+                                <div key={`${t.type}-${t.id}`} className="mini-task-item">
                                     <div>
-                                        <strong>{t.taskName}</strong>
-                                        <span className={`badge-priority ${t.priority.toLowerCase()}`} style={{ marginLeft: '0.5rem', fontSize: '0.7rem' }}>{t.priority}</span>
+                                        <strong>{t.title}</strong>
+                                        <span className="mini-task-meta">{t.type} · {emailName(t.assignee)}</span>
+                                        {t.priority && (
+                                            <span className={`badge-priority ${t.priority.toLowerCase()}`} style={{ marginLeft: '0.5rem', fontSize: '0.7rem' }}>{t.priority}</span>
+                                        )}
                                     </div>
                                     <span className="days-badge warning">{t.daysLeft === 0 ? 'Today' : 'Tomorrow'}</span>
                                 </div>
@@ -152,15 +182,16 @@ const UserDashboard = () => {
             {nearestDeadline && (
                 <div className="glass-panel" style={{ padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>⏰ Deadline gần nhất</span>
-                        <h3 style={{ margin: '0.25rem 0 0', fontSize: '1.1rem' }}>{nearestDeadline.taskName}</h3>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Nearest deadline</span>
+                        <h3 style={{ margin: '0.25rem 0 0', fontSize: '1.1rem' }}>{nearestDeadline.title}</h3>
+                        <span className="mini-task-meta">{nearestDeadline.type}</span>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                         <span style={{ fontSize: '0.9rem', color: nearestDeadline.daysLeft <= 1 ? '#EF4444' : '#64748B' }}>
-                            {new Date(nearestDeadline.deadline).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            {formatDateTime(nearestDeadline.deadline)}
                         </span>
                         <div className={`days-badge ${nearestDeadline.daysLeft <= 0 ? 'danger' : nearestDeadline.daysLeft <= 3 ? 'warning' : 'info'}`} style={{ marginTop: '0.25rem', display: 'inline-block' }}>
-                            {nearestDeadline.daysLeft < 0 ? `${Math.abs(nearestDeadline.daysLeft)} ngày trễ` : nearestDeadline.daysLeft === 0 ? 'Hôm nay!' : `${nearestDeadline.daysLeft} ngày nữa`}
+                            {nearestDeadline.daysLeft < 0 ? `${Math.abs(nearestDeadline.daysLeft)}d late` : nearestDeadline.daysLeft === 0 ? 'Today' : `${nearestDeadline.daysLeft}d left`}
                         </div>
                     </div>
                 </div>

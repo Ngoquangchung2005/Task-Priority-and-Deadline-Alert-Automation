@@ -4,13 +4,33 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import api from '../../services/api';
 import LoadingCompass from '../../components/LoadingCompass';
 import useAutoRefresh from '../../hooks/useAutoRefresh';
-import { ArrowLeft, Plus, Trash2, Edit3, GripVertical, CheckCircle, AlertTriangle, Clock, ListTodo, Flag, User, Calendar, X, Save } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Edit3, GripVertical, CheckCircle, AlertTriangle, Clock, ListTodo, Flag, User, Calendar, X, Save, Lock } from 'lucide-react';
 
 const COLUMNS = [
     { id: 'TODO', title: 'To Do', icon: <ListTodo size={16} />, color: '#64748B' },
     { id: 'IN_PROGRESS', title: 'In Progress', icon: <Clock size={16} />, color: '#3B82F6' },
     { id: 'DONE', title: 'Done', icon: <CheckCircle size={16} />, color: '#10B981' },
 ];
+
+const PRIORITY_OPTIONS = ['HIGH', 'MEDIUM', 'LOW'];
+const priorityRank = { LOW: 1, MEDIUM: 2, HIGH: 3 };
+const emailPattern = /\S+@\S+\.\S+/;
+const isPriorityAllowed = (priority, parentPriority) => (
+    !priority || !parentPriority || priorityRank[priority] <= priorityRank[parentPriority]
+);
+const getAllowedPriorityOptions = (parentPriority) => (
+    PRIORITY_OPTIONS.filter((priority) => isPriorityAllowed(priority, parentPriority))
+);
+const clampPriorityToParent = (priority, parentPriority) => (
+    isPriorityAllowed(priority, parentPriority) ? priority : parentPriority
+);
+const isDeadlineAfter = (childDeadline, parentDeadline) => {
+    if (!childDeadline || !parentDeadline) return false;
+    const childDate = new Date(childDeadline);
+    const parentDate = new Date(parentDeadline);
+    if (Number.isNaN(childDate.getTime()) || Number.isNaN(parentDate.getTime())) return false;
+    return childDate > parentDate;
+};
 
 const reorderSubtasks = (items, source, destination, subtaskId) => {
     const movedSubtask = items.find((item) => item.id === subtaskId);
@@ -54,6 +74,8 @@ const ManagerSubtaskBoard = () => {
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingSubtask, setEditingSubtask] = useState(null);
     const [formData, setFormData] = useState({ title: '', priority: '', deadline: '', assignedTo: '' });
+    const [formErrors, setFormErrors] = useState({});
+    const [fetchError, setFetchError] = useState('');
 
     const fetchData = async () => {
         try {
@@ -62,9 +84,11 @@ const ManagerSubtaskBoard = () => {
                 api.get(`/tasks/${taskId}/subtasks`)
             ]);
             setTask(taskRes.data);
-            setSubtasks(subtaskRes.data);
+            setSubtasks(Array.isArray(subtaskRes.data) ? subtaskRes.data : []);
+            setFetchError('');
         } catch (err) {
             console.error('Failed to load board data', err);
+            setFetchError(err.response?.data?.message || 'Không tải được dữ liệu board subtask');
         } finally {
             setLoading(false);
         }
@@ -77,13 +101,42 @@ const ManagerSubtaskBoard = () => {
         setTimeout(() => setToast(null), 3000);
     };
 
-    const getColumnSubtasks = (columnId) => subtasks.filter(s => s.status === columnId);
+    const allowedPriorityOptions = getAllowedPriorityOptions(task?.priority);
+    const boardLocked = task?.archived || ['DONE', 'CANCELLED'].includes(task?.status);
+
+    const getColumnSubtasks = (columnId) => subtasks
+        .filter(s => s.status === columnId)
+        .sort((a, b) => (a.positionIndex ?? 0) - (b.positionIndex ?? 0));
+
+    const updateFormField = (field, value) => {
+        setFormData((current) => ({ ...current, [field]: value }));
+        setFormErrors((current) => ({ ...current, [field]: undefined }));
+    };
+
+    const validateSubtaskForm = () => {
+        const nextErrors = {};
+        if (!formData.title.trim()) nextErrors.title = 'Tên subtask là bắt buộc';
+        if (!formData.assignedTo.trim()) nextErrors.assignedTo = 'Email người nhận là bắt buộc';
+        else if (!emailPattern.test(formData.assignedTo.trim())) nextErrors.assignedTo = 'Email không hợp lệ';
+        if (!isPriorityAllowed(formData.priority || task?.priority, task?.priority)) {
+            nextErrors.priority = 'Priority subtask không được cao hơn task cha';
+        }
+        if (isDeadlineAfter(formData.deadline, task?.deadline)) {
+            nextErrors.deadline = 'Deadline subtask không được sau deadline task cha';
+        }
+        setFormErrors(nextErrors);
+        return Object.keys(nextErrors).length === 0;
+    };
 
     const handleDragEnd = async (result) => {
         const { destination, source, draggableId } = result;
         setIsDragging(false);
         if (!destination) return;
         if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+        if (boardLocked) {
+            showToast('Task cha đã khóa, không thể cập nhật subtask', 'error');
+            return;
+        }
 
         const subtaskId = Number.parseInt(draggableId, 10);
         const newStatus = destination.droppableId;
@@ -96,66 +149,87 @@ const ManagerSubtaskBoard = () => {
                 api.patch(`/subtasks/${subtaskId}/status`, { status: newStatus }),
                 api.patch(`/subtasks/${subtaskId}/position`, { position: destination.index }),
             ]);
+            await fetchData();
+            if (reorderedSubtasks.length > 0 && reorderedSubtasks.every((subtask) => subtask.status === 'DONE')) {
+                showToast('Tất cả subtask đã xong, task cha đang chờ duyệt');
+            }
         } catch {
             showToast('Lỗi cập nhật trạng thái', 'error');
             fetchData();
         }
     };
 
+    const handleApproveParent = async () => {
+        try {
+            await api.patch(`/tasks/${taskId}/status`, { status: 'DONE' });
+            showToast('Đã duyệt task cha DONE');
+            fetchData();
+        } catch (err) {
+            showToast(err.response?.data?.message || 'Không thể duyệt task cha', 'error');
+        }
+    };
+
     const resetForm = () => {
         setFormData({ title: '', priority: '', deadline: '', assignedTo: '' });
+        setFormErrors({});
         setShowAddForm(false);
         setEditingSubtask(null);
     };
 
     const handleAddSubtask = async () => {
-        if (!formData.title.trim()) return;
+        if (!validateSubtaskForm()) return;
         try {
             const payload = {
                 title: formData.title.trim(),
-                priority: formData.priority || null,
+                priority: clampPriorityToParent(formData.priority || task.priority, task.priority),
                 deadline: formData.deadline || null,
-                assignedTo: formData.assignedTo || null
+                assignedTo: formData.assignedTo.trim().toLowerCase()
             };
             await api.post(`/tasks/${taskId}/subtasks`, payload);
             showToast('Đã thêm subtask!');
             resetForm();
             fetchData();
-        } catch {
-            showToast('Lỗi thêm subtask', 'error');
+        } catch (err) {
+            showToast(err.response?.data?.message || 'Lỗi thêm subtask', 'error');
         }
     };
 
     const handleEditSubtask = async () => {
-        if (!formData.title.trim() || !editingSubtask) return;
+        if (!editingSubtask || !validateSubtaskForm()) return;
         try {
             const payload = {
                 title: formData.title.trim(),
-                priority: formData.priority || null,
+                priority: clampPriorityToParent(formData.priority || task.priority, task.priority),
                 deadline: formData.deadline || null,
-                assignedTo: formData.assignedTo || null
+                assignedTo: formData.assignedTo.trim().toLowerCase()
             };
             await api.put(`/subtasks/${editingSubtask.id}`, payload);
             showToast('Đã cập nhật subtask!');
             resetForm();
             fetchData();
-        } catch {
-            showToast('Lỗi cập nhật subtask', 'error');
+        } catch (err) {
+            showToast(err.response?.data?.message || 'Lỗi cập nhật subtask', 'error');
         }
     };
 
     const startEdit = (subtask) => {
+        if (boardLocked) return;
         setEditingSubtask(subtask);
         setFormData({
             title: subtask.title,
-            priority: subtask.priority || '',
+            priority: clampPriorityToParent(subtask.priority || task?.priority, task?.priority) || '',
             deadline: subtask.deadline ? subtask.deadline.slice(0, 16) : '',
             assignedTo: subtask.assignedTo || ''
         });
+        setFormErrors({});
         setShowAddForm(true);
     };
 
     const handleDeleteSubtask = async (id) => {
+        if (boardLocked) {
+            showToast('Task cha đã khóa, không thể xoá subtask', 'error');
+            return;
+        }
         if (!window.confirm('Xoá subtask này?')) return;
         try {
             await api.delete(`/subtasks/${id}`);
@@ -196,7 +270,16 @@ const ManagerSubtaskBoard = () => {
     };
 
     if (loading) return <div className="page-loading"><LoadingCompass size={40} /></div>;
-    if (!task) return <div className="page-loading">Task not found.</div>;
+    if (!task) {
+        return (
+            <div className="page-container fade-in">
+                <div className="form-error-banner">{fetchError || 'Task not found.'}</div>
+                <button className="btn-glass btn-sm" onClick={() => navigate('/manager/tasks')}>
+                    <ArrowLeft size={16} /> Quay lại
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="page-container fade-in">
@@ -240,14 +323,26 @@ const ManagerSubtaskBoard = () => {
                         </div>
                         <span className="kanban-progress-pct">{progress}%</span>
                     </div>
-                    <button className="btn-primary btn-sm" onClick={() => { resetForm(); setShowAddForm(true); }}>
+                    {task.status === 'IN_REVIEW' && (
+                        <button className="btn-primary btn-sm" onClick={handleApproveParent}>
+                            <CheckCircle size={16} /> Duyệt DONE
+                        </button>
+                    )}
+                    <button className="btn-primary btn-sm" disabled={boardLocked} onClick={() => { resetForm(); setShowAddForm(true); }}>
                         <Plus size={16} /> Thêm subtask
                     </button>
                 </div>
             </div>
 
+            {fetchError && <div className="form-error-banner">{fetchError}</div>}
+            {boardLocked && (
+                <div className="form-muted-banner">
+                    Task cha đã {task.archived ? 'archive' : `ở trạng thái ${task.status}`}; board chỉ cho phép xem lại.
+                </div>
+            )}
+
             {/* Add/Edit Form */}
-            {showAddForm && (
+            {showAddForm && !boardLocked && (
                 <div className="kanban-form-panel glass-panel fade-in">
                     <div className="kanban-form-header">
                         <h3>{editingSubtask ? '✏️ Sửa Subtask' : '➕ Thêm Subtask mới'}</h3>
@@ -257,26 +352,33 @@ const ManagerSubtaskBoard = () => {
                         <div className="kanban-form-row">
                             <div className="form-group" style={{ flex: 2 }}>
                                 <label>Tên subtask <span style={{ color: 'var(--danger)' }}>*</span></label>
-                                <input className="input-field" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Nhập tên subtask" />
+                                <input className={`input-field ${formErrors.title ? 'input-error' : ''}`} value={formData.title} onChange={e => updateFormField('title', e.target.value)} placeholder="Nhập tên subtask" />
+                                {formErrors.title && <span className="field-error">{formErrors.title}</span>}
                             </div>
                             <div className="form-group" style={{ flex: 1 }}>
                                 <label>Priority</label>
-                                <select className="input-field" value={formData.priority} onChange={e => setFormData({ ...formData, priority: e.target.value })}>
-                                    <option value="">— Chọn —</option>
-                                    <option value="HIGH">🔴 High</option>
-                                    <option value="MEDIUM">🟡 Medium</option>
-                                    <option value="LOW">🟢 Low</option>
+                                <select className={`input-field ${formErrors.priority ? 'input-error' : ''}`} value={formData.priority} onChange={e => updateFormField('priority', e.target.value)}>
+                                    <option value="">Theo task cha</option>
+                                    {allowedPriorityOptions.map((priority) => (
+                                        <option key={priority} value={priority}>
+                                            {priority === 'HIGH' ? '🔴 High' : priority === 'MEDIUM' ? '🟡 Medium' : '🟢 Low'}
+                                        </option>
+                                    ))}
                                 </select>
+                                <span className="form-help-text">Không được cao hơn priority task cha: {task.priority}</span>
+                                {formErrors.priority && <span className="field-error">{formErrors.priority}</span>}
                             </div>
                         </div>
                         <div className="kanban-form-row">
                             <div className="form-group" style={{ flex: 1 }}>
                                 <label>Deadline</label>
-                                <input type="datetime-local" className="input-field" value={formData.deadline} onChange={e => setFormData({ ...formData, deadline: e.target.value })} />
+                                <input type="datetime-local" className={`input-field ${formErrors.deadline ? 'input-error' : ''}`} value={formData.deadline} onChange={e => updateFormField('deadline', e.target.value)} />
+                                {formErrors.deadline && <span className="field-error">{formErrors.deadline}</span>}
                             </div>
                             <div className="form-group" style={{ flex: 1 }}>
-                                <label>Assignee (email)</label>
-                                <input type="email" className="input-field" value={formData.assignedTo} onChange={e => setFormData({ ...formData, assignedTo: e.target.value })} placeholder="user@example.com" />
+                                <label>Assignee (email) <span style={{ color: 'var(--danger)' }}>*</span></label>
+                                <input type="email" className={`input-field ${formErrors.assignedTo ? 'input-error' : ''}`} value={formData.assignedTo} onChange={e => updateFormField('assignedTo', e.target.value)} placeholder="user@example.com" />
+                                {formErrors.assignedTo && <span className="field-error">{formErrors.assignedTo}</span>}
                             </div>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
@@ -309,33 +411,39 @@ const ManagerSubtaskBoard = () => {
                                         {...provided.droppableProps}
                                         className={`kanban-column-body ${snapshot.isDraggingOver ? 'kanban-drop-active' : ''}`}
                                     >
+                                        {getColumnSubtasks(col.id).length === 0 && (
+                                            <div className="detail-empty">No subtasks in this column.</div>
+                                        )}
                                         {getColumnSubtasks(col.id).map((subtask, index) => (
                                             <Draggable
                                                 key={subtask.id}
                                                 draggableId={String(subtask.id)}
                                                 index={index}
+                                                isDragDisabled={boardLocked}
                                             >
                                                 {(provided, snapshot) => (
                                                     <div
                                                         ref={provided.innerRef}
                                                         {...provided.draggableProps}
-                                                        {...provided.dragHandleProps}
+                                                        {...(!boardLocked ? provided.dragHandleProps : {})}
                                                         style={provided.draggableProps.style}
-                                                        className={`kanban-card kanban-card-rich ${snapshot.isDragging ? 'kanban-card-dragging' : ''} ${subtask.isOverdue ? 'kanban-card-overdue' : ''}`}
+                                                        className={`kanban-card kanban-card-rich ${snapshot.isDragging ? 'kanban-card-dragging' : ''} ${subtask.isOverdue ? 'kanban-card-overdue' : ''} ${boardLocked ? 'kanban-card-locked' : ''}`}
                                                     >
                                                         <div className="kanban-card-top">
-                                                            <span className="kanban-drag-handle" style={{ cursor: 'grab' }}>
-                                                                <GripVertical size={14} />
+                                                            <span className="kanban-drag-handle" style={{ cursor: boardLocked ? 'not-allowed' : 'grab' }}>
+                                                                {boardLocked ? <Lock size={14} /> : <GripVertical size={14} />}
                                                             </span>
                                                             <span className="kanban-card-title">{subtask.title}</span>
-                                                            <div className="kanban-card-actions">
+                                                            {!boardLocked && (
+                                                                <div className="kanban-card-actions">
                                                                 <button className="kanban-card-action-btn" onClick={() => startEdit(subtask)} title="Sửa">
                                                                     <Edit3 size={13} />
                                                                 </button>
                                                                 <button className="kanban-card-action-btn danger" onClick={() => handleDeleteSubtask(subtask.id)} title="Xoá">
                                                                     <Trash2 size={13} />
                                                                 </button>
-                                                            </div>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                         <div className="kanban-card-details">
                                                             {subtask.priority && (
@@ -355,6 +463,11 @@ const ManagerSubtaskBoard = () => {
                                                                 </span>
                                                             )}
                                                         </div>
+                                                        {boardLocked && (
+                                                            <span className="kanban-card-lock-note">
+                                                                <Lock size={11} /> Chỉ xem, không được kéo
+                                                            </span>
+                                                        )}
                                                         {getOverdueBadge(subtask)}
                                                     </div>
                                                 )}

@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, RefreshCw, Search, Trash2, AlertTriangle, CheckCircle, MoreHorizontal } from 'lucide-react';
+import { Eye, RefreshCw, Search, AlertTriangle, CheckCircle, MoreHorizontal } from 'lucide-react';
 import api from '../../services/api';
-import TaskDetailDrawer from '../../components/TaskDetailDrawer';
+import DetailedTaskDrawer from '../../components/DetailedTaskDrawer';
 import useAutoRefresh from '../../hooks/useAutoRefresh';
 
 const CancelledTasks = () => {
@@ -42,21 +42,6 @@ const CancelledTasks = () => {
             task.assigneeEmail.toLowerCase().includes(keyword)
         );
     }, [tasks, searchTerm]);
-
-    const handlePermanentDelete = async (task) => {
-        if (!window.confirm(`Delete cancelled task "${task.taskName}" permanently? This cannot be undone.`)) return;
-
-        try {
-            await api.delete(`/tasks/${task.id}/permanent`);
-            showToast('Cancelled task deleted permanently');
-            setTasks((current) => current.filter((item) => item.id !== task.id));
-            if (selectedTask?.id === task.id) {
-                setSelectedTask(null);
-            }
-        } catch (err) {
-            showToast(err.response?.data?.message || 'Failed to delete cancelled task', 'error');
-        }
-    };
 
     return (
         <div className="page-container fade-in">
@@ -109,7 +94,7 @@ const CancelledTasks = () => {
                                 <td>
                                     <div className="assignee-cell">
                                         <div className="avatar">{task.assigneeEmail ? task.assigneeEmail.charAt(0).toUpperCase() : 'U'}</div>
-                                        <span style={{ fontSize: '0.85rem' }}>{task.assigneeEmail.split('@')[0]}</span>
+                                        <span style={{ fontSize: '0.85rem' }}>{task.assigneeEmail?.split('@')[0] || 'Unassigned'}</span>
                                     </div>
                                 </td>
                                 <td>
@@ -132,7 +117,6 @@ const CancelledTasks = () => {
                                         {actionMenu === task.id && (
                                             <div className={`action-dropdown ${index >= filteredTasks.length - 3 ? 'open-up' : 'open-down'}`}>
                                                 <button onClick={() => { setSelectedTask(task); setActionMenu(null); }}><Eye size={14} /> View</button>
-                                                <button onClick={() => { handlePermanentDelete(task); setActionMenu(null); }} className="action-danger"><Trash2 size={14} /> Delete Permanently</button>
                                             </div>
                                         )}
                                     </div>
@@ -144,10 +128,11 @@ const CancelledTasks = () => {
             </div>
 
             {selectedTask && (
-                <TaskDetailDrawer
+                <DetailedTaskDrawer
                     task={selectedTask}
                     onClose={() => setSelectedTask(null)}
                     onStatusChange={() => {}}
+                    onTaskChanged={fetchTasks}
                 />
             )}
 
