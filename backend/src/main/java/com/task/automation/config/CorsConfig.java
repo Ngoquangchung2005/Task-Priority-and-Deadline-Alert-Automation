@@ -18,8 +18,7 @@ public class CorsConfig {
                                 "http://localhost:3000",
                                 "http://localhost:5173",
                                 "https://quangchung.me",
-                                "https://www.quangchung.me"
-                        )
+                                "https://www.quangchung.me")
                         .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);

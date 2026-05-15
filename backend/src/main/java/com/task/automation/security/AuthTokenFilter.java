@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public class AuthTokenFilter extends OncePerRequestFilter {
     @Autowired
@@ -37,11 +38,22 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
                     UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities());
+                    if (!userDetails.isEnabled()) {
+                        reject(response, HttpServletResponse.SC_UNAUTHORIZED, "Account is inactive");
+                        return;
+                    }
+
+                    if (userDetails instanceof UserDetailsImpl userDetailsImpl
+                            && Boolean.TRUE.equals(userDetailsImpl.getMustChangePassword())
+                            && !isPasswordChangeAllowedPath(request)) {
+                        reject(response, HttpServletResponse.SC_FORBIDDEN, "Password change is required");
+                        return;
+                    }
+
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -57,7 +69,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return path.startsWith("/api/auth/");
+        return "/api/auth/login".equals(path);
     }
 
     private String parseJwt(HttpServletRequest request) {
@@ -68,5 +80,20 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         }
 
         return null;
+    }
+
+    private boolean isPasswordChangeAllowedPath(HttpServletRequest request) {
+        String path = request.getServletPath();
+        String method = request.getMethod();
+        return ("POST".equalsIgnoreCase(method) && "/api/auth/change-password".equals(path))
+                || ("GET".equalsIgnoreCase(method) && "/api/auth/me".equals(path));
+    }
+
+    private void reject(HttpServletResponse response, int status, String message) throws IOException {
+        SecurityContextHolder.clearContext();
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.getWriter().write("{\"message\":\"" + message + "\"}");
     }
 }
