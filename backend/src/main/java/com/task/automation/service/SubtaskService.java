@@ -5,6 +5,7 @@ import com.task.automation.entity.Subtask;
 import com.task.automation.entity.Task;
 import com.task.automation.entity.TaskLog;
 import com.task.automation.enums.ActionType;
+import com.task.automation.enums.TaskPriority;
 import com.task.automation.enums.TaskStatus;
 import com.task.automation.repository.SubtaskRepository;
 import com.task.automation.repository.TaskLogRepository;
@@ -76,8 +77,9 @@ public class SubtaskService {
         Subtask subtask = new Subtask();
         subtask.setTitle(requireText(request.getTitle(), "title"));
         subtask.setStatus(normalizeSubtaskStatus(request.getStatus()));
-        subtask.setPriority(taskService.normalizeSubtaskPriority(request.getPriority(), task.getPriority(), "priority"));
-        subtask.setDeadline(request.getDeadline());
+        TaskPriority priority = taskService.normalizeSubtaskPriority(request.getPriority(), task.getPriority(), "priority");
+        subtask.setPriority(priority);
+        subtask.setDeadline(resolveSubtaskDeadline(request.getDeadline(), priority));
         subtask.setAssignedTo(assignedTo);
         subtask.setCreatedBy(managerEmail);
         subtask.setTask(task);
@@ -138,7 +140,7 @@ public class SubtaskService {
             subtask.setTitle(title);
             subtask.setStatus(TaskStatus.TODO);
             subtask.setPriority(task.getPriority());
-            subtask.setDeadline(task.getDeadline());
+            subtask.setDeadline(resolveSubtaskDeadline(null, task.getPriority()));
             subtask.setAssignedTo(task.getAssigneeEmail());
             subtask.setCreatedBy(task.getManagerEmail());
             subtask.setTask(task);
@@ -168,8 +170,10 @@ public class SubtaskService {
         taskService.ensureUserExists(assignedTo);
 
         subtask.setTitle(requireText(request.getTitle(), "title"));
-        subtask.setPriority(taskService.normalizeSubtaskPriority(request.getPriority(), subtask.getTask().getPriority(), "priority"));
-        subtask.setDeadline(request.getDeadline());
+        TaskPriority priority = taskService.normalizeSubtaskPriority(
+                request.getPriority(), subtask.getTask().getPriority(), "priority");
+        subtask.setPriority(priority);
+        subtask.setDeadline(resolveSubtaskDeadline(request.getDeadline(), priority));
         subtask.setAssignedTo(assignedTo);
         if (request.getPositionIndex() != null) {
             subtask.setPositionIndex(request.getPositionIndex());
@@ -342,6 +346,19 @@ public class SubtaskService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Subtask status cannot be CANCELLED");
         }
         return normalized;
+    }
+
+    private LocalDateTime resolveSubtaskDeadline(LocalDateTime requestedDeadline, TaskPriority priority) {
+        if (requestedDeadline != null) {
+            return requestedDeadline;
+        }
+        TaskPriority normalizedPriority = priority != null ? priority : TaskPriority.MEDIUM;
+        int days = switch (normalizedPriority) {
+            case HIGH -> 7;
+            case MEDIUM -> 14;
+            case LOW -> 30;
+        };
+        return LocalDateTime.now().plusDays(days);
     }
 
     private TaskStatus normalizeUserSubtaskStatus(TaskStatus status) {
