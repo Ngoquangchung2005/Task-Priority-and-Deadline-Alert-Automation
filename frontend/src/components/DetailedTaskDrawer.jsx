@@ -19,10 +19,10 @@ import {
 
 const STATUS_OPTIONS = ['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE', 'OVERDUE'];
 const PRIORITY_OPTIONS = ['HIGH', 'MEDIUM', 'LOW'];
-const priorityRank = { HIGH: 1, MEDIUM: 2, LOW: 3 };
+const priorityRank = { LOW: 1, MEDIUM: 2, HIGH: 3 };
 
 const isPriorityAllowed = (priority, parentPriority) => (
-    !priority || !parentPriority || priorityRank[priority] <= priorityRank[parentPriority]
+    !priority || !parentPriority || priorityRank[priority] >= priorityRank[parentPriority]
 );
 
 const getAllowedPriorityOptions = (parentPriority) => (
@@ -99,7 +99,7 @@ const DetailedTaskDrawer = ({ task, onClose, onStatusChange, isUser = false, onT
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [editingSubtaskId, setEditingSubtaskId] = useState(null);
-const [subtaskDraft, setSubtaskDraft] = useState({});
+    const [subtaskDraft, setSubtaskDraft] = useState({});
 
     const taskId = task?.id;
     const isManagerView = !isUser;
@@ -182,7 +182,7 @@ const [subtaskDraft, setSubtaskDraft] = useState({});
             deadline: toDatetimeLocalValue(subtask.deadline),
             priority: clampPriorityToParent(subtask.priority || currentTask.priority, currentTask.priority) || 'LOW',
             status: subtask.status || 'TODO',
-positionIndex: subtask.positionIndex ?? 0
+            positionIndex: subtask.positionIndex ?? 0
         });
     };
 
@@ -247,7 +247,7 @@ positionIndex: subtask.positionIndex ?? 0
                             <span className={`badge ${statusClass(currentTask.archived ? 'ARCHIVED' : currentTask.status)}`}>
                                 {currentTask.archived ? 'Archived' : statusLabel(currentTask.status)}
                             </span>
-<span className={`badge-priority ${priorityClass(currentTask.priority)}`}>
+                            <span className={`badge-priority ${priorityClass(currentTask.priority)}`}>
                                 {currentTask.priority || '—'}
                             </span>
                         </div>
@@ -281,7 +281,7 @@ positionIndex: subtask.positionIndex ?? 0
                                     <DetailField icon={<Clock size={14} />} label="Status" value={statusLabel(currentTask.status)} />
                                     <DetailField icon={<Bell size={14} />} label="Reminder count" value={currentTask.reminderCount ?? 0} />
                                     <DetailField label="Last reminded at" value={formatDateTime(currentTask.lastRemindedAt)} />
-<DetailField label="Escalated at" value={formatDateTime(currentTask.escalatedAt)} />
+                                    <DetailField label="Escalated at" value={formatDateTime(currentTask.escalatedAt)} />
                                     <DetailField label="Completed at" value={formatDateTime(currentTask.completedAt)} />
                                     <DetailField icon={<Archive size={14} />} label="Archived" value={currentTask.archived ? 'Yes' : 'No'} />
                                     <DetailField label="Archived at" value={formatDateTime(currentTask.archivedAt)} />
@@ -318,7 +318,7 @@ positionIndex: subtask.positionIndex ?? 0
                                                         value={subtaskDraft.assignedTo || ''}
                                                         onChange={(event) => setSubtaskDraft((draft) => ({ ...draft, assignedTo: event.target.value }))}
                                                         placeholder="assignee@example.com"
-/>
+                                                    />
                                                     <input
                                                         className="input-field"
                                                         type="datetime-local"
@@ -352,7 +352,7 @@ positionIndex: subtask.positionIndex ?? 0
                                                                 <span>#{subtask.positionIndex ?? 0}</span>
                                                             </div>
                                                         </div>
-<span className={`badge ${statusClass(subtask.status)}`}>{statusLabel(subtask.status)}</span>
+                                                        <span className={`badge ${statusClass(subtask.status)}`}>{statusLabel(subtask.status)}</span>
                                                     </div>
                                                     <div className="detail-subtask-actions">
                                                         <span className={`badge-priority ${priorityClass(subtask.priority)}`}>{subtask.priority || '—'}</span>
@@ -390,7 +390,7 @@ positionIndex: subtask.positionIndex ?? 0
 
                             {activeTab === 'notifications' && (
                                 <div className="detail-notification-tab">
-<div className="detail-reminder-summary">
+                                    <div className="detail-reminder-summary">
                                         <DetailField icon={<Bell size={14} />} label="Reminder count" value={currentTask.reminderCount ?? 0} />
                                         <DetailField label="Last reminded at" value={formatDateTime(currentTask.lastRemindedAt)} />
                                         <DetailField label="Escalated at" value={formatDateTime(currentTask.escalatedAt)} />

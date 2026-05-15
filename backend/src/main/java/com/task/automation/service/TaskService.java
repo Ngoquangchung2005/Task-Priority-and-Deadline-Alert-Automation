@@ -164,7 +164,8 @@ public class TaskService {
 
                 TaskStatus status = subtaskRequest.getStatus() != null ? subtaskRequest.getStatus() : TaskStatus.TODO;
                 if (status == TaskStatus.CANCELLED) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "subtasks[" + i + "].status cannot be CANCELLED");
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "subtasks[" + i + "].status cannot be CANCELLED");
                 }
 
                 String assignedTo = requireEmail(subtaskRequest.getAssignedTo(), "subtasks[" + i + "].assignedTo");
@@ -180,7 +181,8 @@ public class TaskService {
                 subtask.setDeadline(subtaskRequest.getDeadline());
                 subtask.setAssignedTo(assignedTo);
                 subtask.setCreatedBy(managerEmail);
-                subtask.setPositionIndex(subtaskRequest.getPositionIndex() != null ? subtaskRequest.getPositionIndex() : i);
+                subtask.setPositionIndex(
+                        subtaskRequest.getPositionIndex() != null ? subtaskRequest.getPositionIndex() : i);
                 subtask.setTask(task);
                 subtasks.add(subtask);
             }
@@ -231,7 +233,8 @@ public class TaskService {
             boolean nameChanged = !Objects.equals(task.getTaskName(), request.getTaskName());
             boolean descriptionChanged = !Objects.equals(task.getTaskDescription(), request.getTaskDescription());
             if (assigneeChanged || nameChanged || descriptionChanged) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Tasks with started subtasks only allow updating deadline, priority, and admin note");
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Tasks with started subtasks only allow updating deadline, priority, and admin note");
             }
         }
 
@@ -256,7 +259,8 @@ public class TaskService {
 
         List<String> changes = new ArrayList<>();
         if (!Objects.equals(beforeName, savedTask.getTaskName())) {
-            changes.add(String.format("Task name changed from '%s' to '%s'", safe(beforeName), safe(savedTask.getTaskName())));
+            changes.add(String.format("Task name changed from '%s' to '%s'", safe(beforeName),
+                    safe(savedTask.getTaskName())));
         }
         if (!Objects.equals(beforeDescription, savedTask.getTaskDescription())) {
             changes.add("Task description updated");
@@ -276,7 +280,8 @@ public class TaskService {
                             formatDateTime(beforeDeadline), formatDateTime(savedTask.getDeadline()), managerEmail));
         }
         if (!Objects.equals(beforeAssignee, savedTask.getAssigneeEmail())) {
-            changes.add(String.format("Assignee changed from '%s' to '%s'", safe(beforeAssignee), safe(savedTask.getAssigneeEmail())));
+            changes.add(String.format("Assignee changed from '%s' to '%s'", safe(beforeAssignee),
+                    safe(savedTask.getAssigneeEmail())));
             logTaskAction(savedTask.getId(), ActionType.REASSIGNED,
                     String.format("Task reassigned from %s to %s by %s",
                             safe(beforeAssignee), safe(savedTask.getAssigneeEmail()), managerEmail));
@@ -356,7 +361,8 @@ public class TaskService {
 
         boolean canDelete = task.getStatus() == TaskStatus.CANCELLED || Boolean.TRUE.equals(task.getArchived());
         if (!canDelete) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Only cancelled or archived tasks can be permanently deleted");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Only cancelled or archived tasks can be permanently deleted");
         }
 
         taskLogRepository.deleteByTaskId(task.getId());
@@ -450,7 +456,8 @@ public class TaskService {
             return true;
         }
         return subtasks.stream()
-                .anyMatch(subtask -> subtask.getStatus() != TaskStatus.TODO && subtask.getStatus() != TaskStatus.PENDING);
+                .anyMatch(
+                        subtask -> subtask.getStatus() != TaskStatus.TODO && subtask.getStatus() != TaskStatus.PENDING);
     }
 
     private boolean hasSubtasks(Long taskId) {
@@ -462,13 +469,16 @@ public class TaskService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "status is required");
         }
         if (newStatus == TaskStatus.DONE) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the manager can approve a parent task as DONE");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only the manager can approve a parent task as DONE");
         }
         if (hasSubtasks(task.getId()) && newStatus != TaskStatus.IN_PROGRESS) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Use the subtask board to update assigned subtasks");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Use the subtask board to update assigned subtasks");
         }
         if (newStatus != TaskStatus.IN_PROGRESS && newStatus != TaskStatus.IN_REVIEW) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Users can only start a task or submit it for review");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Users can only start a task or submit it for review");
         }
         return newStatus;
     }
@@ -542,7 +552,8 @@ public class TaskService {
 
     public List<Task> getOverdueTasks() {
         return syncOverdueStatuses(
-                taskRepository.findOverdueTasks(List.of(TaskStatus.PENDING, TaskStatus.IN_PROGRESS, TaskStatus.IN_REVIEW, TaskStatus.OVERDUE)));
+                taskRepository.findOverdueTasks(
+                        List.of(TaskStatus.PENDING, TaskStatus.IN_PROGRESS, TaskStatus.IN_REVIEW, TaskStatus.OVERDUE)));
     }
 
     public List<WebhookWorkItemResponse> getPendingReminderItems() {
@@ -588,15 +599,18 @@ public class TaskService {
 
         List<Task> parentTasksWithoutSubtasks = syncOverdueStatuses(
                 taskRepository.findTasksForEmployeeStatistics(
-                        List.of(TaskStatus.PENDING, TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.IN_REVIEW, TaskStatus.OVERDUE),
+                        List.of(TaskStatus.PENDING, TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.IN_REVIEW,
+                                TaskStatus.OVERDUE),
                         TaskStatus.DONE,
-                        startOfWeek)).stream()
+                        startOfWeek))
+                .stream()
                 .filter(task -> task.getTotalSubTask() == null || task.getTotalSubTask() == 0)
                 .toList();
 
         List<Subtask> subtasks = syncOverdueSubtaskStatuses(
                 subtaskRepository.findWebhookSubtasksForEmployeeStatistics(
-                        List.of(TaskStatus.PENDING, TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.IN_REVIEW, TaskStatus.OVERDUE),
+                        List.of(TaskStatus.PENDING, TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.IN_REVIEW,
+                                TaskStatus.OVERDUE),
                         TaskStatus.DONE,
                         TaskStatus.CANCELLED,
                         startOfWeek));
@@ -764,7 +778,8 @@ public class TaskService {
 
         String description = request.getTaskDescription() != null ? request.getTaskDescription() : "";
         String priority = request.getPriority() != null ? request.getPriority().name() : "MEDIUM";
-        String deadline = request.getDeadline() != null && !request.getDeadline().isBlank() ? request.getDeadline() : "N/A";
+        String deadline = request.getDeadline() != null && !request.getDeadline().isBlank() ? request.getDeadline()
+                : "N/A";
         String note = request.getAdminNote() != null ? request.getAdminNote() : "";
         String prompt = "Task: " + taskName
                 + "\nDescription: " + description
@@ -955,11 +970,12 @@ public class TaskService {
                 .toList();
     }
 
-    public TaskPriority normalizeSubtaskPriority(TaskPriority requestedPriority, TaskPriority parentPriority, String fieldName) {
+    public TaskPriority normalizeSubtaskPriority(TaskPriority requestedPriority, TaskPriority parentPriority,
+            String fieldName) {
         TaskPriority normalized = requestedPriority != null ? requestedPriority : parentPriority;
-        if (normalized != null && parentPriority != null && priorityRank(normalized) > priorityRank(parentPriority)) {
+        if (normalized != null && parentPriority != null && priorityRank(normalized) < priorityRank(parentPriority)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    fieldName + " cannot be higher than parent task priority " + parentPriority);
+                    fieldName + " cannot be lower than parent task priority " + parentPriority);
         }
         return normalized;
     }
@@ -972,9 +988,9 @@ public class TaskService {
         List<Subtask> subtasks = subtaskRepository.findByTaskIdOrderByPositionIndexAsc(taskId);
         for (Subtask subtask : subtasks) {
             TaskPriority subtaskPriority = subtask.getPriority();
-            if (subtaskPriority != null && priorityRank(subtaskPriority) > priorityRank(parentPriority)) {
+            if (subtaskPriority != null && priorityRank(subtaskPriority) < priorityRank(parentPriority)) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT,
-                        "Cannot lower parent priority below existing subtask priority " + subtaskPriority);
+                        "Cannot raise parent priority above existing subtask priority " + subtaskPriority);
             }
         }
     }
